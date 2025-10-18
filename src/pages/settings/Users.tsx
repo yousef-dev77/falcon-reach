@@ -16,13 +16,33 @@ export default function Users() {
         </Button>
       </div>
 
+      <div className="grid gap-4 md:grid-cols-4 mb-6">
+        {[
+          { role: "مدير", count: 2, color: "text-primary" },
+          { role: "محاسب", count: 5, color: "text-secondary" },
+          { role: "أمين مخزون", count: 8, color: "text-accent" },
+          { role: "بائع", count: 12, color: "text-green-600" },
+        ].map((item) => (
+          <Card key={item.role}>
+            <CardHeader className="pb-3">
+              <CardTitle className={`text-sm font-medium ${item.color}`}>{item.role}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{item.count}</div>
+              <p className="text-xs text-muted-foreground">مستخدم نشط</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
       <Card>
         <CardHeader>
           <CardTitle>قائمة المستخدمين</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-center py-12 text-muted-foreground">
-            لا يوجد مستخدمين مسجلين
+            <p className="mb-2">لا يوجد مستخدمين مسجلين</p>
+            <p className="text-sm">يمكنك إنشاء مستخدمين وتحديد صلاحيات الوصول لكل شاشة والأدوار الوظيفية</p>
           </div>
         </CardContent>
       </Card>

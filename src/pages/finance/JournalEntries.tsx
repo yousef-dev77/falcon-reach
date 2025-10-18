@@ -16,13 +16,41 @@ export default function JournalEntries() {
         </Button>
       </div>
 
+      <div className="grid gap-4 md:grid-cols-3 mb-6">
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium">قيود يدوية</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">156</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium">قيود آلية</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">892</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium">إجمالي القيود</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">1,048</div>
+          </CardContent>
+        </Card>
+      </div>
+
       <Card>
         <CardHeader>
           <CardTitle>سجل القيود</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-center py-12 text-muted-foreground">
-            لا توجد قيود مسجلة. ابدأ بإضافة قيد جديد.
+            <p className="mb-4">لا توجد قيود مسجلة. ابدأ بإضافة قيد جديد.</p>
+            <p className="text-sm">سيتم عرض القيود اليدوية والآلية من المبيعات والمشتريات هنا مع إمكانية البحث والترشيح والطباعة</p>
           </div>
         </CardContent>
       </Card>

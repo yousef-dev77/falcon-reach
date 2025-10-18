@@ -21,12 +21,13 @@ export default function Products() {
         <CardHeader>
           <div className="relative">
             <Search className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="ابحث عن صنف..." className="pr-10" />
+            <Input placeholder="ابحث عن صنف (الرمز، الاسم، الفئة، المورد)..." className="pr-10" />
           </div>
         </CardHeader>
         <CardContent>
           <div className="text-center py-12 text-muted-foreground">
-            لا توجد أصناف مسجلة
+            <p className="mb-2">لا توجد أصناف مسجلة</p>
+            <p className="text-sm">قم بإضافة صنف جديد مع تحديد الرمز، الوحدة، الفئة، السعر، والمورد</p>
           </div>
         </CardContent>
       </Card>

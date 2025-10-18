@@ -16,7 +16,7 @@ export default function CashBank() {
         </Button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2 mb-6">
         <Card>
           <CardHeader>
             <div className="flex items-center gap-3">
@@ -26,7 +26,7 @@ export default function CashBank() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">125,000 ر.س</div>
-            <p className="text-sm text-muted-foreground">الرصيد الإجمالي</p>
+            <p className="text-sm text-muted-foreground">الرصيد الإجمالي • 3 صناديق</p>
           </CardContent>
         </Card>
 
@@ -39,10 +39,22 @@ export default function CashBank() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">215,000 ر.س</div>
-            <p className="text-sm text-muted-foreground">الرصيد الإجمالي</p>
+            <p className="text-sm text-muted-foreground">الرصيد الإجمالي • 5 حسابات</p>
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>العمليات المالية</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-12 text-muted-foreground">
+            <p className="mb-2">سجل العمليات المالية</p>
+            <p className="text-sm">عمليات الإيداع، السحب، التحويل، والتسويات البنكية</p>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
