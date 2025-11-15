@@ -4,6 +4,10 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { DashboardLayout } from "./components/DashboardLayout";
+import { AuthProvider } from "./contexts/AuthContext";
+import { ProtectedRoute } from "./components/ProtectedRoute";
+import Index from "./pages/Index";
+import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 
@@ -48,44 +52,48 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<DashboardLayout><Dashboard /></DashboardLayout>} />
-          
-          {/* Finance Routes */}
-          <Route path="/finance/accounts" element={<DashboardLayout><Accounts /></DashboardLayout>} />
-          <Route path="/finance/journal-entries" element={<DashboardLayout><JournalEntries /></DashboardLayout>} />
-          <Route path="/finance/general-ledger" element={<DashboardLayout><GeneralLedger /></DashboardLayout>} />
-          <Route path="/finance/reports" element={<DashboardLayout><FinancialReports /></DashboardLayout>} />
-          <Route path="/finance/cash-bank" element={<DashboardLayout><CashBank /></DashboardLayout>} />
-          <Route path="/finance/expenses-revenue" element={<DashboardLayout><ExpensesRevenue /></DashboardLayout>} />
-          <Route path="/finance/fixed-assets" element={<DashboardLayout><FixedAssets /></DashboardLayout>} />
-          
-          {/* Inventory Routes */}
-          <Route path="/inventory/warehouses" element={<DashboardLayout><Warehouses /></DashboardLayout>} />
-          <Route path="/inventory/products" element={<DashboardLayout><Products /></DashboardLayout>} />
-          <Route path="/inventory/movements" element={<DashboardLayout><Movements /></DashboardLayout>} />
-          <Route path="/inventory/reports" element={<DashboardLayout><InventoryReports /></DashboardLayout>} />
-          
-          {/* Sales Routes */}
-          <Route path="/sales/customers" element={<DashboardLayout><Customers /></DashboardLayout>} />
-          <Route path="/sales/invoices" element={<DashboardLayout><SalesInvoices /></DashboardLayout>} />
-          <Route path="/sales/collections" element={<DashboardLayout><Collections /></DashboardLayout>} />
-          <Route path="/sales/reports" element={<DashboardLayout><SalesReports /></DashboardLayout>} />
-          
-          {/* Purchases Routes */}
-          <Route path="/purchases/suppliers" element={<DashboardLayout><Suppliers /></DashboardLayout>} />
-          <Route path="/purchases/invoices" element={<DashboardLayout><PurchaseInvoices /></DashboardLayout>} />
-          <Route path="/purchases/payments" element={<DashboardLayout><Payments /></DashboardLayout>} />
-          <Route path="/purchases/reports" element={<DashboardLayout><PurchaseReports /></DashboardLayout>} />
-          
-          {/* Settings Routes */}
-          <Route path="/settings/users" element={<DashboardLayout><Users /></DashboardLayout>} />
-          <Route path="/settings/branches" element={<DashboardLayout><Branches /></DashboardLayout>} />
-          <Route path="/settings/general" element={<DashboardLayout><GeneralSettings /></DashboardLayout>} />
-          <Route path="/settings/logs" element={<DashboardLayout><SystemLogs /></DashboardLayout>} />
-          
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AuthProvider>
+          <Routes>
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/" element={<ProtectedRoute><DashboardLayout><Index /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout><Dashboard /></DashboardLayout></ProtectedRoute>} />
+            
+            {/* Finance Routes */}
+            <Route path="/finance/accounts" element={<ProtectedRoute><DashboardLayout><Accounts /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/finance/journal-entries" element={<ProtectedRoute><DashboardLayout><JournalEntries /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/finance/general-ledger" element={<ProtectedRoute><DashboardLayout><GeneralLedger /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/finance/reports" element={<ProtectedRoute><DashboardLayout><FinancialReports /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/finance/cash-bank" element={<ProtectedRoute><DashboardLayout><CashBank /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/finance/expenses-revenue" element={<ProtectedRoute><DashboardLayout><ExpensesRevenue /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/finance/fixed-assets" element={<ProtectedRoute><DashboardLayout><FixedAssets /></DashboardLayout></ProtectedRoute>} />
+            
+            {/* Inventory Routes */}
+            <Route path="/inventory/warehouses" element={<ProtectedRoute><DashboardLayout><Warehouses /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/inventory/products" element={<ProtectedRoute><DashboardLayout><Products /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/inventory/movements" element={<ProtectedRoute><DashboardLayout><Movements /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/inventory/reports" element={<ProtectedRoute><DashboardLayout><InventoryReports /></DashboardLayout></ProtectedRoute>} />
+            
+            {/* Sales Routes */}
+            <Route path="/sales/customers" element={<ProtectedRoute><DashboardLayout><Customers /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/sales/invoices" element={<ProtectedRoute><DashboardLayout><SalesInvoices /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/sales/collections" element={<ProtectedRoute><DashboardLayout><Collections /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/sales/reports" element={<ProtectedRoute><DashboardLayout><SalesReports /></DashboardLayout></ProtectedRoute>} />
+            
+            {/* Purchases Routes */}
+            <Route path="/purchases/suppliers" element={<ProtectedRoute><DashboardLayout><Suppliers /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/purchases/invoices" element={<ProtectedRoute><DashboardLayout><PurchaseInvoices /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/purchases/payments" element={<ProtectedRoute><DashboardLayout><Payments /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/purchases/reports" element={<ProtectedRoute><DashboardLayout><PurchaseReports /></DashboardLayout></ProtectedRoute>} />
+            
+            {/* Settings Routes */}
+            <Route path="/settings/general" element={<ProtectedRoute><DashboardLayout><GeneralSettings /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/settings/users" element={<ProtectedRoute><DashboardLayout><Users /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/settings/branches" element={<ProtectedRoute><DashboardLayout><Branches /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/settings/logs" element={<ProtectedRoute><DashboardLayout><SystemLogs /></DashboardLayout></ProtectedRoute>} />
+            
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
