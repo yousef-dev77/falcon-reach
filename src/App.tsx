@@ -23,6 +23,8 @@ import FixedAssets from "./pages/finance/FixedAssets";
 // Inventory Pages
 import Warehouses from "./pages/inventory/Warehouses";
 import Products from "./pages/inventory/Products";
+import Categories from "./pages/inventory/Categories";
+import Units from "./pages/inventory/Units";
 import Movements from "./pages/inventory/Movements";
 import InventoryReports from "./pages/inventory/InventoryReports";
 
@@ -70,6 +72,8 @@ const App = () => (
             {/* Inventory Routes */}
             <Route path="/inventory/warehouses" element={<ProtectedRoute><DashboardLayout><Warehouses /></DashboardLayout></ProtectedRoute>} />
             <Route path="/inventory/products" element={<ProtectedRoute><DashboardLayout><Products /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/inventory/categories" element={<ProtectedRoute><DashboardLayout><Categories /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/inventory/units" element={<ProtectedRoute><DashboardLayout><Units /></DashboardLayout></ProtectedRoute>} />
             <Route path="/inventory/movements" element={<ProtectedRoute><DashboardLayout><Movements /></DashboardLayout></ProtectedRoute>} />
             <Route path="/inventory/reports" element={<ProtectedRoute><DashboardLayout><InventoryReports /></DashboardLayout></ProtectedRoute>} />
             
