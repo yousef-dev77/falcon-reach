@@ -74,6 +74,8 @@ const navigationItems = [
     items: [
       { title: "المستودعات", url: "/inventory/warehouses", icon: Warehouse },
       { title: "الأصناف والمنتجات", url: "/inventory/products", icon: Box },
+      { title: "فئات المنتجات", url: "/inventory/categories", icon: Layers },
+      { title: "وحدات القياس", url: "/inventory/units", icon: Box },
       { title: "الحركات المخزنية", url: "/inventory/movements", icon: ArrowDownUp },
       { title: "تقارير المخزون", url: "/inventory/reports", icon: FileBarChart },
     ],
