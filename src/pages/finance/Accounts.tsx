@@ -1,103 +1,186 @@
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, ChevronRight, Plus, Search } from "lucide-react";
-import { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ChevronDown, ChevronRight, Plus, Search, Edit, Trash2, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
+
+type Account = {
+  id: string;
+  code: string;
+  name: string;
+  account_type: "asset" | "liability" | "equity" | "revenue" | "expense";
+  parent_id: string | null;
+  level: number;
+  is_active: boolean;
+  children?: Account[];
+};
+
+const accountTypeLabels: Record<string, string> = {
+  asset: "أصول",
+  liability: "التزامات",
+  equity: "حقوق ملكية",
+  revenue: "إيرادات",
+  expense: "مصروفات",
+};
+
+const accountTypeColors: Record<string, string> = {
+  asset: "text-primary",
+  liability: "text-secondary",
+  equity: "text-accent",
+  revenue: "text-green-600",
+  expense: "text-red-600",
+};
 
 export default function Accounts() {
-  const accountsTree = [
-    {
-      name: "الأصول",
-      code: "1",
-      color: "text-primary",
-      children: [
-        {
-          name: "الأصول المتداولة",
-          code: "11",
-          children: [
-            { name: "الصندوق", code: "1101", balance: "125,000 ر.س" },
-            { name: "البنوك", code: "1102", balance: "215,000 ر.س" },
-            { name: "العملاء", code: "1103", balance: "89,500 ر.س" },
-            { name: "المخزون", code: "1104", balance: "450,000 ر.س" },
-          ],
-        },
-        {
-          name: "الأصول الثابتة",
-          code: "12",
-          children: [
-            { name: "الأراضي والمباني", code: "1201", balance: "2,500,000 ر.س" },
-            { name: "الآلات والمعدات", code: "1202", balance: "850,000 ر.س" },
-            { name: "السيارات", code: "1203", balance: "320,000 ر.س" },
-          ],
-        },
-      ],
-    },
-    {
-      name: "الالتزامات",
-      code: "2",
-      color: "text-secondary",
-      children: [
-        {
-          name: "الالتزامات المتداولة",
-          code: "21",
-          children: [
-            { name: "الموردين", code: "2101", balance: "145,000 ر.س" },
-            { name: "أوراق الدفع", code: "2102", balance: "75,000 ر.س" },
-          ],
-        },
-        {
-          name: "الالتزامات طويلة الأجل",
-          code: "22",
-          children: [
-            { name: "قروض بنكية", code: "2201", balance: "500,000 ر.س" },
-          ],
-        },
-      ],
-    },
-    {
-      name: "حقوق الملكية",
-      code: "3",
-      color: "text-accent",
-      children: [
-        { name: "رأس المال", code: "3001", balance: "1,000,000 ر.س" },
-        { name: "الأرباح المحتجزة", code: "3002", balance: "450,000 ر.س" },
-      ],
-    },
-    {
-      name: "الإيرادات",
-      code: "4",
-      color: "text-green-600",
-      children: [
-        { name: "إيرادات المبيعات", code: "4001", balance: "850,000 ر.س" },
-        { name: "إيرادات أخرى", code: "4002", balance: "25,000 ر.س" },
-      ],
-    },
-    {
-      name: "المصروفات",
-      code: "5",
-      color: "text-red-600",
-      children: [
-        {
-          name: "مصروفات تشغيلية",
-          code: "51",
-          children: [
-            { name: "الرواتب والأجور", code: "5101", balance: "180,000 ر.س" },
-            { name: "الإيجارات", code: "5102", balance: "48,000 ر.س" },
-            { name: "الكهرباء والماء", code: "5103", balance: "12,000 ر.س" },
-          ],
-        },
-        {
-          name: "مصروفات إدارية",
-          code: "52",
-          children: [
-            { name: "مصروفات مكتبية", code: "5201", balance: "8,500 ر.س" },
-            { name: "مصروفات صيانة", code: "5202", balance: "15,000 ر.س" },
-          ],
-        },
-      ],
-    },
-  ];
+  const { user } = useAuth();
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingAccount, setEditingAccount] = useState<Account | null>(null);
+  const [formData, setFormData] = useState({
+    code: "",
+    name: "",
+    account_type: "asset" as Account["account_type"],
+    parent_id: "",
+  });
+
+  useEffect(() => {
+    fetchAccounts();
+  }, []);
+
+  const fetchAccounts = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("accounts")
+      .select("*")
+      .order("code");
+
+    if (error) {
+      toast.error("خطأ في جلب الحسابات");
+      console.error(error);
+    } else {
+      setAccounts(data || []);
+    }
+    setLoading(false);
+  };
+
+  const buildTree = (accounts: Account[]): Account[] => {
+    const map = new Map<string, Account>();
+    const roots: Account[] = [];
+
+    accounts.forEach((acc) => {
+      map.set(acc.id, { ...acc, children: [] });
+    });
+
+    accounts.forEach((acc) => {
+      const node = map.get(acc.id)!;
+      if (acc.parent_id && map.has(acc.parent_id)) {
+        map.get(acc.parent_id)!.children!.push(node);
+      } else {
+        roots.push(node);
+      }
+    });
+
+    return roots;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) {
+      toast.error("يجب تسجيل الدخول أولاً");
+      return;
+    }
+
+    const accountData = {
+      code: formData.code,
+      name: formData.name,
+      account_type: formData.account_type,
+      parent_id: formData.parent_id || null,
+      level: formData.parent_id ? 2 : 1,
+    };
+
+    if (editingAccount) {
+      const { error } = await supabase
+        .from("accounts")
+        .update(accountData)
+        .eq("id", editingAccount.id);
+
+      if (error) {
+        toast.error("خطأ في تحديث الحساب");
+        console.error(error);
+      } else {
+        toast.success("تم تحديث الحساب بنجاح");
+        fetchAccounts();
+        resetForm();
+      }
+    } else {
+      const { error } = await supabase.from("accounts").insert(accountData);
+
+      if (error) {
+        toast.error("خطأ في إضافة الحساب");
+        console.error(error);
+      } else {
+        toast.success("تم إضافة الحساب بنجاح");
+        fetchAccounts();
+        resetForm();
+      }
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("هل أنت متأكد من حذف هذا الحساب؟")) return;
+
+    const { error } = await supabase.from("accounts").delete().eq("id", id);
+
+    if (error) {
+      toast.error("خطأ في حذف الحساب");
+      console.error(error);
+    } else {
+      toast.success("تم حذف الحساب بنجاح");
+      fetchAccounts();
+    }
+  };
+
+  const handleEdit = (account: Account) => {
+    setEditingAccount(account);
+    setFormData({
+      code: account.code,
+      name: account.name,
+      account_type: account.account_type,
+      parent_id: account.parent_id || "",
+    });
+    setIsDialogOpen(true);
+  };
+
+  const resetForm = () => {
+    setFormData({ code: "", name: "", account_type: "asset", parent_id: "" });
+    setEditingAccount(null);
+    setIsDialogOpen(false);
+  };
+
+  const filteredAccounts = accounts.filter(
+    (acc) =>
+      acc.name.includes(searchQuery) || acc.code.includes(searchQuery)
+  );
+
+  const accountTree = buildTree(filteredAccounts);
+  const parentAccounts = accounts.filter((acc) => acc.level === 1);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -106,10 +189,84 @@ export default function Accounts() {
           <h1 className="text-3xl font-bold">شجرة الحسابات</h1>
           <p className="text-muted-foreground">إدارة الحسابات المالية بنظام شجري</p>
         </div>
-        <Button className="bg-primary hover:bg-primary/90">
-          <Plus className="mr-2 h-4 w-4" />
-          إضافة حساب جديد
-        </Button>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button className="bg-primary hover:bg-primary/90" onClick={() => resetForm()}>
+              <Plus className="ml-2 h-4 w-4" />
+              إضافة حساب جديد
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>{editingAccount ? "تعديل الحساب" : "إضافة حساب جديد"}</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label>رقم الحساب</Label>
+                <Input
+                  value={formData.code}
+                  onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>اسم الحساب</Label>
+                <Input
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>نوع الحساب</Label>
+                <Select
+                  value={formData.account_type}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, account_type: value as Account["account_type"] })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="asset">أصول</SelectItem>
+                    <SelectItem value="liability">التزامات</SelectItem>
+                    <SelectItem value="equity">حقوق ملكية</SelectItem>
+                    <SelectItem value="revenue">إيرادات</SelectItem>
+                    <SelectItem value="expense">مصروفات</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>الحساب الرئيسي (اختياري)</Label>
+                <Select
+                  value={formData.parent_id}
+                  onValueChange={(value) => setFormData({ ...formData, parent_id: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="اختر الحساب الرئيسي" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">بدون حساب رئيسي</SelectItem>
+                    {parentAccounts.map((acc) => (
+                      <SelectItem key={acc.id} value={acc.id}>
+                        {acc.code} - {acc.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex gap-2">
+                <Button type="submit" className="flex-1">
+                  {editingAccount ? "تحديث" : "إضافة"}
+                </Button>
+                <Button type="button" variant="outline" onClick={resetForm}>
+                  إلغاء
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <Card>
@@ -117,23 +274,50 @@ export default function Accounts() {
           <div className="flex items-center gap-4">
             <div className="relative flex-1">
               <Search className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="ابحث عن حساب برقم الحساب أو الاسم..." className="pr-10" />
+              <Input
+                placeholder="ابحث عن حساب برقم الحساب أو الاسم..."
+                className="pr-10"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="space-y-2">
-            {accountsTree.map((account) => (
-              <AccountTreeNode key={account.code} account={account} level={0} />
-            ))}
-          </div>
+          {accountTree.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              لا توجد حسابات. ابدأ بإضافة حساب جديد.
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {accountTree.map((account) => (
+                <AccountTreeNode
+                  key={account.id}
+                  account={account}
+                  level={0}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                />
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
   );
 }
 
-function AccountTreeNode({ account, level }: { account: any; level: number }) {
+function AccountTreeNode({
+  account,
+  level,
+  onEdit,
+  onDelete,
+}: {
+  account: Account;
+  level: number;
+  onEdit: (account: Account) => void;
+  onDelete: (id: string) => void;
+}) {
   const [isOpen, setIsOpen] = useState(level === 0);
   const hasChildren = account.children && account.children.length > 0;
   const paddingRight = `${level * 1.5}rem`;
@@ -155,26 +339,49 @@ function AccountTreeNode({ account, level }: { account: any; level: number }) {
               {!hasChildren && <div className="w-4" />}
               <div>
                 <div className="flex items-center gap-2">
-                  <span className={`font-semibold ${account.color || ""}`}>{account.name}</span>
+                  <span className={`font-semibold ${accountTypeColors[account.account_type] || ""}`}>
+                    {account.name}
+                  </span>
                   <span className="text-sm text-muted-foreground">({account.code})</span>
                 </div>
-                {account.balance && (
-                  <p className="text-sm text-muted-foreground mt-1">الرصيد: {account.balance}</p>
-                )}
+                <p className="text-xs text-muted-foreground">{accountTypeLabels[account.account_type]}</p>
               </div>
             </div>
-            {hasChildren && (
-              <span className="text-xs bg-muted px-2 py-1 rounded">
-                {account.children.length} {level === 0 ? "مجموعة" : "حساب"}
-              </span>
-            )}
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit(account);
+                }}
+              >
+                <Edit className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(account.id);
+                }}
+              >
+                <Trash2 className="h-4 w-4 text-destructive" />
+              </Button>
+            </div>
           </div>
         </CollapsibleTrigger>
         {hasChildren && (
           <CollapsibleContent>
             <div className="mt-1 space-y-1">
-              {account.children.map((child: any) => (
-                <AccountTreeNode key={child.code} account={child} level={level + 1} />
+              {account.children!.map((child) => (
+                <AccountTreeNode
+                  key={child.id}
+                  account={child}
+                  level={level + 1}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                />
               ))}
             </div>
           </CollapsibleContent>

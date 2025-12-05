@@ -518,6 +518,77 @@ export type Database = {
           },
         ]
       }
+      fixed_assets: {
+        Row: {
+          account_id: string | null
+          accumulated_depreciation: number | null
+          category: string | null
+          code: string
+          created_at: string
+          created_by: string
+          current_value: number | null
+          depreciation_method: string | null
+          description: string | null
+          id: string
+          location: string | null
+          name: string
+          purchase_cost: number
+          purchase_date: string
+          salvage_value: number | null
+          status: string | null
+          updated_at: string
+          useful_life_years: number | null
+        }
+        Insert: {
+          account_id?: string | null
+          accumulated_depreciation?: number | null
+          category?: string | null
+          code: string
+          created_at?: string
+          created_by: string
+          current_value?: number | null
+          depreciation_method?: string | null
+          description?: string | null
+          id?: string
+          location?: string | null
+          name: string
+          purchase_cost?: number
+          purchase_date: string
+          salvage_value?: number | null
+          status?: string | null
+          updated_at?: string
+          useful_life_years?: number | null
+        }
+        Update: {
+          account_id?: string | null
+          accumulated_depreciation?: number | null
+          category?: string | null
+          code?: string
+          created_at?: string
+          created_by?: string
+          current_value?: number | null
+          depreciation_method?: string | null
+          description?: string | null
+          id?: string
+          location?: string | null
+          name?: string
+          purchase_cost?: number
+          purchase_date?: string
+          salvage_value?: number | null
+          status?: string | null
+          updated_at?: string
+          useful_life_years?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fixed_assets_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inventory_movements: {
         Row: {
           created_at: string
