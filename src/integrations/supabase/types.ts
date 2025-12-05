@@ -518,6 +518,65 @@ export type Database = {
           },
         ]
       }
+      expenses_revenues: {
+        Row: {
+          account_id: string | null
+          amount: number
+          category: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          notes: string | null
+          payment_method: string | null
+          reference: string | null
+          transaction_date: string
+          transaction_number: string
+          transaction_type: string
+          updated_at: string
+        }
+        Insert: {
+          account_id?: string | null
+          amount?: number
+          category?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          notes?: string | null
+          payment_method?: string | null
+          reference?: string | null
+          transaction_date: string
+          transaction_number: string
+          transaction_type: string
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string | null
+          amount?: number
+          category?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          notes?: string | null
+          payment_method?: string | null
+          reference?: string | null
+          transaction_date?: string
+          transaction_number?: string
+          transaction_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expenses_revenues_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fixed_assets: {
         Row: {
           account_id: string | null
