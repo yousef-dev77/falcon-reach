@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, Loader2, Eye } from "lucide-react";
+import { Plus, Edit, Trash2, Loader2, Eye, AlertCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -37,12 +37,24 @@ type Account = {
   id: string;
   code: string;
   name: string;
+  allow_manual_entry: boolean;
+  is_active: boolean;
+};
+
+type FiscalPeriod = {
+  id: string;
+  name: string;
+  start_date: string;
+  end_date: string;
+  is_closed: boolean;
 };
 
 export default function JournalEntries() {
   const { user } = useAuth();
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
+  const [postableAccounts, setPostableAccounts] = useState<Account[]>([]);
+  const [fiscalPeriods, setFiscalPeriods] = useState<FiscalPeriod[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
@@ -59,10 +71,12 @@ export default function JournalEntries() {
     { account_id: "", debit_amount: 0, credit_amount: 0, description: "" },
     { account_id: "", debit_amount: 0, credit_amount: 0, description: "" },
   ]);
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
   useEffect(() => {
     fetchEntries();
     fetchAccounts();
+    fetchFiscalPeriods();
   }, []);
 
   const fetchEntries = async () => {
@@ -82,8 +96,38 @@ export default function JournalEntries() {
   };
 
   const fetchAccounts = async () => {
-    const { data, error } = await supabase.from("accounts").select("id, code, name").order("code");
-    if (!error) setAccounts(data || []);
+    const { data, error } = await supabase
+      .from("accounts")
+      .select("id, code, name, allow_manual_entry, is_active")
+      .eq("is_active", true)
+      .order("code");
+    
+    if (!error && data) {
+      setAccounts(data);
+      
+      // Get accounts that have children (parent accounts)
+      const { data: allAccounts } = await supabase
+        .from("accounts")
+        .select("id, parent_id");
+      
+      const parentIds = new Set(allAccounts?.filter(a => a.parent_id).map(a => a.parent_id) || []);
+      
+      // Postable accounts: allow_manual_entry = true AND no children
+      const postable = data.filter(acc => 
+        acc.allow_manual_entry && 
+        acc.is_active && 
+        !parentIds.has(acc.id)
+      );
+      setPostableAccounts(postable);
+    }
+  };
+
+  const fetchFiscalPeriods = async () => {
+    const { data } = await supabase
+      .from("fiscal_periods")
+      .select("*")
+      .order("start_date", { ascending: false });
+    if (data) setFiscalPeriods(data);
   };
 
   const fetchEntryLines = async (entryId: string) => {
@@ -94,6 +138,82 @@ export default function JournalEntries() {
     if (!error) setEntryLines(data || []);
   };
 
+  const validateEntry = (): boolean => {
+    const errors: string[] = [];
+
+    // Check entry number uniqueness
+    if (!editingEntry) {
+      const exists = entries.some(e => e.entry_number === formData.entry_number);
+      if (exists) {
+        errors.push("رقم القيد موجود مسبقاً");
+      }
+    }
+
+    // Check fiscal period
+    if (fiscalPeriods.length > 0) {
+      const entryDate = new Date(formData.entry_date);
+      const validPeriod = fiscalPeriods.find(p => {
+        const start = new Date(p.start_date);
+        const end = new Date(p.end_date);
+        return entryDate >= start && entryDate <= end && !p.is_closed;
+      });
+      
+      if (!validPeriod) {
+        const closedPeriod = fiscalPeriods.find(p => {
+          const start = new Date(p.start_date);
+          const end = new Date(p.end_date);
+          return entryDate >= start && entryDate <= end;
+        });
+        
+        if (closedPeriod) {
+          errors.push("الفترة المحاسبية مغلقة");
+        } else {
+          errors.push("التاريخ خارج الفترات المحاسبية المعرفة");
+        }
+      }
+    }
+
+    // Check debit = credit
+    const totalDebit = lines.reduce((sum, l) => sum + (l.debit_amount || 0), 0);
+    const totalCredit = lines.reduce((sum, l) => sum + (l.credit_amount || 0), 0);
+    
+    if (totalDebit !== totalCredit) {
+      errors.push("مجموع المدين يجب أن يساوي مجموع الدائن");
+    }
+
+    if (totalDebit === 0) {
+      errors.push("يجب إدخال مبالغ في القيد");
+    }
+
+    // Check valid lines
+    const validLines = lines.filter((l) => l.account_id && (l.debit_amount > 0 || l.credit_amount > 0));
+    if (validLines.length < 2) {
+      errors.push("يجب إدخال سطرين على الأقل بحسابات صحيحة");
+    }
+
+    // Check that accounts are postable
+    for (const line of validLines) {
+      const account = postableAccounts.find(a => a.id === line.account_id);
+      if (!account) {
+        const fullAccount = accounts.find(a => a.id === line.account_id);
+        if (fullAccount) {
+          errors.push(`الحساب "${fullAccount.name}" غير قابل للقيد عليه`);
+        }
+      }
+    }
+
+    // Check that line doesn't have both debit and credit
+    for (const line of lines) {
+      if (line.debit_amount > 0 && line.credit_amount > 0) {
+        errors.push("لا يمكن أن يكون السطر مدين ودائن في نفس الوقت");
+        break;
+      }
+    }
+
+    setValidationErrors(errors);
+    return errors.length === 0;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) {
@@ -101,41 +221,31 @@ export default function JournalEntries() {
       return;
     }
 
-    const totalDebit = lines.reduce((sum, l) => sum + (l.debit_amount || 0), 0);
-    const totalCredit = lines.reduce((sum, l) => sum + (l.credit_amount || 0), 0);
-
-    if (totalDebit !== totalCredit) {
-      toast.error("مجموع المدين يجب أن يساوي مجموع الدائن");
-      return;
-    }
-
-    if (totalDebit === 0) {
-      toast.error("يجب إدخال مبالغ في القيد");
+    if (!validateEntry()) {
       return;
     }
 
     const validLines = lines.filter((l) => l.account_id && (l.debit_amount > 0 || l.credit_amount > 0));
-    if (validLines.length < 2) {
-      toast.error("يجب إدخال سطرين على الأقل");
-      return;
-    }
 
     if (editingEntry) {
       const { error } = await supabase
         .from("journal_entries")
         .update({
-          entry_number: formData.entry_number,
+          entry_number: formData.entry_number.trim(),
           entry_date: formData.entry_date,
-          description: formData.description || null,
-          reference: formData.reference || null,
+          description: formData.description.trim() || null,
+          reference: formData.reference.trim() || null,
         })
         .eq("id", editingEntry.id);
 
       if (error) {
-        toast.error("خطأ في تحديث القيد");
+        if (error.code === "23505") {
+          toast.error("رقم القيد موجود مسبقاً");
+        } else {
+          toast.error("خطأ في تحديث القيد");
+        }
         console.error(error);
       } else {
-        // Delete old lines and insert new ones
         await supabase.from("journal_entry_lines").delete().eq("journal_entry_id", editingEntry.id);
         await supabase.from("journal_entry_lines").insert(
           validLines.map((l) => ({
@@ -143,7 +253,7 @@ export default function JournalEntries() {
             account_id: l.account_id,
             debit_amount: l.debit_amount || 0,
             credit_amount: l.credit_amount || 0,
-            description: l.description || null,
+            description: l.description.trim() || null,
           }))
         );
         toast.success("تم تحديث القيد بنجاح");
@@ -154,17 +264,21 @@ export default function JournalEntries() {
       const { data: newEntry, error } = await supabase
         .from("journal_entries")
         .insert({
-          entry_number: formData.entry_number,
+          entry_number: formData.entry_number.trim(),
           entry_date: formData.entry_date,
-          description: formData.description || null,
-          reference: formData.reference || null,
+          description: formData.description.trim() || null,
+          reference: formData.reference.trim() || null,
           created_by: user.id,
         })
         .select()
         .single();
 
       if (error) {
-        toast.error("خطأ في إضافة القيد");
+        if (error.code === "23505") {
+          toast.error("رقم القيد موجود مسبقاً");
+        } else {
+          toast.error("خطأ في إضافة القيد");
+        }
         console.error(error);
       } else {
         await supabase.from("journal_entry_lines").insert(
@@ -173,7 +287,7 @@ export default function JournalEntries() {
             account_id: l.account_id,
             debit_amount: l.debit_amount || 0,
             credit_amount: l.credit_amount || 0,
-            description: l.description || null,
+            description: l.description.trim() || null,
           }))
         );
         toast.success("تم إضافة القيد بنجاح");
@@ -184,6 +298,12 @@ export default function JournalEntries() {
   };
 
   const handleDelete = async (id: string) => {
+    const entry = entries.find(e => e.id === id);
+    if (entry?.is_posted) {
+      toast.error("لا يمكن حذف قيد مرحّل");
+      return;
+    }
+
     if (!confirm("هل أنت متأكد من حذف هذا القيد؟")) return;
 
     await supabase.from("journal_entry_lines").delete().eq("journal_entry_id", id);
@@ -196,6 +316,38 @@ export default function JournalEntries() {
       toast.success("تم حذف القيد بنجاح");
       fetchEntries();
     }
+  };
+
+  const handleEdit = async (entry: JournalEntry) => {
+    if (entry.is_posted) {
+      toast.error("لا يمكن تعديل قيد مرحّل");
+      return;
+    }
+
+    setEditingEntry(entry);
+    setFormData({
+      entry_number: entry.entry_number,
+      entry_date: entry.entry_date,
+      description: entry.description || "",
+      reference: entry.reference || "",
+    });
+    
+    const { data: entryLines } = await supabase
+      .from("journal_entry_lines")
+      .select("*")
+      .eq("journal_entry_id", entry.id);
+    
+    if (entryLines && entryLines.length > 0) {
+      setLines(entryLines.map(l => ({
+        account_id: l.account_id,
+        debit_amount: l.debit_amount || 0,
+        credit_amount: l.credit_amount || 0,
+        description: l.description || "",
+      })));
+    }
+    
+    setValidationErrors([]);
+    setIsDialogOpen(true);
   };
 
   const handleView = async (entry: JournalEntry) => {
@@ -216,6 +368,7 @@ export default function JournalEntries() {
       { account_id: "", debit_amount: 0, credit_amount: 0, description: "" },
     ]);
     setEditingEntry(null);
+    setValidationErrors([]);
     setIsDialogOpen(false);
   };
 
@@ -226,13 +379,27 @@ export default function JournalEntries() {
   const updateLine = (index: number, field: string, value: any) => {
     const newLines = [...lines];
     newLines[index] = { ...newLines[index], [field]: value };
+    
+    // If setting debit, clear credit and vice versa
+    if (field === "debit_amount" && value > 0) {
+      newLines[index].credit_amount = 0;
+    } else if (field === "credit_amount" && value > 0) {
+      newLines[index].debit_amount = 0;
+    }
+    
     setLines(newLines);
+    setValidationErrors([]);
   };
 
   const removeLine = (index: number) => {
     if (lines.length > 2) {
       setLines(lines.filter((_, i) => i !== index));
     }
+  };
+
+  const getAccountName = (accountId: string) => {
+    const account = accounts.find(a => a.id === accountId);
+    return account ? `${account.code} - ${account.name}` : "-";
   };
 
   const totalDebit = lines.reduce((sum, l) => sum + (l.debit_amount || 0), 0);
@@ -263,43 +430,69 @@ export default function JournalEntries() {
               إضافة قيد جديد
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{editingEntry ? "تعديل القيد" : "إضافة قيد جديد"}</DialogTitle>
             </DialogHeader>
+            
+            {validationErrors.length > 0 && (
+              <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3">
+                <div className="flex items-center gap-2 text-destructive mb-2">
+                  <AlertCircle className="h-4 w-4" />
+                  <span className="font-medium">أخطاء التحقق:</span>
+                </div>
+                <ul className="list-disc list-inside text-sm text-destructive">
+                  {validationErrors.map((error, index) => (
+                    <li key={index}>{error}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>رقم القيد</Label>
+                  <Label>رقم القيد <span className="text-destructive">*</span></Label>
                   <Input
                     value={formData.entry_number}
-                    onChange={(e) => setFormData({ ...formData, entry_number: e.target.value })}
+                    onChange={(e) => {
+                      setFormData({ ...formData, entry_number: e.target.value });
+                      setValidationErrors([]);
+                    }}
                     required
+                    maxLength={50}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>تاريخ القيد</Label>
+                  <Label>تاريخ القيد <span className="text-destructive">*</span></Label>
                   <Input
                     type="date"
                     value={formData.entry_date}
-                    onChange={(e) => setFormData({ ...formData, entry_date: e.target.value })}
+                    onChange={(e) => {
+                      setFormData({ ...formData, entry_date: e.target.value });
+                      setValidationErrors([]);
+                    }}
                     required
                   />
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label>البيان</Label>
-                <Input
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>المرجع</Label>
-                <Input
-                  value={formData.reference}
-                  onChange={(e) => setFormData({ ...formData, reference: e.target.value })}
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>البيان</Label>
+                  <Input
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    maxLength={255}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>المرجع</Label>
+                  <Input
+                    value={formData.reference}
+                    onChange={(e) => setFormData({ ...formData, reference: e.target.value })}
+                    maxLength={100}
+                  />
+                </div>
               </div>
 
               <div className="space-y-2">
@@ -314,11 +507,11 @@ export default function JournalEntries() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>الحساب</TableHead>
+                        <TableHead className="w-[40%]">الحساب</TableHead>
                         <TableHead>مدين</TableHead>
                         <TableHead>دائن</TableHead>
                         <TableHead>البيان</TableHead>
-                        <TableHead></TableHead>
+                        <TableHead className="w-12"></TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -326,14 +519,15 @@ export default function JournalEntries() {
                         <TableRow key={index}>
                           <TableCell>
                             <Select
-                              value={line.account_id}
-                              onValueChange={(value) => updateLine(index, "account_id", value)}
+                              value={line.account_id || "none"}
+                              onValueChange={(value) => updateLine(index, "account_id", value === "none" ? "" : value)}
                             >
-                              <SelectTrigger className="w-40">
+                              <SelectTrigger>
                                 <SelectValue placeholder="اختر حساب" />
                               </SelectTrigger>
                               <SelectContent>
-                                {accounts.map((acc) => (
+                                <SelectItem value="none">اختر حساب</SelectItem>
+                                {postableAccounts.map((acc) => (
                                   <SelectItem key={acc.id} value={acc.id}>
                                     {acc.code} - {acc.name}
                                   </SelectItem>
@@ -344,17 +538,21 @@ export default function JournalEntries() {
                           <TableCell>
                             <Input
                               type="number"
+                              min="0"
+                              step="0.01"
                               value={line.debit_amount || ""}
                               onChange={(e) => updateLine(index, "debit_amount", parseFloat(e.target.value) || 0)}
-                              className="w-24"
+                              className="w-28"
                             />
                           </TableCell>
                           <TableCell>
                             <Input
                               type="number"
+                              min="0"
+                              step="0.01"
                               value={line.credit_amount || ""}
                               onChange={(e) => updateLine(index, "credit_amount", parseFloat(e.target.value) || 0)}
-                              className="w-24"
+                              className="w-28"
                             />
                           </TableCell>
                           <TableCell>
@@ -362,6 +560,7 @@ export default function JournalEntries() {
                               value={line.description}
                               onChange={(e) => updateLine(index, "description", e.target.value)}
                               className="w-32"
+                              maxLength={100}
                             />
                           </TableCell>
                           <TableCell>
@@ -383,7 +582,12 @@ export default function JournalEntries() {
                         <TableCell className="font-bold">{totalCredit.toLocaleString()}</TableCell>
                         <TableCell colSpan={2}>
                           {totalDebit !== totalCredit && (
-                            <span className="text-destructive text-sm">الفرق: {Math.abs(totalDebit - totalCredit).toLocaleString()}</span>
+                            <span className="text-destructive text-sm">
+                              الفرق: {Math.abs(totalDebit - totalCredit).toLocaleString()}
+                            </span>
+                          )}
+                          {totalDebit === totalCredit && totalDebit > 0 && (
+                            <span className="text-green-600 text-sm">✓ متوازن</span>
                           )}
                         </TableCell>
                       </TableRow>
@@ -393,7 +597,7 @@ export default function JournalEntries() {
               </div>
 
               <div className="flex gap-2">
-                <Button type="submit" className="flex-1" disabled={totalDebit !== totalCredit}>
+                <Button type="submit" className="flex-1">
                   {editingEntry ? "تحديث" : "إضافة"}
                 </Button>
                 <Button type="button" variant="outline" onClick={resetForm}>
@@ -460,17 +664,24 @@ export default function JournalEntries() {
                     <TableCell>{entry.description || "-"}</TableCell>
                     <TableCell>
                       <Badge variant={entry.is_posted ? "default" : "secondary"}>
-                        {entry.is_posted ? "مرحل" : "غير مرحل"}
+                        {entry.is_posted ? "مرحّل" : "مسودة"}
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <div className="flex gap-1">
+                      <div className="flex items-center gap-1">
                         <Button variant="ghost" size="icon" onClick={() => handleView(entry)}>
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(entry.id)}>
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
+                        {!entry.is_posted && (
+                          <>
+                            <Button variant="ghost" size="icon" onClick={() => handleEdit(entry)}>
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => handleDelete(entry.id)}>
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -481,46 +692,60 @@ export default function JournalEntries() {
         </CardContent>
       </Card>
 
-      {/* View Entry Dialog */}
+      {/* View Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="sm:max-w-xl">
+        <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>تفاصيل القيد</DialogTitle>
           </DialogHeader>
           {viewingEntry && (
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <span className="text-muted-foreground">رقم القيد:</span> {viewingEntry.entry_number}
+                  <Label className="text-muted-foreground">رقم القيد</Label>
+                  <p className="font-medium">{viewingEntry.entry_number}</p>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">التاريخ:</span> {format(new Date(viewingEntry.entry_date), "yyyy/MM/dd")}
+                  <Label className="text-muted-foreground">التاريخ</Label>
+                  <p className="font-medium">{format(new Date(viewingEntry.entry_date), "yyyy/MM/dd", { locale: ar })}</p>
                 </div>
-                <div className="col-span-2">
-                  <span className="text-muted-foreground">البيان:</span> {viewingEntry.description || "-"}
+                <div>
+                  <Label className="text-muted-foreground">البيان</Label>
+                  <p className="font-medium">{viewingEntry.description || "-"}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">المرجع</Label>
+                  <p className="font-medium">{viewingEntry.reference || "-"}</p>
                 </div>
               </div>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>الحساب</TableHead>
-                    <TableHead>مدين</TableHead>
-                    <TableHead>دائن</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {entryLines.map((line) => {
-                    const account = accounts.find((a) => a.id === line.account_id);
-                    return (
+              <div className="border rounded-lg overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>الحساب</TableHead>
+                      <TableHead>مدين</TableHead>
+                      <TableHead>دائن</TableHead>
+                      <TableHead>البيان</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {entryLines.map((line) => (
                       <TableRow key={line.id}>
-                        <TableCell>{account ? `${account.code} - ${account.name}` : "-"}</TableCell>
-                        <TableCell>{line.debit_amount > 0 ? line.debit_amount.toLocaleString() : "-"}</TableCell>
-                        <TableCell>{line.credit_amount > 0 ? line.credit_amount.toLocaleString() : "-"}</TableCell>
+                        <TableCell>{getAccountName(line.account_id)}</TableCell>
+                        <TableCell>{line.debit_amount ? line.debit_amount.toLocaleString() : "-"}</TableCell>
+                        <TableCell>{line.credit_amount ? line.credit_amount.toLocaleString() : "-"}</TableCell>
+                        <TableCell>{line.description || "-"}</TableCell>
                       </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
+                    ))}
+                    <TableRow className="bg-muted/50 font-bold">
+                      <TableCell>الإجمالي</TableCell>
+                      <TableCell>{entryLines.reduce((sum, l) => sum + (l.debit_amount || 0), 0).toLocaleString()}</TableCell>
+                      <TableCell>{entryLines.reduce((sum, l) => sum + (l.credit_amount || 0), 0).toLocaleString()}</TableCell>
+                      <TableCell></TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </div>
             </div>
           )}
         </DialogContent>

@@ -16,42 +16,57 @@ export type Database = {
     Tables: {
       accounts: {
         Row: {
+          account_group: string | null
           account_type: Database["public"]["Enums"]["account_type"]
           allow_manual_entry: boolean | null
           code: string
           created_at: string
           currency_id: string | null
+          default_tax_id: string | null
           id: string
+          internal_type: string | null
           is_active: boolean | null
           level: number
           name: string
+          opening_balance: number | null
           parent_id: string | null
+          reconcile: boolean | null
           updated_at: string
         }
         Insert: {
+          account_group?: string | null
           account_type: Database["public"]["Enums"]["account_type"]
           allow_manual_entry?: boolean | null
           code: string
           created_at?: string
           currency_id?: string | null
+          default_tax_id?: string | null
           id?: string
+          internal_type?: string | null
           is_active?: boolean | null
           level?: number
           name: string
+          opening_balance?: number | null
           parent_id?: string | null
+          reconcile?: boolean | null
           updated_at?: string
         }
         Update: {
+          account_group?: string | null
           account_type?: Database["public"]["Enums"]["account_type"]
           allow_manual_entry?: boolean | null
           code?: string
           created_at?: string
           currency_id?: string | null
+          default_tax_id?: string | null
           id?: string
+          internal_type?: string | null
           is_active?: boolean | null
           level?: number
           name?: string
+          opening_balance?: number | null
           parent_id?: string | null
+          reconcile?: boolean | null
           updated_at?: string
         }
         Relationships: [
@@ -576,6 +591,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      fiscal_periods: {
+        Row: {
+          code: string
+          created_at: string
+          end_date: string
+          id: string
+          is_closed: boolean | null
+          name: string
+          start_date: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          end_date: string
+          id?: string
+          is_closed?: boolean | null
+          name: string
+          start_date: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          end_date?: string
+          id?: string
+          is_closed?: boolean | null
+          name?: string
+          start_date?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       fixed_assets: {
         Row: {
@@ -1535,6 +1583,8 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_date_in_open_period: { Args: { check_date: string }; Returns: boolean }
+      is_postable_account: { Args: { account_id: string }; Returns: boolean }
     }
     Enums: {
       account_type: "asset" | "liability" | "equity" | "revenue" | "expense"
