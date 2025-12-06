@@ -240,15 +240,15 @@ export default function Accounts() {
               <div className="space-y-2">
                 <Label>الحساب الرئيسي (اختياري)</Label>
                 <Select
-                  value={formData.parent_id}
-                  onValueChange={(value) => setFormData({ ...formData, parent_id: value })}
+                  value={formData.parent_id || "none"}
+                  onValueChange={(value) => setFormData({ ...formData, parent_id: value === "none" ? "" : value })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="اختر الحساب الرئيسي" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">بدون حساب رئيسي</SelectItem>
-                    {parentAccounts.map((acc) => (
+                    <SelectItem value="none">بدون حساب رئيسي</SelectItem>
+                    {accounts.filter(acc => !editingAccount || acc.id !== editingAccount.id).map((acc) => (
                       <SelectItem key={acc.id} value={acc.id}>
                         {acc.code} - {acc.name}
                       </SelectItem>
