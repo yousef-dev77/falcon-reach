@@ -62,7 +62,6 @@ export default function JournalEntries() {
   const [viewingEntry, setViewingEntry] = useState<JournalEntry | null>(null);
   const [entryLines, setEntryLines] = useState<JournalEntryLine[]>([]);
   const [formData, setFormData] = useState({
-    entry_number: "",
     entry_date: new Date().toISOString().split("T")[0],
     description: "",
     reference: "",
@@ -138,16 +137,26 @@ export default function JournalEntries() {
     if (!error) setEntryLines(data || []);
   };
 
+  const generateEntryNumber = (): string => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const prefix = `JE-${year}${month}-`;
+    
+    // Find existing entries with same prefix
+    const existingNumbers = entries
+      .filter(e => e.entry_number.startsWith(prefix))
+      .map(e => {
+        const num = parseInt(e.entry_number.replace(prefix, ''));
+        return isNaN(num) ? 0 : num;
+      });
+    
+    const maxNumber = existingNumbers.length > 0 ? Math.max(...existingNumbers) : 0;
+    return `${prefix}${String(maxNumber + 1).padStart(4, '0')}`;
+  };
+
   const validateEntry = (): boolean => {
     const errors: string[] = [];
-
-    // Check entry number uniqueness
-    if (!editingEntry) {
-      const exists = entries.some(e => e.entry_number === formData.entry_number);
-      if (exists) {
-        errors.push("رقم القيد موجود مسبقاً");
-      }
-    }
 
     // Check fiscal period
     if (fiscalPeriods.length > 0) {
@@ -231,7 +240,6 @@ export default function JournalEntries() {
       const { error } = await supabase
         .from("journal_entries")
         .update({
-          entry_number: formData.entry_number.trim(),
           entry_date: formData.entry_date,
           description: formData.description.trim() || null,
           reference: formData.reference.trim() || null,
@@ -261,10 +269,11 @@ export default function JournalEntries() {
         resetForm();
       }
     } else {
+      const newEntryNumber = generateEntryNumber();
       const { data: newEntry, error } = await supabase
         .from("journal_entries")
         .insert({
-          entry_number: formData.entry_number.trim(),
+          entry_number: newEntryNumber,
           entry_date: formData.entry_date,
           description: formData.description.trim() || null,
           reference: formData.reference.trim() || null,
@@ -326,7 +335,6 @@ export default function JournalEntries() {
 
     setEditingEntry(entry);
     setFormData({
-      entry_number: entry.entry_number,
       entry_date: entry.entry_date,
       description: entry.description || "",
       reference: entry.reference || "",
@@ -358,7 +366,6 @@ export default function JournalEntries() {
 
   const resetForm = () => {
     setFormData({
-      entry_number: "",
       entry_date: new Date().toISOString().split("T")[0],
       description: "",
       reference: "",
@@ -450,19 +457,19 @@ export default function JournalEntries() {
             )}
             
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>رقم القيد <span className="text-destructive">*</span></Label>
-                  <Input
-                    value={formData.entry_number}
-                    onChange={(e) => {
-                      setFormData({ ...formData, entry_number: e.target.value });
-                      setValidationErrors([]);
-                    }}
-                    required
-                    maxLength={50}
-                  />
+              {editingEntry && (
+                <div className="bg-muted/50 p-3 rounded-lg">
+                  <span className="text-sm text-muted-foreground">رقم القيد: </span>
+                  <span className="font-medium">{editingEntry.entry_number}</span>
                 </div>
+              )}
+              {!editingEntry && (
+                <div className="bg-primary/10 p-3 rounded-lg">
+                  <span className="text-sm text-muted-foreground">رقم القيد: </span>
+                  <span className="font-medium text-primary">سيتم توليده تلقائياً</span>
+                </div>
+              )}
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>تاريخ القيد <span className="text-destructive">*</span></Label>
                   <Input
@@ -475,16 +482,6 @@ export default function JournalEntries() {
                     required
                   />
                 </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>البيان</Label>
-                  <Input
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    maxLength={255}
-                  />
-                </div>
                 <div className="space-y-2">
                   <Label>المرجع</Label>
                   <Input
@@ -493,6 +490,15 @@ export default function JournalEntries() {
                     maxLength={100}
                   />
                 </div>
+              </div>
+              <div className="space-y-2">
+                <Label>البيان</Label>
+                <Input
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  maxLength={255}
+                  placeholder="وصف القيد المحاسبي"
+                />
               </div>
 
               <div className="space-y-2">

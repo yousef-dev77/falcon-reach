@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -575,6 +576,9 @@ function AccountTreeNode({
                     {account.name}
                   </span>
                   <span className="text-sm text-muted-foreground">({account.code})</span>
+                  <Badge variant="secondary" className="text-xs">
+                    المستوى {account.level}
+                  </Badge>
                   {isPostable && (
                     <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">
                       قابل للقيد
