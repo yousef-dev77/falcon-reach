@@ -19,6 +19,7 @@ import FinancialReports from "./pages/finance/FinancialReports";
 import CashBank from "./pages/finance/CashBank";
 import ExpensesRevenue from "./pages/finance/ExpensesRevenue";
 import FixedAssets from "./pages/finance/FixedAssets";
+import FiscalPeriods from "./pages/finance/FiscalPeriods";
 
 // Inventory Pages
 import Warehouses from "./pages/inventory/Warehouses";
@@ -68,6 +69,7 @@ const App = () => (
             <Route path="/finance/cash-bank" element={<ProtectedRoute><DashboardLayout><CashBank /></DashboardLayout></ProtectedRoute>} />
             <Route path="/finance/expenses-revenue" element={<ProtectedRoute><DashboardLayout><ExpensesRevenue /></DashboardLayout></ProtectedRoute>} />
             <Route path="/finance/fixed-assets" element={<ProtectedRoute><DashboardLayout><FixedAssets /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/finance/fiscal-periods" element={<ProtectedRoute><DashboardLayout><FiscalPeriods /></DashboardLayout></ProtectedRoute>} />
             
             {/* Inventory Routes */}
             <Route path="/inventory/warehouses" element={<ProtectedRoute><DashboardLayout><Warehouses /></DashboardLayout></ProtectedRoute>} />
