@@ -22,6 +22,7 @@ type JournalEntry = {
   reference: string | null;
   is_posted: boolean;
   created_at: string;
+  cost_center_id: string | null;
 };
 
 type JournalEntryLine = {
@@ -49,12 +50,20 @@ type FiscalPeriod = {
   is_closed: boolean;
 };
 
+type CostCenter = {
+  id: string;
+  code: string;
+  name: string;
+  is_active: boolean;
+};
+
 export default function JournalEntries() {
   const { user } = useAuth();
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [postableAccounts, setPostableAccounts] = useState<Account[]>([]);
   const [fiscalPeriods, setFiscalPeriods] = useState<FiscalPeriod[]>([]);
+  const [costCenters, setCostCenters] = useState<CostCenter[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
@@ -65,6 +74,7 @@ export default function JournalEntries() {
     entry_date: new Date().toISOString().split("T")[0],
     description: "",
     reference: "",
+    cost_center_id: "",
   });
   const [lines, setLines] = useState<{ account_id: string; debit_amount: number; credit_amount: number; description: string }[]>([
     { account_id: "", debit_amount: 0, credit_amount: 0, description: "" },
@@ -76,6 +86,7 @@ export default function JournalEntries() {
     fetchEntries();
     fetchAccounts();
     fetchFiscalPeriods();
+    fetchCostCenters();
   }, []);
 
   const fetchEntries = async () => {
@@ -127,6 +138,15 @@ export default function JournalEntries() {
       .select("*")
       .order("start_date", { ascending: false });
     if (data) setFiscalPeriods(data);
+  };
+
+  const fetchCostCenters = async () => {
+    const { data } = await supabase
+      .from("cost_centers")
+      .select("id, code, name, is_active")
+      .eq("is_active", true)
+      .order("code");
+    if (data) setCostCenters(data);
   };
 
   const fetchEntryLines = async (entryId: string) => {
@@ -243,6 +263,7 @@ export default function JournalEntries() {
           entry_date: formData.entry_date,
           description: formData.description.trim() || null,
           reference: formData.reference.trim() || null,
+          cost_center_id: formData.cost_center_id || null,
         })
         .eq("id", editingEntry.id);
 
@@ -277,6 +298,7 @@ export default function JournalEntries() {
           entry_date: formData.entry_date,
           description: formData.description.trim() || null,
           reference: formData.reference.trim() || null,
+          cost_center_id: formData.cost_center_id || null,
           created_by: user.id,
         })
         .select()
@@ -338,6 +360,7 @@ export default function JournalEntries() {
       entry_date: entry.entry_date,
       description: entry.description || "",
       reference: entry.reference || "",
+      cost_center_id: entry.cost_center_id || "",
     });
     
     const { data: entryLines } = await supabase
@@ -369,6 +392,7 @@ export default function JournalEntries() {
       entry_date: new Date().toISOString().split("T")[0],
       description: "",
       reference: "",
+      cost_center_id: "",
     });
     setLines([
       { account_id: "", debit_amount: 0, credit_amount: 0, description: "" },
@@ -491,14 +515,35 @@ export default function JournalEntries() {
                   />
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label>البيان</Label>
-                <Input
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  maxLength={255}
-                  placeholder="وصف القيد المحاسبي"
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>البيان</Label>
+                  <Input
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    maxLength={255}
+                    placeholder="وصف القيد المحاسبي"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>مركز التكلفة</Label>
+                  <Select
+                    value={formData.cost_center_id || "none"}
+                    onValueChange={(value) => setFormData({ ...formData, cost_center_id: value === "none" ? "" : value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="بدون مركز تكلفة" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">بدون مركز تكلفة</SelectItem>
+                      {costCenters.map((cc) => (
+                        <SelectItem key={cc.id} value={cc.id}>
+                          {cc.code} - {cc.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               <div className="space-y-2">
