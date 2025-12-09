@@ -27,6 +27,7 @@ import {
   ChevronDown,
   Home,
   Calendar,
+  Target,
 } from "lucide-react";
 import {
   Sidebar,
@@ -64,6 +65,7 @@ const navigationItems = [
       { title: "القيود اليومية", url: "/finance/journal-entries", icon: FileText },
       { title: "الأستاذ العام", url: "/finance/general-ledger", icon: Receipt },
       { title: "الفترات المحاسبية", url: "/finance/fiscal-periods", icon: Calendar },
+      { title: "مراكز التكلفة", url: "/finance/cost-centers", icon: Target },
       { title: "التقارير المالية", url: "/finance/reports", icon: BarChart3 },
       { title: "الصناديق والبنوك", url: "/finance/cash-bank", icon: Building2 },
       { title: "المصاريف والإيرادات", url: "/finance/expenses-revenue", icon: TrendingUp },
