@@ -1,5 +1,6 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
+import { ConnectionStatusBanner, ConnectionStatusIndicator } from "./ConnectionStatusBanner";
 import { Bell, User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,6 +22,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   
   return (
     <SidebarProvider>
+      <ConnectionStatusBanner />
       <div className="flex min-h-screen w-full">
         <AppSidebar />
         <div className="flex flex-1 flex-col">
@@ -28,6 +30,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-card px-6">
             <SidebarTrigger />
             <div className="flex-1" />
+            <ConnectionStatusIndicator />
             <Button variant="ghost" size="icon" className="relative">
               <Bell className="h-5 w-5" />
               <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-accent" />
