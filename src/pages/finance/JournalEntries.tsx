@@ -91,62 +91,82 @@ export default function JournalEntries() {
 
   const fetchEntries = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("journal_entries")
-      .select("*")
-      .order("entry_date", { ascending: false });
+    try {
+      const { data, error } = await supabase
+        .from("journal_entries")
+        .select("*")
+        .order("entry_date", { ascending: false });
 
-    if (error) {
-      toast.error("خطأ في جلب القيود");
-      console.error(error);
-    } else {
-      setEntries(data || []);
+      if (error) {
+        if (error.code === '42P01') {
+          setEntries([]);
+        } else {
+          toast.error("خطأ في جلب القيود");
+          console.error(error);
+        }
+      } else {
+        setEntries(data || []);
+      }
+    } catch (e) {
+      console.error("Connection error:", e);
     }
     setLoading(false);
   };
 
   const fetchAccounts = async () => {
-    const { data, error } = await supabase
-      .from("accounts")
-      .select("id, code, name, allow_manual_entry, is_active")
-      .eq("is_active", true)
-      .order("code");
-    
-    if (!error && data) {
-      setAccounts(data);
-      
-      // Get accounts that have children (parent accounts)
-      const { data: allAccounts } = await supabase
+    try {
+      const { data, error } = await supabase
         .from("accounts")
-        .select("id, parent_id");
+        .select("id, code, name, allow_manual_entry, is_active")
+        .eq("is_active", true)
+        .order("code");
       
-      const parentIds = new Set(allAccounts?.filter(a => a.parent_id).map(a => a.parent_id) || []);
-      
-      // Postable accounts: allow_manual_entry = true AND no children
-      const postable = data.filter(acc => 
-        acc.allow_manual_entry && 
-        acc.is_active && 
-        !parentIds.has(acc.id)
-      );
-      setPostableAccounts(postable);
+      if (!error && data) {
+        setAccounts(data);
+        
+        // Get accounts that have children (parent accounts)
+        const { data: allAccounts } = await supabase
+          .from("accounts")
+          .select("id, parent_id");
+        
+        const parentIds = new Set(allAccounts?.filter(a => a.parent_id).map(a => a.parent_id) || []);
+        
+        // Postable accounts: allow_manual_entry = true AND no children
+        const postable = data.filter(acc => 
+          acc.allow_manual_entry && 
+          acc.is_active && 
+          !parentIds.has(acc.id)
+        );
+        setPostableAccounts(postable);
+      }
+    } catch (e) {
+      console.error("Connection error:", e);
     }
   };
 
   const fetchFiscalPeriods = async () => {
-    const { data } = await supabase
-      .from("fiscal_periods")
-      .select("*")
-      .order("start_date", { ascending: false });
-    if (data) setFiscalPeriods(data);
+    try {
+      const { data, error } = await supabase
+        .from("fiscal_periods")
+        .select("*")
+        .order("start_date", { ascending: false });
+      if (!error && data) setFiscalPeriods(data);
+    } catch (e) {
+      console.error("Connection error:", e);
+    }
   };
 
   const fetchCostCenters = async () => {
-    const { data } = await supabase
-      .from("cost_centers")
-      .select("id, code, name, is_active")
-      .eq("is_active", true)
-      .order("code");
-    if (data) setCostCenters(data);
+    try {
+      const { data, error } = await supabase
+        .from("cost_centers")
+        .select("id, code, name, is_active")
+        .eq("is_active", true)
+        .order("code");
+      if (!error && data) setCostCenters(data);
+    } catch (e) {
+      console.error("Connection error:", e);
+    }
   };
 
   const fetchEntryLines = async (entryId: string) => {

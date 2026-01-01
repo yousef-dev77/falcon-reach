@@ -95,23 +95,37 @@ export default function Accounts() {
 
   const fetchAccounts = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("accounts")
-      .select("*")
-      .order("code");
+    try {
+      const { data, error } = await supabase
+        .from("accounts")
+        .select("*")
+        .order("code");
 
-    if (error) {
-      toast.error("خطأ في جلب الحسابات");
-      console.error(error);
-    } else {
-      setAccounts((data || []) as Account[]);
+      if (error) {
+        if (error.code === '42P01') {
+          // Table doesn't exist yet
+          setAccounts([]);
+        } else {
+          toast.error("خطأ في جلب الحسابات");
+          console.error(error);
+        }
+      } else {
+        setAccounts((data || []) as Account[]);
+      }
+    } catch (e) {
+      console.error("Connection error:", e);
     }
     setLoading(false);
   };
 
   const fetchCurrencies = async () => {
-    const { data } = await supabase.from("currencies").select("id, code, name").eq("is_active", true);
-    if (data) setCurrencies(data);
+    try {
+      const { data, error } = await supabase.from("currencies").select("id, code, name").eq("is_active", true);
+      if (!error && data) setCurrencies(data);
+    } catch (e) {
+      // Table may not exist yet
+      console.log("Currencies table not available");
+    }
   };
 
   const buildTree = (accounts: Account[]): Account[] => {
