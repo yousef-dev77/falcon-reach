@@ -1,10 +1,10 @@
-import { useConnectionStatus } from "@/hooks/useConnectionStatus";
-import { AlertCircle, RefreshCw, Wifi, WifiOff } from "lucide-react";
+import { useConnection } from "@/contexts/ConnectionContext";
+import { RefreshCw, Wifi, WifiOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export function ConnectionStatusBanner() {
-  const { status, retry } = useConnectionStatus();
+  const { status, retry } = useConnection();
 
   if (status === "connected") {
     return null;
@@ -43,7 +43,7 @@ export function ConnectionStatusBanner() {
 }
 
 export function ConnectionStatusIndicator() {
-  const { status, retry } = useConnectionStatus();
+  const { status, retry } = useConnection();
 
   return (
     <div className="flex items-center gap-2">
