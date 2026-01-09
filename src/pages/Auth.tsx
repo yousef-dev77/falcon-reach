@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Mail, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 
 export default function Auth() {
@@ -13,11 +15,40 @@ export default function Auth() {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const [needsEmailConfirm, setNeedsEmailConfirm] = useState(false);
+  const [confirmEmail, setConfirmEmail] = useState("");
+  const [systemError, setSystemError] = useState<string | null>(null);
+
   const navigate = useNavigate();
+
+  const normalizeEmail = (value: string) => value.trim().toLowerCase();
+
+  const handleResendConfirmation = async () => {
+    const e = normalizeEmail(confirmEmail || email);
+    if (!e) {
+      toast.error("يرجى إدخال البريد الإلكتروني أولاً");
+      return;
+    }
+
+    try {
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email: e,
+      });
+      if (error) throw error;
+      toast.success("تم إرسال رسالة التفعيل مرة أخرى. تحقق من بريدك.");
+    } catch (err: any) {
+      toast.error(err?.message || "تعذر إرسال رسالة التفعيل");
+    }
+  };
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
+    setSystemError(null);
+    setNeedsEmailConfirm(false);
+
     if (!email || !password || !fullName) {
       toast.error("الرجاء ملء جميع الحقول");
       return;
@@ -31,9 +62,10 @@ export default function Auth() {
     setLoading(true);
     try {
       const redirectUrl = `${window.location.origin}/`;
-      
-      const { error } = await supabase.auth.signUp({
-        email,
+      const normalizedEmail = normalizeEmail(email);
+
+      const { data, error } = await supabase.auth.signUp({
+        email: normalizedEmail,
         password,
         options: {
           emailRedirectTo: redirectUrl,
@@ -45,10 +77,23 @@ export default function Auth() {
 
       if (error) throw error;
 
-      toast.success("تم إنشاء الحساب بنجاح! جاري تسجيل الدخول...");
+      // If email confirmation is required, session will be null
+      if (!data?.session) {
+        setNeedsEmailConfirm(true);
+        setConfirmEmail(normalizedEmail);
+        toast.success("تم إنشاء الحساب. يرجى تفعيل البريد الإلكتروني ثم تسجيل الدخول.");
+        return;
+      }
+
+      toast.success("تم إنشاء الحساب وتسجيل الدخول بنجاح!");
       navigate("/");
     } catch (error: any) {
-      if (error.message.includes("already registered")) {
+      const msg = String(error?.message || "");
+
+      if (msg.toLowerCase().includes("paused") || msg.toLowerCase().includes("failed to fetch")) {
+        setSystemError("الخدمة الخلفية متوقفة مؤقتاً (Paused). شغّلها ثم أعد المحاولة.");
+        toast.error("تعذر الاتصال بالخدمة الخلفية");
+      } else if (msg.includes("already registered")) {
         toast.error("البريد الإلكتروني مسجل مسبقاً");
       } else {
         toast.error(error.message || "حدث خطأ أثناء إنشاء الحساب");
@@ -60,7 +105,10 @@ export default function Auth() {
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
+    setSystemError(null);
+    setNeedsEmailConfirm(false);
+
     if (!email || !password) {
       toast.error("الرجاء ملء جميع الحقول");
       return;
@@ -68,8 +116,10 @@ export default function Auth() {
 
     setLoading(true);
     try {
+      const normalizedEmail = normalizeEmail(email);
+
       const { error } = await supabase.auth.signInWithPassword({
-        email,
+        email: normalizedEmail,
         password,
       });
 
@@ -78,7 +128,16 @@ export default function Auth() {
       toast.success("تم تسجيل الدخول بنجاح!");
       navigate("/");
     } catch (error: any) {
-      if (error.message.includes("Invalid login credentials")) {
+      const msg = String(error?.message || "");
+
+      if (msg.toLowerCase().includes("email not confirmed")) {
+        setNeedsEmailConfirm(true);
+        setConfirmEmail(normalizeEmail(email));
+        toast.error("البريد الإلكتروني غير مُفعّل. فعّل حسابك ثم أعد المحاولة.");
+      } else if (msg.toLowerCase().includes("paused") || msg.toLowerCase().includes("failed to fetch")) {
+        setSystemError("الخدمة الخلفية متوقفة مؤقتاً (Paused). شغّلها ثم أعد المحاولة.");
+        toast.error("تعذر الاتصال بالخدمة الخلفية");
+      } else if (msg.includes("Invalid login credentials")) {
         toast.error("البريد الإلكتروني أو كلمة المرور غير صحيحة");
       } else {
         toast.error(error.message || "حدث خطأ أثناء تسجيل الدخول");
@@ -96,6 +155,39 @@ export default function Auth() {
           <CardDescription>قم بتسجيل الدخول أو إنشاء حساب جديد</CardDescription>
         </CardHeader>
         <CardContent>
+          {systemError && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>تعذر تسجيل الدخول</AlertTitle>
+              <AlertDescription>{systemError}</AlertDescription>
+            </Alert>
+          )}
+
+          {needsEmailConfirm && (
+            <Alert className="mb-4">
+              <Mail className="h-4 w-4" />
+              <AlertTitle>تفعيل البريد الإلكتروني مطلوب</AlertTitle>
+              <AlertDescription>
+                <div className="space-y-3">
+                  <p>تم إنشاء الحساب لكن يلزم تفعيل البريد قبل الدخول.</p>
+                  <div className="space-y-2">
+                    <Label htmlFor="confirm-email">البريد الإلكتروني</Label>
+                    <Input
+                      id="confirm-email"
+                      type="email"
+                      value={confirmEmail}
+                      onChange={(e) => setConfirmEmail(e.target.value)}
+                      disabled={loading}
+                    />
+                  </div>
+                  <Button type="button" variant="secondary" onClick={handleResendConfirmation} disabled={loading}>
+                    إعادة إرسال رسالة التفعيل
+                  </Button>
+                </div>
+              </AlertDescription>
+            </Alert>
+          )}
+
           <Tabs defaultValue="signin" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="signin">تسجيل الدخول</TabsTrigger>
