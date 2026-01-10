@@ -26,6 +26,7 @@ export type Database = {
           id: string
           internal_type: string | null
           is_active: boolean | null
+          is_frozen: boolean | null
           level: number
           name: string
           opening_balance: number | null
@@ -44,6 +45,7 @@ export type Database = {
           id?: string
           internal_type?: string | null
           is_active?: boolean | null
+          is_frozen?: boolean | null
           level?: number
           name: string
           opening_balance?: number | null
@@ -62,6 +64,7 @@ export type Database = {
           id?: string
           internal_type?: string | null
           is_active?: boolean | null
+          is_frozen?: boolean | null
           level?: number
           name?: string
           opening_balance?: number | null
@@ -185,6 +188,167 @@ export type Database = {
             columns: ["currency_id"]
             isOneToOne: false
             referencedRelation: "currencies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bank_reconciliations: {
+        Row: {
+          adjustment_journal_id: string | null
+          bank_account_id: string
+          book_balance: number
+          created_at: string
+          created_by: string
+          difference: number
+          id: string
+          notes: string | null
+          reconciliation_date: string
+          statement_balance: number
+          status: string | null
+        }
+        Insert: {
+          adjustment_journal_id?: string | null
+          bank_account_id: string
+          book_balance?: number
+          created_at?: string
+          created_by: string
+          difference?: number
+          id?: string
+          notes?: string | null
+          reconciliation_date: string
+          statement_balance?: number
+          status?: string | null
+        }
+        Update: {
+          adjustment_journal_id?: string | null
+          bank_account_id?: string
+          book_balance?: number
+          created_at?: string
+          created_by?: string
+          difference?: number
+          id?: string
+          notes?: string | null
+          reconciliation_date?: string
+          statement_balance?: number
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_reconciliations_adjustment_journal_id_fkey"
+            columns: ["adjustment_journal_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_reconciliations_bank_account_id_fkey"
+            columns: ["bank_account_id"]
+            isOneToOne: false
+            referencedRelation: "bank_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bank_statement_lines: {
+        Row: {
+          created_at: string
+          credit_amount: number | null
+          debit_amount: number | null
+          description: string | null
+          id: string
+          is_matched: boolean | null
+          match_difference: number | null
+          matched_entry_id: string | null
+          reference: string | null
+          statement_id: string
+          transaction_date: string
+        }
+        Insert: {
+          created_at?: string
+          credit_amount?: number | null
+          debit_amount?: number | null
+          description?: string | null
+          id?: string
+          is_matched?: boolean | null
+          match_difference?: number | null
+          matched_entry_id?: string | null
+          reference?: string | null
+          statement_id: string
+          transaction_date: string
+        }
+        Update: {
+          created_at?: string
+          credit_amount?: number | null
+          debit_amount?: number | null
+          description?: string | null
+          id?: string
+          is_matched?: boolean | null
+          match_difference?: number | null
+          matched_entry_id?: string | null
+          reference?: string | null
+          statement_id?: string
+          transaction_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_statement_lines_matched_entry_id_fkey"
+            columns: ["matched_entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entry_lines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_statement_lines_statement_id_fkey"
+            columns: ["statement_id"]
+            isOneToOne: false
+            referencedRelation: "bank_statements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bank_statements: {
+        Row: {
+          bank_account_id: string
+          closing_balance: number
+          created_at: string
+          created_by: string
+          id: string
+          opening_balance: number
+          statement_date: string
+          statement_number: string | null
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          bank_account_id: string
+          closing_balance?: number
+          created_at?: string
+          created_by: string
+          id?: string
+          opening_balance?: number
+          statement_date: string
+          statement_number?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          bank_account_id?: string
+          closing_balance?: number
+          created_at?: string
+          created_by?: string
+          id?: string
+          opening_balance?: number
+          statement_date?: string
+          statement_number?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_statements_bank_account_id_fkey"
+            columns: ["bank_account_id"]
+            isOneToOne: false
+            referencedRelation: "bank_accounts"
             referencedColumns: ["id"]
           },
         ]
@@ -533,6 +697,50 @@ export type Database = {
           },
         ]
       }
+      exchange_rates: {
+        Row: {
+          buy_rate: number
+          created_at: string
+          created_by: string
+          currency_id: string
+          id: string
+          is_locked: boolean | null
+          rate_date: string
+          sell_rate: number
+          updated_at: string
+        }
+        Insert: {
+          buy_rate?: number
+          created_at?: string
+          created_by: string
+          currency_id: string
+          id?: string
+          is_locked?: boolean | null
+          rate_date: string
+          sell_rate?: number
+          updated_at?: string
+        }
+        Update: {
+          buy_rate?: number
+          created_at?: string
+          created_by?: string
+          currency_id?: string
+          id?: string
+          is_locked?: boolean | null
+          rate_date?: string
+          sell_rate?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exchange_rates_currency_id_fkey"
+            columns: ["currency_id"]
+            isOneToOne: false
+            referencedRelation: "currencies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       expenses_revenues: {
         Row: {
           account_id: string | null
@@ -696,6 +904,83 @@ export type Database = {
           },
         ]
       }
+      fx_adjustments: {
+        Row: {
+          adjusted_amount: number
+          adjustment_date: string
+          adjustment_type: string
+          created_at: string
+          created_by: string
+          currency_id: string
+          difference_amount: number
+          gain_account_id: string | null
+          id: string
+          journal_entry_id: string | null
+          loss_account_id: string | null
+          notes: string | null
+          original_amount: number
+        }
+        Insert: {
+          adjusted_amount?: number
+          adjustment_date: string
+          adjustment_type: string
+          created_at?: string
+          created_by: string
+          currency_id: string
+          difference_amount?: number
+          gain_account_id?: string | null
+          id?: string
+          journal_entry_id?: string | null
+          loss_account_id?: string | null
+          notes?: string | null
+          original_amount?: number
+        }
+        Update: {
+          adjusted_amount?: number
+          adjustment_date?: string
+          adjustment_type?: string
+          created_at?: string
+          created_by?: string
+          currency_id?: string
+          difference_amount?: number
+          gain_account_id?: string | null
+          id?: string
+          journal_entry_id?: string | null
+          loss_account_id?: string | null
+          notes?: string | null
+          original_amount?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fx_adjustments_currency_id_fkey"
+            columns: ["currency_id"]
+            isOneToOne: false
+            referencedRelation: "currencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fx_adjustments_gain_account_id_fkey"
+            columns: ["gain_account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fx_adjustments_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fx_adjustments_loss_account_id_fkey"
+            columns: ["loss_account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inventory_movements: {
         Row: {
           created_at: string
@@ -764,8 +1049,12 @@ export type Database = {
           description: string | null
           entry_date: string
           entry_number: string
+          exchange_rate: number | null
           id: string
           is_posted: boolean | null
+          journal_type_id: string | null
+          original_amount: number | null
+          original_currency_id: string | null
           reference: string | null
           updated_at: string
         }
@@ -779,8 +1068,12 @@ export type Database = {
           description?: string | null
           entry_date: string
           entry_number: string
+          exchange_rate?: number | null
           id?: string
           is_posted?: boolean | null
+          journal_type_id?: string | null
+          original_amount?: number | null
+          original_currency_id?: string | null
           reference?: string | null
           updated_at?: string
         }
@@ -794,8 +1087,12 @@ export type Database = {
           description?: string | null
           entry_date?: string
           entry_number?: string
+          exchange_rate?: number | null
           id?: string
           is_posted?: boolean | null
+          journal_type_id?: string | null
+          original_amount?: number | null
+          original_currency_id?: string | null
           reference?: string | null
           updated_at?: string
         }
@@ -817,6 +1114,20 @@ export type Database = {
           {
             foreignKeyName: "journal_entries_currency_id_fkey"
             columns: ["currency_id"]
+            isOneToOne: false
+            referencedRelation: "currencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_entries_journal_type_id_fkey"
+            columns: ["journal_type_id"]
+            isOneToOne: false
+            referencedRelation: "journal_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_entries_original_currency_id_fkey"
+            columns: ["original_currency_id"]
             isOneToOne: false
             referencedRelation: "currencies"
             referencedColumns: ["id"]
@@ -864,6 +1175,57 @@ export type Database = {
             columns: ["journal_entry_id"]
             isOneToOne: false
             referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      journal_types: {
+        Row: {
+          code: string
+          created_at: string
+          default_credit_account_id: string | null
+          default_debit_account_id: string | null
+          id: string
+          is_active: boolean | null
+          is_auto_generated: boolean | null
+          name: string
+          type_category: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          default_credit_account_id?: string | null
+          default_debit_account_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_auto_generated?: boolean | null
+          name: string
+          type_category: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          default_credit_account_id?: string | null
+          default_debit_account_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_auto_generated?: boolean | null
+          name?: string
+          type_category?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journal_types_default_credit_account_id_fkey"
+            columns: ["default_credit_account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_types_default_debit_account_id_fkey"
+            columns: ["default_debit_account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
             referencedColumns: ["id"]
           },
         ]
@@ -1567,6 +1929,90 @@ export type Database = {
             columns: ["manager_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      year_end_closings: {
+        Row: {
+          closed_by: string | null
+          closing_date: string
+          closing_journal_id: string | null
+          created_at: string
+          fiscal_period_id: string
+          id: string
+          net_income: number | null
+          next_period_id: string | null
+          opening_journal_id: string | null
+          retained_earnings_account_id: string | null
+          status: string | null
+          total_expenses: number | null
+          total_revenue: number | null
+        }
+        Insert: {
+          closed_by?: string | null
+          closing_date: string
+          closing_journal_id?: string | null
+          created_at?: string
+          fiscal_period_id: string
+          id?: string
+          net_income?: number | null
+          next_period_id?: string | null
+          opening_journal_id?: string | null
+          retained_earnings_account_id?: string | null
+          status?: string | null
+          total_expenses?: number | null
+          total_revenue?: number | null
+        }
+        Update: {
+          closed_by?: string | null
+          closing_date?: string
+          closing_journal_id?: string | null
+          created_at?: string
+          fiscal_period_id?: string
+          id?: string
+          net_income?: number | null
+          next_period_id?: string | null
+          opening_journal_id?: string | null
+          retained_earnings_account_id?: string | null
+          status?: string | null
+          total_expenses?: number | null
+          total_revenue?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "year_end_closings_closing_journal_id_fkey"
+            columns: ["closing_journal_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "year_end_closings_fiscal_period_id_fkey"
+            columns: ["fiscal_period_id"]
+            isOneToOne: false
+            referencedRelation: "fiscal_periods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "year_end_closings_next_period_id_fkey"
+            columns: ["next_period_id"]
+            isOneToOne: false
+            referencedRelation: "fiscal_periods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "year_end_closings_opening_journal_id_fkey"
+            columns: ["opening_journal_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "year_end_closings_retained_earnings_account_id_fkey"
+            columns: ["retained_earnings_account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
             referencedColumns: ["id"]
           },
         ]
