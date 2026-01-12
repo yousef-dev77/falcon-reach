@@ -22,6 +22,13 @@ import ExpensesRevenue from "./pages/finance/ExpensesRevenue";
 import FixedAssets from "./pages/finance/FixedAssets";
 import FiscalPeriods from "./pages/finance/FiscalPeriods";
 import CostCenters from "./pages/finance/CostCenters";
+import Currencies from "./pages/finance/Currencies";
+import ExchangeRates from "./pages/finance/ExchangeRates";
+import BankReconciliation from "./pages/finance/BankReconciliation";
+import SubLedger from "./pages/finance/SubLedger";
+import JournalTypes from "./pages/finance/JournalTypes";
+import YearEndClosing from "./pages/finance/YearEndClosing";
+import FxAdjustment from "./pages/finance/FxAdjustment";
 
 // Inventory Pages
 import Warehouses from "./pages/inventory/Warehouses";
@@ -74,6 +81,13 @@ const App = () => (
             <Route path="/finance/fixed-assets" element={<ProtectedRoute><DashboardLayout><FixedAssets /></DashboardLayout></ProtectedRoute>} />
             <Route path="/finance/fiscal-periods" element={<ProtectedRoute><DashboardLayout><FiscalPeriods /></DashboardLayout></ProtectedRoute>} />
             <Route path="/finance/cost-centers" element={<ProtectedRoute><DashboardLayout><CostCenters /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/finance/currencies" element={<ProtectedRoute><DashboardLayout><Currencies /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/finance/exchange-rates" element={<ProtectedRoute><DashboardLayout><ExchangeRates /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/finance/bank-reconciliation" element={<ProtectedRoute><DashboardLayout><BankReconciliation /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/finance/sub-ledger" element={<ProtectedRoute><DashboardLayout><SubLedger /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/finance/journal-types" element={<ProtectedRoute><DashboardLayout><JournalTypes /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/finance/year-end-closing" element={<ProtectedRoute><DashboardLayout><YearEndClosing /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/finance/fx-adjustment" element={<ProtectedRoute><DashboardLayout><FxAdjustment /></DashboardLayout></ProtectedRoute>} />
             
             {/* Inventory Routes */}
             <Route path="/inventory/warehouses" element={<ProtectedRoute><DashboardLayout><Warehouses /></DashboardLayout></ProtectedRoute>} />

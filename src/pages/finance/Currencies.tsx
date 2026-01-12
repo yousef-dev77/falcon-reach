@@ -64,7 +64,14 @@ export default function Currencies() {
   });
 
   const saveMutation = useMutation({
-    mutationFn: async (data: Partial<Currency>) => {
+    mutationFn: async (data: {
+      code: string;
+      name: string;
+      symbol: string;
+      exchange_rate: number;
+      is_base: boolean;
+      is_active: boolean;
+    }) => {
       // إذا كانت العملة الأساسية، نحتاج لإزالة الأساسية من العملات الأخرى
       if (data.is_base) {
         await supabase
@@ -80,7 +87,7 @@ export default function Currencies() {
           .eq("id", editingCurrency.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("currencies").insert(data);
+        const { error } = await supabase.from("currencies").insert([data]);
         if (error) throw error;
       }
     },
