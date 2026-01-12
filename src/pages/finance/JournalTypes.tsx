@@ -100,7 +100,15 @@ export default function JournalTypes() {
   });
 
   const saveMutation = useMutation({
-    mutationFn: async (data: Partial<JournalType>) => {
+    mutationFn: async (data: {
+      code: string;
+      name: string;
+      type_category: string;
+      is_auto_generated: boolean;
+      is_active: boolean;
+      default_debit_account_id: string | null;
+      default_credit_account_id: string | null;
+    }) => {
       if (editingType) {
         const { error } = await supabase
           .from("journal_types")
@@ -108,7 +116,7 @@ export default function JournalTypes() {
           .eq("id", editingType.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("journal_types").insert(data);
+        const { error } = await supabase.from("journal_types").insert([data]);
         if (error) throw error;
       }
     },

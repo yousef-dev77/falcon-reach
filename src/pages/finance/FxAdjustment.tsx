@@ -37,7 +37,7 @@ import { Plus, RefreshCw, TrendingUp, TrendingDown, ArrowUpDown } from "lucide-r
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 
-interface CurrencyBase {
+interface CurrencyForFx {
   id: string;
   code: string;
   name: string;
@@ -93,7 +93,7 @@ export default function FxAdjustment() {
         .eq("is_base", false)
         .order("code");
       if (error) throw error;
-      return data as Currency[];
+      return data as CurrencyForFx[];
     },
   });
 

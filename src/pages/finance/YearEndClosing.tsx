@@ -54,7 +54,7 @@ interface FiscalPeriod {
   is_closed: boolean;
 }
 
-interface YearEndClosing {
+interface YearEndClosingData {
   id: string;
   fiscal_period_id: string;
   closing_date: string;
@@ -62,7 +62,12 @@ interface YearEndClosing {
   total_expenses: number;
   net_income: number;
   status: string;
-  fiscal_period?: FiscalPeriod;
+  fiscal_period?: {
+    code: string;
+    name: string;
+    start_date: string;
+    end_date: string;
+  };
 }
 
 interface Account {
@@ -110,7 +115,7 @@ export default function YearEndClosing() {
         `)
         .order("closing_date", { ascending: false });
       if (error) throw error;
-      return data as YearEndClosing[];
+      return data as YearEndClosingData[];
     },
   });
 

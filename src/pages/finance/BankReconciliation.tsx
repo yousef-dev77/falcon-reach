@@ -53,7 +53,15 @@ interface BankStatement {
   };
 }
 
-interface BankReconciliation {
+interface BankAccount {
+  id: string;
+  code: string;
+  bank_name: string;
+  account_number: string;
+  current_balance: number;
+}
+
+interface BankReconciliationData {
   id: string;
   bank_account_id: string;
   reconciliation_date: string;
@@ -131,7 +139,7 @@ export default function BankReconciliation() {
         `)
         .order("reconciliation_date", { ascending: false });
       if (error) throw error;
-      return data as BankReconciliation[];
+      return data as BankReconciliationData[];
     },
   });
 
