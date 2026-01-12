@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { DashboardLayout } from "@/components/DashboardLayout";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -194,8 +194,7 @@ export default function SubLedger() {
   ) || { debit: 0, credit: 0 };
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold text-foreground">دفتر الأستاذ المساعد</h1>
           <p className="text-muted-foreground mt-1">
@@ -347,7 +346,6 @@ export default function SubLedger() {
             )}
           </div>
         </Tabs>
-      </div>
-    </DashboardLayout>
+    </div>
   );
 }
