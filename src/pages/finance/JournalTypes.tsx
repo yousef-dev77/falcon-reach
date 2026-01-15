@@ -261,16 +261,16 @@ export default function JournalTypes() {
                 <div className="space-y-2">
                   <Label>الحساب المدين الافتراضي (اختياري)</Label>
                   <Select
-                    value={formData.default_debit_account_id}
+                    value={formData.default_debit_account_id || "none"}
                     onValueChange={(value) =>
-                      setFormData({ ...formData, default_debit_account_id: value })
+                      setFormData({ ...formData, default_debit_account_id: value === "none" ? "" : value })
                     }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="اختر حساب..." />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">بدون</SelectItem>
+                      <SelectItem value="none">بدون</SelectItem>
                       {accounts?.map((account) => (
                         <SelectItem key={account.id} value={account.id}>
                           {account.code} - {account.name}
@@ -283,16 +283,16 @@ export default function JournalTypes() {
                 <div className="space-y-2">
                   <Label>الحساب الدائن الافتراضي (اختياري)</Label>
                   <Select
-                    value={formData.default_credit_account_id}
+                    value={formData.default_credit_account_id || "none"}
                     onValueChange={(value) =>
-                      setFormData({ ...formData, default_credit_account_id: value })
+                      setFormData({ ...formData, default_credit_account_id: value === "none" ? "" : value })
                     }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="اختر حساب..." />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">بدون</SelectItem>
+                      <SelectItem value="none">بدون</SelectItem>
                       {accounts?.map((account) => (
                         <SelectItem key={account.id} value={account.id}>
                           {account.code} - {account.name}
