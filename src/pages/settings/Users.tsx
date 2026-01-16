@@ -1,51 +1,245 @@
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Plus, Edit, Shield, Building2, UserCheck, Users, Crown, Package } from "lucide-react";
+import { UserFormDialog } from "@/components/settings/UserFormDialog";
+import { Skeleton } from "@/components/ui/skeleton";
 
-export default function Users() {
+const roleLabels: Record<string, { label: string; color: string; icon: any }> = {
+  admin: { label: "مدير النظام", color: "bg-primary text-primary-foreground", icon: Crown },
+  accountant: { label: "محاسب", color: "bg-blue-500 text-white", icon: UserCheck },
+  sales_manager: { label: "مدير مبيعات", color: "bg-green-500 text-white", icon: Users },
+  inventory_manager: { label: "مدير مخزون", color: "bg-orange-500 text-white", icon: Package },
+  user: { label: "مستخدم", color: "bg-muted text-muted-foreground", icon: Users },
+};
+
+export default function UsersPage() {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+
+  const { data: users = [], isLoading } = useQuery({
+    queryKey: ['all-users'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select(`
+          *,
+          user_roles(
+            id,
+            role,
+            branch_id,
+            is_global
+          ),
+          user_branch_assignments(
+            id,
+            branch_id,
+            is_primary,
+            branch:branches(id, name, code)
+          )
+        `)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const roleCounts = users.reduce((acc: Record<string, number>, user: any) => {
+    const role = user.user_roles?.[0]?.role || 'user';
+    acc[role] = (acc[role] || 0) + 1;
+    return acc;
+  }, {});
+
+  const handleEditUser = (user: any) => {
+    setSelectedUser(user);
+    setIsDialogOpen(true);
+  };
+
+  const handleAddUser = () => {
+    setSelectedUser(null);
+    setIsDialogOpen(true);
+  };
+
+  const getUserInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(n => n[0])
+      .slice(0, 2)
+      .join('')
+      .toUpperCase();
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">المستخدمين والصلاحيات</h1>
-          <p className="text-muted-foreground">إدارة المستخدمين وصلاحيات الوصول</p>
+          <p className="text-muted-foreground">إدارة المستخدمين وصلاحيات الوصول للفروع</p>
         </div>
-        <Button className="bg-primary hover:bg-primary/90">
-          <Plus className="mr-2 h-4 w-4" />
+        <Button onClick={handleAddUser} className="bg-primary hover:bg-primary/90">
+          <Plus className="ml-2 h-4 w-4" />
           إضافة مستخدم
         </Button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-4 mb-6">
-        {[
-          { role: "مدير", count: 2, color: "text-primary" },
-          { role: "محاسب", count: 5, color: "text-secondary" },
-          { role: "أمين مخزون", count: 8, color: "text-accent" },
-          { role: "بائع", count: 12, color: "text-green-600" },
-        ].map((item) => (
-          <Card key={item.role}>
-            <CardHeader className="pb-3">
-              <CardTitle className={`text-sm font-medium ${item.color}`}>{item.role}</CardTitle>
+      {/* Role Statistics */}
+      <div className="grid gap-4 md:grid-cols-5">
+        {Object.entries(roleLabels).map(([role, { label, icon: Icon }]) => (
+          <Card key={role}>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">{label}</CardTitle>
+              <Icon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{item.count}</div>
-              <p className="text-xs text-muted-foreground">مستخدم نشط</p>
+              <div className="text-2xl font-bold">{roleCounts[role] || 0}</div>
+              <p className="text-xs text-muted-foreground">مستخدم</p>
             </CardContent>
           </Card>
         ))}
       </div>
 
+      {/* Users Table */}
       <Card>
         <CardHeader>
-          <CardTitle>قائمة المستخدمين</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            قائمة المستخدمين
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-12 text-muted-foreground">
-            <p className="mb-2">لا يوجد مستخدمين مسجلين</p>
-            <p className="text-sm">يمكنك إنشاء مستخدمين وتحديد صلاحيات الوصول لكل شاشة والأدوار الوظيفية</p>
-          </div>
+          {isLoading ? (
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex items-center space-x-4 space-x-reverse">
+                  <Skeleton className="h-12 w-12 rounded-full" />
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-48" />
+                    <Skeleton className="h-4 w-32" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : users.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p className="mb-2">لا يوجد مستخدمين مسجلين</p>
+              <p className="text-sm">يمكنك إنشاء مستخدمين وتحديد صلاحيات الوصول لكل شاشة والأدوار الوظيفية</p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>المستخدم</TableHead>
+                  <TableHead>البريد الإلكتروني</TableHead>
+                  <TableHead>الدور</TableHead>
+                  <TableHead>الفروع</TableHead>
+                  <TableHead>النطاق</TableHead>
+                  <TableHead className="text-left">إجراءات</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {users.map((user: any) => {
+                  const userRole = user.user_roles?.[0]?.role || 'user';
+                  const roleInfo = roleLabels[userRole] || roleLabels.user;
+                  const isGlobal = user.user_roles?.[0]?.is_global;
+                  const branches = user.user_branch_assignments || [];
+
+                  return (
+                    <TableRow key={user.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <Avatar>
+                            <AvatarImage src={user.avatar_url} />
+                            <AvatarFallback>{getUserInitials(user.full_name)}</AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <div className="font-medium">{user.full_name}</div>
+                            {user.phone && (
+                              <div className="text-sm text-muted-foreground">{user.phone}</div>
+                            )}
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {user.email}
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={roleInfo.color}>
+                          {roleInfo.label}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {isGlobal ? (
+                          <Badge variant="outline" className="gap-1">
+                            <Shield className="h-3 w-3" />
+                            جميع الفروع
+                          </Badge>
+                        ) : branches.length > 0 ? (
+                          <div className="flex flex-wrap gap-1">
+                            {branches.slice(0, 2).map((assignment: any) => (
+                              <Badge 
+                                key={assignment.id} 
+                                variant={assignment.is_primary ? "default" : "secondary"}
+                                className="gap-1"
+                              >
+                                <Building2 className="h-3 w-3" />
+                                {assignment.branch?.name}
+                              </Badge>
+                            ))}
+                            {branches.length > 2 && (
+                              <Badge variant="outline">+{branches.length - 2}</Badge>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">غير محدد</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {isGlobal ? (
+                          <Badge variant="default" className="bg-primary">
+                            مركزي
+                          </Badge>
+                        ) : (
+                          <Badge variant="secondary">
+                            فرعي
+                          </Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEditUser(user)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
+
+      <UserFormDialog 
+        open={isDialogOpen} 
+        onOpenChange={setIsDialogOpen}
+        user={selectedUser}
+      />
     </div>
   );
 }
