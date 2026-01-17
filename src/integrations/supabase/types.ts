@@ -697,6 +697,50 @@ export type Database = {
           },
         ]
       }
+      document_sequences: {
+        Row: {
+          branch_id: string
+          created_at: string
+          current_number: number
+          document_type: string
+          format_pattern: string
+          id: string
+          number_padding: number
+          prefix: string
+          updated_at: string
+        }
+        Insert: {
+          branch_id: string
+          created_at?: string
+          current_number?: number
+          document_type: string
+          format_pattern?: string
+          id?: string
+          number_padding?: number
+          prefix: string
+          updated_at?: string
+        }
+        Update: {
+          branch_id?: string
+          created_at?: string
+          current_number?: number
+          document_type?: string
+          format_pattern?: string
+          id?: string
+          number_padding?: number
+          prefix?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_sequences_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       exchange_rates: {
         Row: {
           buy_rate: number
@@ -2199,6 +2243,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_next_document_number: {
+        Args: { _branch_id: string; _document_type: string }
+        Returns: string
+      }
+      get_user_branches: {
+        Args: { _user_id: string }
+        Returns: {
+          branch_code: string
+          branch_id: string
+          branch_name: string
+          is_primary: boolean
+        }[]
+      }
       has_branch_access: {
         Args: { _branch_id: string; _user_id: string }
         Returns: boolean
