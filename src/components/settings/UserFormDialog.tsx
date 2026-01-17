@@ -90,59 +90,66 @@ export function UserFormDialog({ open, onOpenChange, user }: UserFormDialogProps
 
   const createUserMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
-      // Create user via Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: data.email,
-        password: data.password,
-        options: {
-          data: {
-            full_name: data.full_name,
-          },
-        },
-      });
-
-      if (authError) throw authError;
-      if (!authData.user) throw new Error("Failed to create user");
-
-      const userId = authData.user.id;
-
-      // Update user role
-      const { error: roleError } = await supabase
-        .from('user_roles')
-        .update({
-          role: data.role as any,
-          is_global: data.is_global,
-        })
-        .eq('user_id', userId);
-
-      if (roleError) throw roleError;
-
-      // Assign branches
-      if (data.selectedBranches.length > 0) {
-        const branchAssignments = data.selectedBranches.map((branchId: string) => ({
-          user_id: userId,
-          branch_id: branchId,
-          is_primary: branchId === data.primaryBranchId,
-        }));
-
-        const { error: branchError } = await supabase
-          .from('user_branch_assignments')
-          .insert(branchAssignments);
-
-        if (branchError) throw branchError;
+      // Get current session token
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        throw new Error("يجب تسجيل الدخول أولاً");
       }
 
-      return authData;
+      // Call edge function to create user (won't log out current user)
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-user`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({
+            email: data.email,
+            password: data.password,
+            full_name: data.full_name,
+            phone: data.phone,
+            role: data.role,
+            is_global: data.is_global,
+            selectedBranches: data.selectedBranches,
+            primaryBranchId: data.primaryBranchId,
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "فشل في إنشاء المستخدم");
+      }
+
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['all-users'] });
       toast.success("تم إنشاء المستخدم بنجاح");
       onOpenChange(false);
+      resetForm();
     },
     onError: (error: any) => {
       toast.error(error.message || "فشل في إنشاء المستخدم");
     },
   });
+
+  const resetForm = () => {
+    setFormData({
+      full_name: "",
+      email: "",
+      phone: "",
+      password: "",
+      role: "user",
+      is_global: false,
+      selectedBranches: [],
+      primaryBranchId: "",
+    });
+  };
 
   const updateUserMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
