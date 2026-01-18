@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -24,7 +24,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { X } from "lucide-react";
+import { X, AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface UserFormDialogProps {
   open: boolean;
@@ -48,20 +49,29 @@ const moduleLabels: Record<string, string> = {
   settings: "الإعدادات",
 };
 
+const getInitialFormData = (user?: any) => ({
+  full_name: user?.full_name || "",
+  email: user?.email || "",
+  phone: user?.phone || "",
+  password: "",
+  role: user?.user_roles?.[0]?.role || "user",
+  is_global: user?.user_roles?.[0]?.is_global || false,
+  selectedBranches: user?.user_branch_assignments?.map((b: any) => b.branch_id) || [],
+  primaryBranchId: user?.user_branch_assignments?.find((b: any) => b.is_primary)?.branch_id || "",
+});
+
 export function UserFormDialog({ open, onOpenChange, user }: UserFormDialogProps) {
   const queryClient = useQueryClient();
   const isEditing = !!user;
 
-  const [formData, setFormData] = useState({
-    full_name: user?.full_name || "",
-    email: user?.email || "",
-    phone: user?.phone || "",
-    password: "",
-    role: user?.user_roles?.[0]?.role || "user",
-    is_global: user?.user_roles?.[0]?.is_global || false,
-    selectedBranches: user?.user_branch_assignments?.map((b: any) => b.branch_id) || [],
-    primaryBranchId: user?.user_branch_assignments?.find((b: any) => b.is_primary)?.branch_id || "",
-  });
+  const [formData, setFormData] = useState(getInitialFormData(user));
+
+  // Reset form when dialog opens or user changes
+  useEffect(() => {
+    if (open) {
+      setFormData(getInitialFormData(user));
+    }
+  }, [open, user]);
 
   const { data: branches = [] } = useQuery({
     queryKey: ['branches'],
@@ -311,6 +321,15 @@ export function UserFormDialog({ open, onOpenChange, user }: UserFormDialogProps
 
             <TabsContent value="branches" className="space-y-4 mt-4">
               <div className="space-y-4">
+                {branches.length === 0 && (
+                  <Alert>
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      لا توجد فروع مسجلة. يرجى إنشاء فروع أولاً من صفحة إعدادات الفروع.
+                    </AlertDescription>
+                  </Alert>
+                )}
+
                 <div className="flex items-center space-x-2 space-x-reverse">
                   <Checkbox
                     id="is_global"
@@ -320,14 +339,14 @@ export function UserFormDialog({ open, onOpenChange, user }: UserFormDialogProps
                     }
                   />
                   <Label htmlFor="is_global">
-                    صلاحية عامة (الوصول لجميع الفروع)
+                    صلاحية عامة (الوصول لجميع الفروع) - للمدراء فقط
                   </Label>
                 </div>
 
-                {!formData.is_global && (
+                {!formData.is_global && branches.length > 0 && (
                   <>
                     <div>
-                      <Label className="mb-2 block">اختر الفروع المتاحة:</Label>
+                      <Label className="mb-2 block">اختر الفروع المتاحة للمستخدم:</Label>
                       <div className="flex flex-wrap gap-2 mb-4">
                         {formData.selectedBranches.map((branchId: string) => {
                           const branch = branches.find((b: any) => b.id === branchId);
@@ -347,7 +366,8 @@ export function UserFormDialog({ open, onOpenChange, user }: UserFormDialogProps
                           {branches.map((branch: any) => (
                             <div 
                               key={branch.id}
-                              className="flex items-center space-x-2 space-x-reverse p-2 hover:bg-muted rounded"
+                              className="flex items-center space-x-2 space-x-reverse p-2 hover:bg-muted rounded cursor-pointer"
+                              onClick={() => toggleBranch(branch.id)}
                             >
                               <Checkbox
                                 checked={formData.selectedBranches.includes(branch.id)}
@@ -363,7 +383,7 @@ export function UserFormDialog({ open, onOpenChange, user }: UserFormDialogProps
 
                     {formData.selectedBranches.length > 1 && (
                       <div className="space-y-2">
-                        <Label>الفرع الرئيسي:</Label>
+                        <Label>الفرع الرئيسي (سيتم تحديده تلقائياً عند تسجيل الدخول):</Label>
                         <Select
                           value={formData.primaryBranchId}
                           onValueChange={(value) => setFormData({ ...formData, primaryBranchId: value })}
@@ -383,6 +403,15 @@ export function UserFormDialog({ open, onOpenChange, user }: UserFormDialogProps
                           </SelectContent>
                         </Select>
                       </div>
+                    )}
+
+                    {formData.selectedBranches.length === 0 && (
+                      <Alert variant="destructive">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription>
+                          يجب اختيار فرع واحد على الأقل أو تفعيل "صلاحية عامة"
+                        </AlertDescription>
+                      </Alert>
                     )}
                   </>
                 )}
