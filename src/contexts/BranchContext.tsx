@@ -34,7 +34,8 @@ export function BranchProvider({ children }: { children: ReactNode }) {
   const fetchUserBranches = useCallback(async () => {
     if (!user) {
       setUserBranches([]);
-      setActiveBranch(null);
+      setActiveBranchState(null);
+      sessionStorage.removeItem(ACTIVE_BRANCH_KEY);
       setIsLoading(false);
       return;
     }
@@ -88,22 +89,29 @@ export function BranchProvider({ children }: { children: ReactNode }) {
 
       // استعادة الفرع النشط من التخزين المحلي
       const savedBranchId = sessionStorage.getItem(ACTIVE_BRANCH_KEY);
-      
+
+      const pickDefaultBranch = () => branches.find((b) => b?.is_primary) || branches.find(Boolean);
+
       if (savedBranchId) {
-        const savedBranch = branches.find(b => b.id === savedBranchId);
+        const savedBranch = branches.find((b) => b?.id === savedBranchId) || null;
         if (savedBranch) {
           setActiveBranchState(savedBranch);
         } else if (branches.length > 0) {
-          // الفرع المحفوظ غير متاح، استخدم الفرع الأساسي أو الأول
-          const primaryBranch = branches.find(b => b.is_primary) || branches[0];
-          setActiveBranchState(primaryBranch);
-          sessionStorage.setItem(ACTIVE_BRANCH_KEY, primaryBranch.id);
+          const defaultBranch = pickDefaultBranch();
+          if (defaultBranch) {
+            setActiveBranchState(defaultBranch);
+            sessionStorage.setItem(ACTIVE_BRANCH_KEY, defaultBranch.id);
+          } else {
+            setActiveBranchState(null);
+            sessionStorage.removeItem(ACTIVE_BRANCH_KEY);
+          }
         }
       } else if (branches.length > 0) {
-        // لا يوجد فرع محفوظ، استخدم الفرع الأساسي أو الأول
-        const primaryBranch = branches.find(b => b.is_primary) || branches[0];
-        setActiveBranchState(primaryBranch);
-        sessionStorage.setItem(ACTIVE_BRANCH_KEY, primaryBranch.id);
+        const defaultBranch = pickDefaultBranch();
+        if (defaultBranch) {
+          setActiveBranchState(defaultBranch);
+          sessionStorage.setItem(ACTIVE_BRANCH_KEY, defaultBranch.id);
+        }
       }
 
     } catch (error) {
