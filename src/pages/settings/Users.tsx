@@ -32,27 +32,43 @@ export default function UsersPage() {
   const { data: users = [], isLoading } = useQuery({
     queryKey: ['all-users'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // جلب كل البيانات بشكل منفصل ثم دمجها
+      const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select(`
-          *,
-          user_roles(
-            id,
-            role,
-            branch_id,
-            is_global
-          ),
-          user_branch_assignments(
-            id,
-            branch_id,
-            is_primary,
-            branch:branches(id, name, code)
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
       
-      if (error) throw error;
-      return data;
+      if (profilesError) throw profilesError;
+
+      const { data: roles, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('*');
+      
+      if (rolesError) throw rolesError;
+
+      const { data: branchAssignments, error: branchError } = await supabase
+        .from('user_branch_assignments')
+        .select('*');
+      
+      if (branchError) throw branchError;
+
+      const { data: branches, error: branchesError } = await supabase
+        .from('branches')
+        .select('id, name, code');
+      
+      if (branchesError) throw branchesError;
+
+      // دمج البيانات
+      return (profiles || []).map(profile => ({
+        ...profile,
+        user_roles: (roles || []).filter(r => r.user_id === profile.id),
+        user_branch_assignments: (branchAssignments || [])
+          .filter(ba => ba.user_id === profile.id)
+          .map(ba => ({
+            ...ba,
+            branch: branches?.find(b => b.id === ba.branch_id)
+          }))
+      }));
     },
   });
 
