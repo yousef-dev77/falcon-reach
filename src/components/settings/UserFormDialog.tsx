@@ -363,27 +363,28 @@ export function UserFormDialog({ open, onOpenChange, user }: UserFormDialogProps
                       </div>
                       <ScrollArea className="h-40 border rounded-md p-2">
                         <div className="space-y-2">
-                          {branches.map((branch: any) => (
-                            <div 
-                              key={branch.id}
-                              className="flex items-center space-x-2 space-x-reverse p-2 hover:bg-muted rounded cursor-pointer"
-                              onClick={() => toggleBranch(branch.id)}
-                              role="button"
-                              tabIndex={0}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter' || e.key === ' ') {
-                                  e.preventDefault();
-                                  toggleBranch(branch.id);
-                                }
-                              }}
-                            >
-                              <Checkbox
-                                checked={formData.selectedBranches.includes(branch.id)}
-                              />
-                              <span>{branch.name}</span>
-                              <span className="text-muted-foreground text-sm">({branch.code})</span>
-                            </div>
-                          ))}
+                          {branches.map((branch: any) => {
+                            const checkboxId = `branch-${branch.id}`;
+                            return (
+                              <div
+                                key={branch.id}
+                                className="flex items-center space-x-2 space-x-reverse p-2 hover:bg-muted rounded"
+                              >
+                                <Checkbox
+                                  id={checkboxId}
+                                  checked={formData.selectedBranches.includes(branch.id)}
+                                  onCheckedChange={() => toggleBranch(branch.id)}
+                                />
+                                <Label
+                                  htmlFor={checkboxId}
+                                  className="flex flex-1 items-center justify-between cursor-pointer"
+                                >
+                                  <span>{branch.name}</span>
+                                  <span className="text-muted-foreground text-sm">({branch.code})</span>
+                                </Label>
+                              </div>
+                            );
+                          })}
                         </div>
                       </ScrollArea>
                     </div>
