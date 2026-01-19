@@ -93,18 +93,32 @@ Deno.serve(async (req) => {
         .eq('id', newUserId)
     }
 
-    // Insert user role
+    // Update user role (trigger already creates a default 'user' role)
     const { error: roleError } = await supabaseAdmin
       .from('user_roles')
-      .insert({
-        user_id: newUserId,
+      .update({
         role: role || 'user',
         is_global: is_global || false
       })
+      .eq('user_id', newUserId)
 
     if (roleError) {
-      console.error('Error inserting role:', roleError)
+      console.error('Error updating role:', roleError)
+      // If update fails, try insert (in case trigger didn't fire)
+      const { error: insertRoleError } = await supabaseAdmin
+        .from('user_roles')
+        .insert({
+          user_id: newUserId,
+          role: role || 'user',
+          is_global: is_global || false
+        })
+      
+      if (insertRoleError) {
+        console.error('Error inserting role:', insertRoleError)
+      }
     }
+
+    console.log(`User ${newUserId} created with role: ${role}, is_global: ${is_global}`)
 
     // Insert branch assignments
     if (selectedBranches && selectedBranches.length > 0) {
