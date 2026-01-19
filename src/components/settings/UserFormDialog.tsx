@@ -368,10 +368,17 @@ export function UserFormDialog({ open, onOpenChange, user }: UserFormDialogProps
                               key={branch.id}
                               className="flex items-center space-x-2 space-x-reverse p-2 hover:bg-muted rounded cursor-pointer"
                               onClick={() => toggleBranch(branch.id)}
+                              role="button"
+                              tabIndex={0}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.preventDefault();
+                                  toggleBranch(branch.id);
+                                }
+                              }}
                             >
                               <Checkbox
                                 checked={formData.selectedBranches.includes(branch.id)}
-                                onCheckedChange={() => toggleBranch(branch.id)}
                               />
                               <span>{branch.name}</span>
                               <span className="text-muted-foreground text-sm">({branch.code})</span>
