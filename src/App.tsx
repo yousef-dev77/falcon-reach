@@ -8,6 +8,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { ConnectionProvider } from "./contexts/ConnectionContext";
 import { BranchProvider } from "./contexts/BranchContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { AdminRoute } from "./components/AdminRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -75,49 +76,49 @@ const App = () => (
               <Route path="/" element={<ProtectedRoute><DashboardLayout><Index /></DashboardLayout></ProtectedRoute>} />
               <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout><Dashboard /></DashboardLayout></ProtectedRoute>} />
               
-              {/* Finance Routes */}
-              <Route path="/finance/accounts" element={<ProtectedRoute><DashboardLayout><Accounts /></DashboardLayout></ProtectedRoute>} />
-              <Route path="/finance/journal-entries" element={<ProtectedRoute><DashboardLayout><JournalEntries /></DashboardLayout></ProtectedRoute>} />
-              <Route path="/finance/general-ledger" element={<ProtectedRoute><DashboardLayout><GeneralLedger /></DashboardLayout></ProtectedRoute>} />
-              <Route path="/finance/reports" element={<ProtectedRoute><DashboardLayout><FinancialReports /></DashboardLayout></ProtectedRoute>} />
-              <Route path="/finance/cash-bank" element={<ProtectedRoute><DashboardLayout><CashBank /></DashboardLayout></ProtectedRoute>} />
-              <Route path="/finance/expenses-revenue" element={<ProtectedRoute><DashboardLayout><ExpensesRevenue /></DashboardLayout></ProtectedRoute>} />
-              <Route path="/finance/fixed-assets" element={<ProtectedRoute><DashboardLayout><FixedAssets /></DashboardLayout></ProtectedRoute>} />
-              <Route path="/finance/fiscal-periods" element={<ProtectedRoute><DashboardLayout><FiscalPeriods /></DashboardLayout></ProtectedRoute>} />
-              <Route path="/finance/cost-centers" element={<ProtectedRoute><DashboardLayout><CostCenters /></DashboardLayout></ProtectedRoute>} />
-              <Route path="/finance/currencies" element={<ProtectedRoute><DashboardLayout><Currencies /></DashboardLayout></ProtectedRoute>} />
-              <Route path="/finance/exchange-rates" element={<ProtectedRoute><DashboardLayout><ExchangeRates /></DashboardLayout></ProtectedRoute>} />
-              <Route path="/finance/bank-reconciliation" element={<ProtectedRoute><DashboardLayout><BankReconciliation /></DashboardLayout></ProtectedRoute>} />
-              <Route path="/finance/sub-ledger" element={<ProtectedRoute><DashboardLayout><SubLedger /></DashboardLayout></ProtectedRoute>} />
-              <Route path="/finance/journal-types" element={<ProtectedRoute><DashboardLayout><JournalTypes /></DashboardLayout></ProtectedRoute>} />
-              <Route path="/finance/year-end-closing" element={<ProtectedRoute><DashboardLayout><YearEndClosing /></DashboardLayout></ProtectedRoute>} />
-              <Route path="/finance/fx-adjustment" element={<ProtectedRoute><DashboardLayout><FxAdjustment /></DashboardLayout></ProtectedRoute>} />
+              {/* Finance Routes - Admin + Accountant */}
+              <Route path="/finance/accounts" element={<AdminRoute allowedRoles={['admin', 'accountant']}><DashboardLayout><Accounts /></DashboardLayout></AdminRoute>} />
+              <Route path="/finance/journal-entries" element={<AdminRoute allowedRoles={['admin', 'accountant']}><DashboardLayout><JournalEntries /></DashboardLayout></AdminRoute>} />
+              <Route path="/finance/general-ledger" element={<AdminRoute allowedRoles={['admin', 'accountant']}><DashboardLayout><GeneralLedger /></DashboardLayout></AdminRoute>} />
+              <Route path="/finance/reports" element={<AdminRoute allowedRoles={['admin', 'accountant']}><DashboardLayout><FinancialReports /></DashboardLayout></AdminRoute>} />
+              <Route path="/finance/cash-bank" element={<AdminRoute allowedRoles={['admin', 'accountant']}><DashboardLayout><CashBank /></DashboardLayout></AdminRoute>} />
+              <Route path="/finance/expenses-revenue" element={<AdminRoute allowedRoles={['admin', 'accountant']}><DashboardLayout><ExpensesRevenue /></DashboardLayout></AdminRoute>} />
+              <Route path="/finance/fixed-assets" element={<AdminRoute allowedRoles={['admin', 'accountant']}><DashboardLayout><FixedAssets /></DashboardLayout></AdminRoute>} />
+              <Route path="/finance/fiscal-periods" element={<AdminRoute allowedRoles={['admin', 'accountant']}><DashboardLayout><FiscalPeriods /></DashboardLayout></AdminRoute>} />
+              <Route path="/finance/cost-centers" element={<AdminRoute allowedRoles={['admin', 'accountant']}><DashboardLayout><CostCenters /></DashboardLayout></AdminRoute>} />
+              <Route path="/finance/currencies" element={<AdminRoute allowedRoles={['admin', 'accountant']}><DashboardLayout><Currencies /></DashboardLayout></AdminRoute>} />
+              <Route path="/finance/exchange-rates" element={<AdminRoute allowedRoles={['admin', 'accountant']}><DashboardLayout><ExchangeRates /></DashboardLayout></AdminRoute>} />
+              <Route path="/finance/bank-reconciliation" element={<AdminRoute allowedRoles={['admin', 'accountant']}><DashboardLayout><BankReconciliation /></DashboardLayout></AdminRoute>} />
+              <Route path="/finance/sub-ledger" element={<AdminRoute allowedRoles={['admin', 'accountant']}><DashboardLayout><SubLedger /></DashboardLayout></AdminRoute>} />
+              <Route path="/finance/journal-types" element={<AdminRoute allowedRoles={['admin', 'accountant']}><DashboardLayout><JournalTypes /></DashboardLayout></AdminRoute>} />
+              <Route path="/finance/year-end-closing" element={<AdminRoute allowedRoles={['admin', 'accountant']}><DashboardLayout><YearEndClosing /></DashboardLayout></AdminRoute>} />
+              <Route path="/finance/fx-adjustment" element={<AdminRoute allowedRoles={['admin', 'accountant']}><DashboardLayout><FxAdjustment /></DashboardLayout></AdminRoute>} />
               
-              {/* Inventory Routes */}
-              <Route path="/inventory/warehouses" element={<ProtectedRoute><DashboardLayout><Warehouses /></DashboardLayout></ProtectedRoute>} />
-              <Route path="/inventory/products" element={<ProtectedRoute><DashboardLayout><Products /></DashboardLayout></ProtectedRoute>} />
-              <Route path="/inventory/categories" element={<ProtectedRoute><DashboardLayout><Categories /></DashboardLayout></ProtectedRoute>} />
-              <Route path="/inventory/units" element={<ProtectedRoute><DashboardLayout><Units /></DashboardLayout></ProtectedRoute>} />
-              <Route path="/inventory/movements" element={<ProtectedRoute><DashboardLayout><Movements /></DashboardLayout></ProtectedRoute>} />
-              <Route path="/inventory/reports" element={<ProtectedRoute><DashboardLayout><InventoryReports /></DashboardLayout></ProtectedRoute>} />
+              {/* Inventory Routes - Admin + Inventory Manager */}
+              <Route path="/inventory/warehouses" element={<AdminRoute allowedRoles={['admin', 'inventory_manager']}><DashboardLayout><Warehouses /></DashboardLayout></AdminRoute>} />
+              <Route path="/inventory/products" element={<AdminRoute allowedRoles={['admin', 'inventory_manager']}><DashboardLayout><Products /></DashboardLayout></AdminRoute>} />
+              <Route path="/inventory/categories" element={<AdminRoute allowedRoles={['admin', 'inventory_manager']}><DashboardLayout><Categories /></DashboardLayout></AdminRoute>} />
+              <Route path="/inventory/units" element={<AdminRoute allowedRoles={['admin', 'inventory_manager']}><DashboardLayout><Units /></DashboardLayout></AdminRoute>} />
+              <Route path="/inventory/movements" element={<AdminRoute allowedRoles={['admin', 'inventory_manager']}><DashboardLayout><Movements /></DashboardLayout></AdminRoute>} />
+              <Route path="/inventory/reports" element={<AdminRoute allowedRoles={['admin', 'inventory_manager']}><DashboardLayout><InventoryReports /></DashboardLayout></AdminRoute>} />
               
-              {/* Sales Routes */}
-              <Route path="/sales/customers" element={<ProtectedRoute><DashboardLayout><Customers /></DashboardLayout></ProtectedRoute>} />
-              <Route path="/sales/invoices" element={<ProtectedRoute><DashboardLayout><SalesInvoices /></DashboardLayout></ProtectedRoute>} />
-              <Route path="/sales/collections" element={<ProtectedRoute><DashboardLayout><Collections /></DashboardLayout></ProtectedRoute>} />
-              <Route path="/sales/reports" element={<ProtectedRoute><DashboardLayout><SalesReports /></DashboardLayout></ProtectedRoute>} />
+              {/* Sales Routes - Admin + Sales Manager */}
+              <Route path="/sales/customers" element={<AdminRoute allowedRoles={['admin', 'sales_manager']}><DashboardLayout><Customers /></DashboardLayout></AdminRoute>} />
+              <Route path="/sales/invoices" element={<AdminRoute allowedRoles={['admin', 'sales_manager']}><DashboardLayout><SalesInvoices /></DashboardLayout></AdminRoute>} />
+              <Route path="/sales/collections" element={<AdminRoute allowedRoles={['admin', 'sales_manager']}><DashboardLayout><Collections /></DashboardLayout></AdminRoute>} />
+              <Route path="/sales/reports" element={<AdminRoute allowedRoles={['admin', 'sales_manager']}><DashboardLayout><SalesReports /></DashboardLayout></AdminRoute>} />
               
-              {/* Purchases Routes */}
-              <Route path="/purchases/suppliers" element={<ProtectedRoute><DashboardLayout><Suppliers /></DashboardLayout></ProtectedRoute>} />
-              <Route path="/purchases/invoices" element={<ProtectedRoute><DashboardLayout><PurchaseInvoices /></DashboardLayout></ProtectedRoute>} />
-              <Route path="/purchases/payments" element={<ProtectedRoute><DashboardLayout><Payments /></DashboardLayout></ProtectedRoute>} />
-              <Route path="/purchases/reports" element={<ProtectedRoute><DashboardLayout><PurchaseReports /></DashboardLayout></ProtectedRoute>} />
+              {/* Purchases Routes - Admin + Accountant */}
+              <Route path="/purchases/suppliers" element={<AdminRoute allowedRoles={['admin', 'accountant']}><DashboardLayout><Suppliers /></DashboardLayout></AdminRoute>} />
+              <Route path="/purchases/invoices" element={<AdminRoute allowedRoles={['admin', 'accountant']}><DashboardLayout><PurchaseInvoices /></DashboardLayout></AdminRoute>} />
+              <Route path="/purchases/payments" element={<AdminRoute allowedRoles={['admin', 'accountant']}><DashboardLayout><Payments /></DashboardLayout></AdminRoute>} />
+              <Route path="/purchases/reports" element={<AdminRoute allowedRoles={['admin', 'accountant']}><DashboardLayout><PurchaseReports /></DashboardLayout></AdminRoute>} />
               
-              {/* Settings Routes */}
-              <Route path="/settings/general" element={<ProtectedRoute><DashboardLayout><GeneralSettings /></DashboardLayout></ProtectedRoute>} />
-              <Route path="/settings/users" element={<ProtectedRoute><DashboardLayout><Users /></DashboardLayout></ProtectedRoute>} />
-              <Route path="/settings/branches" element={<ProtectedRoute><DashboardLayout><Branches /></DashboardLayout></ProtectedRoute>} />
-              <Route path="/settings/logs" element={<ProtectedRoute><DashboardLayout><SystemLogs /></DashboardLayout></ProtectedRoute>} />
+              {/* Settings Routes - Admin Only */}
+              <Route path="/settings/general" element={<AdminRoute allowedRoles={['admin']}><DashboardLayout><GeneralSettings /></DashboardLayout></AdminRoute>} />
+              <Route path="/settings/users" element={<AdminRoute allowedRoles={['admin']}><DashboardLayout><Users /></DashboardLayout></AdminRoute>} />
+              <Route path="/settings/branches" element={<AdminRoute allowedRoles={['admin']}><DashboardLayout><Branches /></DashboardLayout></AdminRoute>} />
+              <Route path="/settings/logs" element={<AdminRoute allowedRoles={['admin']}><DashboardLayout><SystemLogs /></DashboardLayout></AdminRoute>} />
               
               <Route path="*" element={<NotFound />} />
               </Routes>

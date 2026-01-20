@@ -50,6 +50,16 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { useState } from "react";
+import { usePermissions } from "@/hooks/usePermissions";
+
+// Define which roles can access each module
+const moduleRoles: Record<string, string[]> = {
+  "النظام المالي": ["admin", "accountant"],
+  "النظام المخزني": ["admin", "inventory_manager"],
+  "نظام المبيعات": ["admin", "sales_manager"],
+  "نظام المشتريات": ["admin", "accountant"],
+  "الإعدادات": ["admin"],
+};
 
 const navigationItems = [
   {
@@ -126,12 +136,27 @@ const navigationItems = [
 export function AppSidebar() {
   const { open } = useSidebar();
   const [openItems, setOpenItems] = useState<string[]>(["النظام المالي"]);
+  const { userRoles, isLoading } = usePermissions();
 
   const toggleItem = (title: string) => {
     setOpenItems((prev) =>
       prev.includes(title) ? prev.filter((item) => item !== title) : [...prev, title]
     );
   };
+
+  // Check if user has access to a module
+  const hasModuleAccess = (moduleTitle: string) => {
+    if (isLoading) return true; // Show all while loading
+    const allowedRoles = moduleRoles[moduleTitle];
+    if (!allowedRoles) return true; // No restriction
+    return userRoles.some(r => allowedRoles.includes(r.role));
+  };
+
+  // Filter navigation items based on user role
+  const filteredNavItems = navigationItems.filter(item => {
+    if (!item.items) return true; // Dashboard is always visible
+    return hasModuleAccess(item.title);
+  });
 
   return (
     <Sidebar className="border-r border-sidebar-border">
@@ -152,7 +177,7 @@ export function AppSidebar() {
       <SidebarContent>
         <SidebarGroup>
           <SidebarMenu>
-            {navigationItems.map((item) =>
+            {filteredNavItems.map((item) =>
               item.items ? (
                 <Collapsible
                   key={item.title}
