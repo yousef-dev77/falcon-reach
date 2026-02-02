@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -13,12 +13,21 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Plus, Edit, Shield, Building2, UserCheck, Users, Crown, Package } from "lucide-react";
+import { Plus, Edit, Shield, Building2, UserCheck, Users, Crown, Package, Filter } from "lucide-react";
 import { UserFormDialog } from "@/components/settings/UserFormDialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { usePermissions } from "@/hooks/usePermissions";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const roleLabels: Record<string, { label: string; color: string; icon: any }> = {
   admin: { label: "مدير النظام", color: "bg-primary text-primary-foreground", icon: Crown },
+  branch_manager: { label: "مدير الفرع", color: "bg-purple-500 text-white", icon: Building2 },
   accountant: { label: "محاسب", color: "bg-blue-500 text-white", icon: UserCheck },
   sales_manager: { label: "مدير مبيعات", color: "bg-green-500 text-white", icon: Users },
   inventory_manager: { label: "مدير مخزون", color: "bg-orange-500 text-white", icon: Package },
@@ -28,6 +37,27 @@ const roleLabels: Record<string, { label: string; color: string; icon: any }> = 
 export default function UsersPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [roleFilter, setRoleFilter] = useState<string>("all");
+  const [branchFilter, setBranchFilter] = useState<string>("all");
+
+  const { userRoles, userBranches, isAdmin, isLoading: permissionsLoading } = usePermissions();
+  
+  // Check if current user is branch_manager
+  const isBranchManager = userRoles.some(r => r.role === 'branch_manager');
+  const currentUserBranchIds = userBranches.map(b => b.branch_id);
+
+  const { data: branches = [] } = useQuery({
+    queryKey: ['branches'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('branches')
+        .select('*')
+        .eq('is_active', true)
+        .order('name');
+      if (error) throw error;
+      return data;
+    },
+  });
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ['all-users'],
@@ -52,7 +82,7 @@ export default function UsersPage() {
       
       if (branchError) throw branchError;
 
-      const { data: branches, error: branchesError } = await supabase
+      const { data: branchesData, error: branchesError } = await supabase
         .from('branches')
         .select('id, name, code');
       
@@ -66,13 +96,63 @@ export default function UsersPage() {
           .filter(ba => ba.user_id === profile.id)
           .map(ba => ({
             ...ba,
-            branch: branches?.find(b => b.id === ba.branch_id)
+            branch: branchesData?.find(b => b.id === ba.branch_id)
           }))
       }));
     },
   });
 
-  const roleCounts = users.reduce((acc: Record<string, number>, user: any) => {
+  // Filter users based on current user's role and selected filters
+  const filteredUsers = useMemo(() => {
+    let result = users;
+
+    // If branch_manager, only show users from their branches
+    if (isBranchManager && !isAdmin) {
+      result = result.filter((user: any) => {
+        const userBranchIds = user.user_branch_assignments?.map((b: any) => b.branch_id) || [];
+        // Show users that share at least one branch with the branch_manager
+        return userBranchIds.some((id: string) => currentUserBranchIds.includes(id));
+      });
+    }
+
+    // Apply role filter
+    if (roleFilter !== "all") {
+      result = result.filter((user: any) => {
+        const userRole = user.user_roles?.[0]?.role;
+        return userRole === roleFilter;
+      });
+    }
+
+    // Apply branch filter
+    if (branchFilter !== "all") {
+      result = result.filter((user: any) => {
+        const userBranchIds = user.user_branch_assignments?.map((b: any) => b.branch_id) || [];
+        return userBranchIds.includes(branchFilter);
+      });
+    }
+
+    return result;
+  }, [users, isBranchManager, isAdmin, currentUserBranchIds, roleFilter, branchFilter]);
+
+  // Get available branches for filter (branch_manager sees only their branches)
+  const availableBranches = useMemo(() => {
+    if (isAdmin) return branches;
+    if (isBranchManager) {
+      return branches.filter((b: any) => currentUserBranchIds.includes(b.id));
+    }
+    return [];
+  }, [branches, isAdmin, isBranchManager, currentUserBranchIds]);
+
+  // Get available roles for filter (branch_manager cannot create admin or other branch_managers)
+  const availableRolesForFilter = useMemo(() => {
+    if (isAdmin) return Object.keys(roleLabels);
+    if (isBranchManager) {
+      return Object.keys(roleLabels).filter(role => role !== 'admin' && role !== 'branch_manager');
+    }
+    return [];
+  }, [isAdmin, isBranchManager]);
+
+  const roleCounts = filteredUsers.reduce((acc: Record<string, number>, user: any) => {
     const role = user.user_roles?.[0]?.role || 'user';
     acc[role] = (acc[role] || 0) + 1;
     return acc;
@@ -110,8 +190,42 @@ export default function UsersPage() {
         </Button>
       </div>
 
+      {/* Filters */}
+      <div className="flex flex-wrap gap-4 items-center">
+        <div className="flex items-center gap-2">
+          <Filter className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm font-medium">فلترة:</span>
+        </div>
+        <Select value={roleFilter} onValueChange={setRoleFilter}>
+          <SelectTrigger className="w-40">
+            <SelectValue placeholder="حسب الدور" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">جميع الأدوار</SelectItem>
+            {(isAdmin ? Object.keys(roleLabels) : availableRolesForFilter).map((role) => (
+              <SelectItem key={role} value={role}>
+                {roleLabels[role]?.label || role}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={branchFilter} onValueChange={setBranchFilter}>
+          <SelectTrigger className="w-40">
+            <SelectValue placeholder="حسب الفرع" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">جميع الفروع</SelectItem>
+            {availableBranches.map((branch: any) => (
+              <SelectItem key={branch.id} value={branch.id}>
+                {branch.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
       {/* Role Statistics */}
-      <div className="grid gap-4 md:grid-cols-5">
+      <div className="grid gap-4 md:grid-cols-6">
         {Object.entries(roleLabels).map(([role, { label, icon: Icon }]) => (
           <Card key={role}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -131,7 +245,7 @@ export default function UsersPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Users className="h-5 w-5" />
-            قائمة المستخدمين
+            قائمة المستخدمين ({filteredUsers.length})
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -147,7 +261,7 @@ export default function UsersPage() {
                 </div>
               ))}
             </div>
-          ) : users.length === 0 ? (
+          ) : filteredUsers.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p className="mb-2">لا يوجد مستخدمين مسجلين</p>
@@ -166,7 +280,7 @@ export default function UsersPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {users.map((user: any) => {
+                {filteredUsers.map((user: any) => {
                   const userRole = user.user_roles?.[0]?.role || 'user';
                   const roleInfo = roleLabels[userRole] || roleLabels.user;
                   const isGlobal = user.user_roles?.[0]?.is_global;
@@ -255,6 +369,8 @@ export default function UsersPage() {
         open={isDialogOpen} 
         onOpenChange={setIsDialogOpen}
         user={selectedUser}
+        isBranchManager={isBranchManager && !isAdmin}
+        allowedBranchIds={currentUserBranchIds}
       />
     </div>
   );
