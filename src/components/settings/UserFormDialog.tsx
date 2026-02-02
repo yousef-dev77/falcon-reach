@@ -31,10 +31,13 @@ interface UserFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   user?: any;
+  isBranchManager?: boolean;
+  allowedBranchIds?: string[];
 }
 
 const roleLabels: Record<string, string> = {
   admin: "مدير النظام",
+  branch_manager: "مدير الفرع",
   accountant: "محاسب",
   sales_manager: "مدير مبيعات",
   inventory_manager: "مدير مخزون",
@@ -60,7 +63,7 @@ const getInitialFormData = (user?: any) => ({
   primaryBranchId: user?.user_branch_assignments?.find((b: any) => b.is_primary)?.branch_id || "",
 });
 
-export function UserFormDialog({ open, onOpenChange, user }: UserFormDialogProps) {
+export function UserFormDialog({ open, onOpenChange, user, isBranchManager = false, allowedBranchIds = [] }: UserFormDialogProps) {
   const queryClient = useQueryClient();
   const isEditing = !!user;
 
@@ -73,7 +76,12 @@ export function UserFormDialog({ open, onOpenChange, user }: UserFormDialogProps
     }
   }, [open, user]);
 
-  const { data: branches = [] } = useQuery({
+  // Get available roles based on current user's role
+  const availableRoles = isBranchManager 
+    ? Object.keys(roleLabels).filter(role => role !== 'admin' && role !== 'branch_manager')
+    : Object.keys(roleLabels);
+
+  const { data: allBranches = [] } = useQuery({
     queryKey: ['branches'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -85,6 +93,11 @@ export function UserFormDialog({ open, onOpenChange, user }: UserFormDialogProps
       return data;
     },
   });
+
+  // Filter branches based on branch manager's allowed branches
+  const branches = isBranchManager 
+    ? allBranches.filter((b: any) => allowedBranchIds.includes(b.id))
+    : allBranches;
 
   const { data: permissions = [] } = useQuery({
     queryKey: ['permissions'],
@@ -330,18 +343,21 @@ export function UserFormDialog({ open, onOpenChange, user }: UserFormDialogProps
                   </Alert>
                 )}
 
-                <div className="flex items-center space-x-2 space-x-reverse">
-                  <Checkbox
-                    id="is_global"
-                    checked={formData.is_global}
-                    onCheckedChange={(checked) => 
-                      setFormData({ ...formData, is_global: checked as boolean })
-                    }
-                  />
-                  <Label htmlFor="is_global">
-                    صلاحية عامة (الوصول لجميع الفروع) - للمدراء فقط
-                  </Label>
-                </div>
+                {/* Only show global access option for non-branch-managers */}
+                {!isBranchManager && (
+                  <div className="flex items-center space-x-2 space-x-reverse">
+                    <Checkbox
+                      id="is_global"
+                      checked={formData.is_global}
+                      onCheckedChange={(checked) => 
+                        setFormData({ ...formData, is_global: checked as boolean })
+                      }
+                    />
+                    <Label htmlFor="is_global">
+                      صلاحية عامة (الوصول لجميع الفروع) - للمدراء فقط
+                    </Label>
+                  </div>
+                )}
 
                 {!formData.is_global && branches.length > 0 && (
                   <>
@@ -437,9 +453,9 @@ export function UserFormDialog({ open, onOpenChange, user }: UserFormDialogProps
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {Object.entries(roleLabels).map(([value, label]) => (
-                      <SelectItem key={value} value={value}>
-                        {label}
+                    {availableRoles.map((role) => (
+                      <SelectItem key={role} value={role}>
+                        {roleLabels[role]}
                       </SelectItem>
                     ))}
                   </SelectContent>

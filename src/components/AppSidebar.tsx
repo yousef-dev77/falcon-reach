@@ -53,12 +53,13 @@ import { useState } from "react";
 import { usePermissions } from "@/hooks/usePermissions";
 
 // Define which roles can access each module
+// branch_manager has full access to all modules within their branch
 const moduleRoles: Record<string, string[]> = {
-  "النظام المالي": ["admin", "accountant"],
-  "النظام المخزني": ["admin", "inventory_manager"],
-  "نظام المبيعات": ["admin", "sales_manager"],
-  "نظام المشتريات": ["admin", "accountant"],
-  "الإعدادات": ["admin"],
+  "النظام المالي": ["admin", "branch_manager", "accountant"],
+  "النظام المخزني": ["admin", "branch_manager", "inventory_manager"],
+  "نظام المبيعات": ["admin", "branch_manager", "sales_manager"],
+  "نظام المشتريات": ["admin", "branch_manager", "accountant"],
+  "الإعدادات": ["admin", "branch_manager"],
 };
 
 const navigationItems = [
