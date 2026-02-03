@@ -115,13 +115,22 @@ export default function Auth() {
     }
 
     setLoading(true);
+    
+    // Create a timeout promise
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error("Connection timeout")), 10000);
+    });
+    
     try {
       const normalizedEmail = normalizeEmail(email);
 
-      const { error } = await supabase.auth.signInWithPassword({
+      const signInPromise = supabase.auth.signInWithPassword({
         email: normalizedEmail,
         password,
       });
+      
+      // Race between signin and timeout
+      const { error } = await Promise.race([signInPromise, timeoutPromise]) as any;
 
       if (error) throw error;
 
@@ -134,9 +143,11 @@ export default function Auth() {
         setNeedsEmailConfirm(true);
         setConfirmEmail(normalizeEmail(email));
         toast.error("البريد الإلكتروني غير مُفعّل. فعّل حسابك ثم أعد المحاولة.");
-      } else if (msg.toLowerCase().includes("paused") || msg.toLowerCase().includes("failed to fetch")) {
-        setSystemError("الخدمة الخلفية متوقفة مؤقتاً (Paused). شغّلها ثم أعد المحاولة.");
+      } else if (msg.toLowerCase().includes("paused") || msg.toLowerCase().includes("failed to fetch") || msg.toLowerCase().includes("timeout")) {
+        setSystemError("تعذر الاتصال بالخدمة الخلفية. تأكد من اتصال الإنترنت وأعد المحاولة.");
         toast.error("تعذر الاتصال بالخدمة الخلفية");
+        // Clear any stale session
+        localStorage.removeItem('sb-yetnmvmgodbvsilukbka-auth-token');
       } else if (msg.includes("Invalid login credentials")) {
         toast.error("البريد الإلكتروني أو كلمة المرور غير صحيحة");
       } else {

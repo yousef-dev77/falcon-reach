@@ -36,7 +36,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // THEN check for existing session with timeout
     const timeoutId = setTimeout(() => {
       if (mounted && loading) {
-        console.log("Auth session check timeout - proceeding without session");
+        console.log("Auth session check timeout - clearing stale session");
+        // Clear any stale session data that might be causing issues
+        localStorage.removeItem('sb-yetnmvmgodbvsilukbka-auth-token');
+        setSession(null);
+        setUser(null);
         setLoading(false);
       }
     }, 5000);
@@ -51,7 +55,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       })
       .catch((error) => {
         console.error("Error getting session:", error);
+        // Clear corrupted session data on error
+        if (error?.message?.includes("Failed to fetch") || error?.name === "AuthRetryableFetchError") {
+          console.log("Network error - clearing stale session");
+          localStorage.removeItem('sb-yetnmvmgodbvsilukbka-auth-token');
+        }
         if (mounted) {
+          setSession(null);
+          setUser(null);
           setLoading(false);
         }
       });
