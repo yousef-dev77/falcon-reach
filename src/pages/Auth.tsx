@@ -23,25 +23,26 @@ export default function Auth() {
 
   const navigate = useNavigate();
 
-  // Check backend connectivity on mount
+  // Check backend connectivity on mount using Supabase client
   const checkConnection = async () => {
     setConnectionStatus('checking');
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      // Use Supabase client for a simple query - more reliable than raw fetch
+      const { error } = await supabase.from('profiles').select('id').limit(1);
       
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/rest/v1/`, {
-        method: 'HEAD',
-        headers: {
-          'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-        },
-        signal: controller.signal,
-      });
-      
-      clearTimeout(timeoutId);
-      setConnectionStatus(response.ok || response.status === 400 ? 'connected' : 'disconnected');
-      setSystemError(null);
-    } catch (error) {
+      // Even if we get a permission error, it means the server is responding
+      if (!error || error.code === 'PGRST301' || error.code === '42501') {
+        setConnectionStatus('connected');
+        setSystemError(null);
+      } else if (error.message?.includes('fetch') || error.message?.includes('network')) {
+        setConnectionStatus('disconnected');
+        setSystemError('تعذر الاتصال بالخادم. تحقق من اتصال الإنترنت.');
+      } else {
+        // Server responded with some error - means it's connected
+        setConnectionStatus('connected');
+        setSystemError(null);
+      }
+    } catch (error: any) {
       console.error('Connection check failed:', error);
       setConnectionStatus('disconnected');
       setSystemError('تعذر الاتصال بالخادم. تحقق من اتصال الإنترنت.');
