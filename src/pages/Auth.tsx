@@ -137,21 +137,21 @@ export default function Auth() {
       toast.success("تم تسجيل الدخول بنجاح!");
       navigate("/");
     } catch (error: any) {
-      const msg = String(error?.message || "");
-
-      if (msg.toLowerCase().includes("email not confirmed")) {
+      const msg = String(error?.message || "").toLowerCase();
+      
+      // Check for invalid credentials FIRST (most common error)
+      if (msg.includes("invalid login credentials") || msg.includes("invalid_credentials")) {
+        toast.error("البريد الإلكتروني أو كلمة المرور غير صحيحة");
+      } else if (msg.includes("email not confirmed")) {
         setNeedsEmailConfirm(true);
         setConfirmEmail(normalizeEmail(email));
         toast.error("البريد الإلكتروني غير مُفعّل. فعّل حسابك ثم أعد المحاولة.");
-      } else if (msg.toLowerCase().includes("paused") || msg.toLowerCase().includes("failed to fetch") || msg.toLowerCase().includes("timeout")) {
+      } else if (msg.includes("paused") || msg.includes("failed to fetch") || msg.includes("connection timeout")) {
         setSystemError("تعذر الاتصال بالخدمة الخلفية. تأكد من اتصال الإنترنت وأعد المحاولة.");
         toast.error("تعذر الاتصال بالخدمة الخلفية");
-        // Clear any stale session
         localStorage.removeItem('sb-yetnmvmgodbvsilukbka-auth-token');
-      } else if (msg.includes("Invalid login credentials")) {
-        toast.error("البريد الإلكتروني أو كلمة المرور غير صحيحة");
       } else {
-        toast.error(error.message || "حدث خطأ أثناء تسجيل الدخول");
+        toast.error(error?.message || "حدث خطأ أثناء تسجيل الدخول");
       }
     } finally {
       setLoading(false);
