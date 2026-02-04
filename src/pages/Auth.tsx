@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Mail, AlertTriangle } from "lucide-react";
+import { Mail, AlertTriangle, RefreshCw, CheckCircle, XCircle } from "lucide-react";
 import { toast } from "sonner";
 
 export default function Auth() {
@@ -19,8 +19,38 @@ export default function Auth() {
   const [needsEmailConfirm, setNeedsEmailConfirm] = useState(false);
   const [confirmEmail, setConfirmEmail] = useState("");
   const [systemError, setSystemError] = useState<string | null>(null);
+  const [connectionStatus, setConnectionStatus] = useState<'checking' | 'connected' | 'disconnected'>('checking');
 
   const navigate = useNavigate();
+
+  // Check backend connectivity on mount
+  const checkConnection = async () => {
+    setConnectionStatus('checking');
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/rest/v1/`, {
+        method: 'HEAD',
+        headers: {
+          'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
+        signal: controller.signal,
+      });
+      
+      clearTimeout(timeoutId);
+      setConnectionStatus(response.ok || response.status === 400 ? 'connected' : 'disconnected');
+      setSystemError(null);
+    } catch (error) {
+      console.error('Connection check failed:', error);
+      setConnectionStatus('disconnected');
+      setSystemError('تعذر الاتصال بالخادم. تحقق من اتصال الإنترنت.');
+    }
+  };
+
+  useEffect(() => {
+    checkConnection();
+  }, []);
 
   const normalizeEmail = (value: string) => value.trim().toLowerCase();
 
@@ -166,11 +196,55 @@ export default function Auth() {
           <CardDescription>قم بتسجيل الدخول أو إنشاء حساب جديد</CardDescription>
         </CardHeader>
         <CardContent>
+          {/* Connection Status Indicator */}
+          <div className="mb-4 flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">حالة الاتصال:</span>
+            <div className="flex items-center gap-2">
+              {connectionStatus === 'checking' && (
+                <>
+                  <RefreshCw className="h-4 w-4 animate-spin text-muted-foreground" />
+                  <span className="text-muted-foreground">جاري الفحص...</span>
+                </>
+              )}
+              {connectionStatus === 'connected' && (
+                <>
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <span className="text-green-600">متصل</span>
+                </>
+              )}
+              {connectionStatus === 'disconnected' && (
+                <>
+                  <XCircle className="h-4 w-4 text-red-500" />
+                  <span className="text-red-600">غير متصل</span>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={checkConnection}
+                    className="h-6 px-2"
+                  >
+                    <RefreshCw className="h-3 w-3" />
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
+
           {systemError && (
             <Alert variant="destructive" className="mb-4">
               <AlertTriangle className="h-4 w-4" />
               <AlertTitle>تعذر تسجيل الدخول</AlertTitle>
-              <AlertDescription>{systemError}</AlertDescription>
+              <AlertDescription className="space-y-2">
+                <p>{systemError}</p>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={checkConnection}
+                  className="mt-2"
+                >
+                  <RefreshCw className="h-4 w-4 ml-2" />
+                  إعادة فحص الاتصال
+                </Button>
+              </AlertDescription>
             </Alert>
           )}
 
