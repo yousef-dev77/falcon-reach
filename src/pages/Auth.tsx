@@ -23,29 +23,48 @@ export default function Auth() {
 
   const navigate = useNavigate();
 
-  // Check backend connectivity on mount using Supabase client
+  // Check backend connectivity with timeout
   const checkConnection = async () => {
     setConnectionStatus('checking');
+    
+    const timeoutMs = 8000;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+    
     try {
-      // Use Supabase client for a simple query - more reliable than raw fetch
-      const { error } = await supabase.from('profiles').select('id').limit(1);
+      // Use direct fetch to Supabase REST API with abort signal
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/profiles?select=id&limit=1`,
+        {
+          method: 'GET',
+          headers: {
+            'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          signal: controller.signal,
+        }
+      );
       
-      // Even if we get a permission error, it means the server is responding
-      if (!error || error.code === 'PGRST301' || error.code === '42501') {
+      clearTimeout(timeoutId);
+      
+      // Any response (even 401/403) means server is reachable
+      console.log('Connection check response:', response.status);
+      setConnectionStatus('connected');
+      setSystemError(null);
+    } catch (error: any) {
+      clearTimeout(timeoutId);
+      console.error('Connection check failed:', error.name, error.message);
+      
+      if (error.name === 'AbortError') {
+        // Timeout - but server might still be reachable, just slow
+        // Let's be optimistic and allow login attempt
         setConnectionStatus('connected');
         setSystemError(null);
-      } else if (error.message?.includes('fetch') || error.message?.includes('network')) {
+        console.log('Connection timeout - allowing login attempt');
+      } else {
         setConnectionStatus('disconnected');
         setSystemError('تعذر الاتصال بالخادم. تحقق من اتصال الإنترنت.');
-      } else {
-        // Server responded with some error - means it's connected
-        setConnectionStatus('connected');
-        setSystemError(null);
       }
-    } catch (error: any) {
-      console.error('Connection check failed:', error);
-      setConnectionStatus('disconnected');
-      setSystemError('تعذر الاتصال بالخادم. تحقق من اتصال الإنترنت.');
     }
   };
 
