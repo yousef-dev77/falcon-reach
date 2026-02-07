@@ -52,7 +52,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   <User className="h-5 w-5" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuContent align="start" className="w-56">
                 <DropdownMenuLabel className="text-right">
                   <div className="flex flex-col space-y-1">
                     <p className="text-sm font-medium leading-none">حسابي</p>
@@ -63,7 +63,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={signOut} className="text-destructive">
-                  <LogOut className="ml-2 h-4 w-4" />
+                  <LogOut className="me-2 h-4 w-4" />
                   تسجيل الخروج
                 </DropdownMenuItem>
               </DropdownMenuContent>
