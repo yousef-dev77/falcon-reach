@@ -31,9 +31,9 @@ export function ConnectionStatusBanner() {
             size="sm"
             variant="secondary"
             onClick={retry}
-            className="mr-2 h-7 px-3"
+            className="ms-2 h-7 px-3"
           >
-            <RefreshCw className="h-3 w-3 ml-1" />
+            <RefreshCw className="h-3 w-3 me-1" />
             إعادة المحاولة
           </Button>
         </>

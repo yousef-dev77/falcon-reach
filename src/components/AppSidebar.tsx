@@ -160,7 +160,7 @@ export function AppSidebar() {
   });
 
   return (
-    <Sidebar className="border-r border-sidebar-border">
+    <Sidebar side="right" className="border-l border-sidebar-border">
       <SidebarHeader className="border-b border-sidebar-border p-4">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-sidebar-primary">
@@ -192,7 +192,7 @@ export function AppSidebar() {
                         {open && <span>{item.title}</span>}
                         {open && (
                           <ChevronDown
-                            className={`ml-auto h-4 w-4 transition-transform ${
+                            className={`me-auto h-4 w-4 transition-transform ${
                               openItems.includes(item.title) ? "rotate-180" : ""
                             }`}
                           />
