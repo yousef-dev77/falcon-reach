@@ -86,6 +86,7 @@ const navigationItems = [
       { title: "مراكز التكلفة", url: "/finance/cost-centers", icon: Target },
       { title: "التقارير المالية", url: "/finance/reports", icon: BarChart3 },
       { title: "الصناديق والبنوك", url: "/finance/cash-bank", icon: Building2 },
+      { title: "تقرير حركة البنوك والصناديق", url: "/finance/bank-cash-report", icon: FileBarChart },
       { title: "المصاريف والإيرادات", url: "/finance/expenses-revenue", icon: TrendingUp },
       { title: "الأصول الثابتة", url: "/finance/fixed-assets", icon: LandPlot },
     ],
