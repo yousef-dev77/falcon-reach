@@ -32,6 +32,7 @@ import JournalTypes from "./pages/finance/JournalTypes";
 import YearEndClosing from "./pages/finance/YearEndClosing";
 import FxAdjustment from "./pages/finance/FxAdjustment";
 import BankCashReport from "./pages/finance/BankCashReport";
+import BankStatements from "./pages/finance/BankStatements";
 
 // Inventory Pages
 import Warehouses from "./pages/inventory/Warehouses";
@@ -95,6 +96,7 @@ const App = () => (
               <Route path="/finance/year-end-closing" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'accountant']}><DashboardLayout><YearEndClosing /></DashboardLayout></AdminRoute>} />
               <Route path="/finance/fx-adjustment" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'accountant']}><DashboardLayout><FxAdjustment /></DashboardLayout></AdminRoute>} />
               <Route path="/finance/bank-cash-report" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'accountant']}><DashboardLayout><BankCashReport /></DashboardLayout></AdminRoute>} />
+              <Route path="/finance/bank-statements" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'accountant']}><DashboardLayout><BankStatements /></DashboardLayout></AdminRoute>} />
               
               {/* Inventory Routes - Admin + Branch Manager + Inventory Manager */}
               <Route path="/inventory/warehouses" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'inventory_manager']}><DashboardLayout><Warehouses /></DashboardLayout></AdminRoute>} />

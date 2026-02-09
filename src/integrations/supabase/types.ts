@@ -1225,6 +1225,8 @@ export type Database = {
       }
       journal_types: {
         Row: {
+          bank_account_id: string | null
+          cash_box_id: string | null
           code: string
           created_at: string
           default_credit_account_id: string | null
@@ -1236,6 +1238,8 @@ export type Database = {
           type_category: string
         }
         Insert: {
+          bank_account_id?: string | null
+          cash_box_id?: string | null
           code: string
           created_at?: string
           default_credit_account_id?: string | null
@@ -1247,6 +1251,8 @@ export type Database = {
           type_category: string
         }
         Update: {
+          bank_account_id?: string | null
+          cash_box_id?: string | null
           code?: string
           created_at?: string
           default_credit_account_id?: string | null
@@ -1258,6 +1264,20 @@ export type Database = {
           type_category?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "journal_types_bank_account_id_fkey"
+            columns: ["bank_account_id"]
+            isOneToOne: true
+            referencedRelation: "bank_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_types_cash_box_id_fkey"
+            columns: ["cash_box_id"]
+            isOneToOne: true
+            referencedRelation: "cash_boxes"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "journal_types_default_credit_account_id_fkey"
             columns: ["default_credit_account_id"]
