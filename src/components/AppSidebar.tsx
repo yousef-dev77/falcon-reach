@@ -80,6 +80,7 @@ const navigationItems = [
       { title: "العملات", url: "/finance/currencies", icon: DollarSign },
       { title: "أسعار الصرف", url: "/finance/exchange-rates", icon: TrendingUp },
       { title: "تسوية فروقات العملة", url: "/finance/fx-adjustment", icon: ArrowDownUp },
+      { title: "كشوفات البنك", url: "/finance/bank-statements", icon: FileText },
       { title: "التسوية البنكية", url: "/finance/bank-reconciliation", icon: Building2 },
       { title: "الفترات المحاسبية", url: "/finance/fiscal-periods", icon: Calendar },
       { title: "الإقفال السنوي", url: "/finance/year-end-closing", icon: Calendar },
