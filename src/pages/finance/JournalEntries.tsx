@@ -82,6 +82,7 @@ export default function JournalEntries() {
     { account_id: "", debit_amount: 0, credit_amount: 0, description: "" },
   ]);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     fetchEntries();
