@@ -233,15 +233,17 @@ export default function BankReconciliation() {
   };
 
   return (
-    <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">التسوية البنكية</h1>
-            <p className="text-muted-foreground mt-1">
-              مطابقة كشوف البنك مع القيود المحاسبية
-            </p>
-          </div>
-        </div>
+    <div className="space-y-4">
+      <ListPageHeader
+        title="التسوية البنكية"
+        breadcrumbs={[
+          { label: "الرئيسية", href: "/" },
+          { label: "النظام المالي" },
+          { label: "التسوية البنكية" },
+        ]}
+        showAdd={false}
+        showSearch={false}
+      />
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>

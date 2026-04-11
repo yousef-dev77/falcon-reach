@@ -179,17 +179,17 @@ export default function UsersPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">المستخدمين والصلاحيات</h1>
-          <p className="text-muted-foreground">إدارة المستخدمين وصلاحيات الوصول للفروع</p>
-        </div>
-        <Button onClick={handleAddUser} className="bg-primary hover:bg-primary/90">
-          <Plus className="ml-2 h-4 w-4" />
-          إضافة مستخدم
-        </Button>
-      </div>
+    <div className="space-y-4">
+      <ListPageHeader
+        title="المستخدمين والصلاحيات"
+        breadcrumbs={[
+          { label: "الرئيسية", href: "/" },
+          { label: "الإعدادات" },
+          { label: "المستخدمين والصلاحيات" },
+        ]}
+        showAdd={false}
+        showSearch={false}
+      />
 
       {/* Filters */}
       <div className="flex flex-wrap gap-4 items-center">

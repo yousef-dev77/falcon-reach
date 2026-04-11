@@ -120,70 +120,17 @@ export default function Suppliers() {
   );
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">الموردين</h1>
-          <p className="text-muted-foreground">إدارة بيانات الموردين</p>
-        </div>
-        <Dialog open={isAddOpen} onOpenChange={(open) => {
-          setIsAddOpen(open);
-          if (!open) {
-            setEditingSupplier(null);
-            resetForm();
-          }
-        }}>
-          <DialogTrigger asChild>
-            <Button className="bg-primary hover:bg-primary/90">
-              <Plus className="mr-2 h-4 w-4" />
-              إضافة مورد
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>{editingSupplier ? "تعديل مورد" : "إضافة مورد جديد"}</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>كود المورد *</Label>
-                  <Input required value={formData.code} onChange={(e) => setFormData({...formData, code: e.target.value})} />
-                </div>
-                <div className="space-y-2">
-                  <Label>اسم المورد *</Label>
-                  <Input required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
-                </div>
-                <div className="space-y-2">
-                  <Label>البريد الإلكتروني</Label>
-                  <Input type="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
-                </div>
-                <div className="space-y-2">
-                  <Label>رقم الهاتف</Label>
-                  <Input value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} />
-                </div>
-                <div className="space-y-2">
-                  <Label>الرقم الضريبي</Label>
-                  <Input value={formData.tax_number} onChange={(e) => setFormData({...formData, tax_number: e.target.value})} />
-                </div>
-                <div className="space-y-2">
-                  <Label>مدة السداد (أيام)</Label>
-                  <Input type="number" value={formData.payment_terms} onChange={(e) => setFormData({...formData, payment_terms: e.target.value})} />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label>العنوان</Label>
-                <Input value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})} />
-              </div>
-              <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" onClick={() => setIsAddOpen(false)}>إلغاء</Button>
-                <Button type="submit" disabled={mutation.isPending}>
-                  {mutation.isPending ? "جاري الحفظ..." : "حفظ"}
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
+    <div className="space-y-4">
+      <ListPageHeader
+        title="الموردين"
+        breadcrumbs={[
+          { label: "الرئيسية", href: "/" },
+          { label: "نظام المشتريات" },
+          { label: "الموردين" },
+        ]}
+        showAdd={false}
+        showSearch={false}
+      />
 
       <Card>
         <CardHeader>

@@ -5,17 +5,17 @@ import { ListPageHeader } from "@/components/ListPageHeader";
 
 export default function PurchaseInvoices() {
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">فواتير المشتريات</h1>
-          <p className="text-muted-foreground">إدارة فواتير المشتريات</p>
-        </div>
-        <Button className="bg-primary hover:bg-primary/90">
-          <Plus className="mr-2 h-4 w-4" />
-          فاتورة جديدة
-        </Button>
-      </div>
+    <div className="space-y-4">
+      <ListPageHeader
+        title="فواتير المشتريات"
+        breadcrumbs={[
+          { label: "الرئيسية", href: "/" },
+          { label: "نظام المشتريات" },
+          { label: "فواتير المشتريات" },
+        ]}
+        showAdd={false}
+        showSearch={false}
+      />
 
       <div className="grid gap-4 md:grid-cols-3 mb-6">
         <Card>

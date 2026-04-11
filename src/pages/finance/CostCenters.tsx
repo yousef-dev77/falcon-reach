@@ -274,107 +274,17 @@ export default function CostCenters() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">مراكز التكلفة</h1>
-          <p className="text-muted-foreground">إدارة مراكز التكلفة وربطها بالعمليات المالية</p>
-        </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={openAddDialog}>
-              <Plus className="ml-2 h-4 w-4" />
-              إضافة مركز تكلفة
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>{editingCenter ? "تعديل مركز التكلفة" : "إضافة مركز تكلفة جديد"}</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>رمز مركز التكلفة</Label>
-                  <Input
-                    value={formData.code}
-                    onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                    placeholder="CC-001"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>اسم مركز التكلفة</Label>
-                  <Input
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="المبيعات"
-                    required
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label>مركز التكلفة الأب (اختياري)</Label>
-                <Select
-                  value={formData.parent_id}
-                  onValueChange={(value) => setFormData({ ...formData, parent_id: value === "none" ? "" : value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="بدون أب (مركز رئيسي)" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">بدون أب (مركز رئيسي)</SelectItem>
-                    {costCenters
-                      .filter(cc => !editingCenter || cc.id !== editingCenter.id)
-                      .map((cc) => (
-                        <SelectItem key={cc.id} value={cc.id}>
-                          {cc.code} - {cc.name}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>الفرع (اختياري)</Label>
-                <Select
-                  value={formData.branch_id}
-                  onValueChange={(value) => setFormData({ ...formData, branch_id: value === "none" ? "" : value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="جميع الفروع" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">جميع الفروع</SelectItem>
-                    {branches.map((branch) => (
-                      <SelectItem key={branch.id} value={branch.id}>
-                        {branch.code} - {branch.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <Switch
-                  checked={formData.is_active}
-                  onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
-                />
-                <Label>مركز تكلفة نشط</Label>
-              </div>
-
-              <div className="flex gap-2">
-                <Button type="submit" className="flex-1">
-                  {editingCenter ? "تحديث" : "إضافة"}
-                </Button>
-                <Button type="button" variant="outline" onClick={resetForm}>
-                  إلغاء
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
+    <div className="space-y-4">
+      <ListPageHeader
+        title="مراكز التكلفة"
+        breadcrumbs={[
+          { label: "الرئيسية", href: "/" },
+          { label: "النظام المالي" },
+          { label: "مراكز التكلفة" },
+        ]}
+        showAdd={false}
+        showSearch={false}
+      />
 
       <div className="grid gap-4 md:grid-cols-4">
         <Card>

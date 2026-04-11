@@ -146,115 +146,17 @@ export default function Collections() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">التحصيلات</h1>
-          <p className="text-muted-foreground">إدارة سندات القبض والتحصيلات</p>
-        </div>
-        <Dialog open={isAddOpen} onOpenChange={(open) => {
-          setIsAddOpen(open);
-          if (!open) {
-            setEditingCollection(null);
-            resetForm();
-          }
-        }}>
-          <DialogTrigger asChild>
-            <Button className="bg-primary hover:bg-primary/90">
-              <Plus className="mr-2 h-4 w-4" />
-              سند قبض جديد
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>{editingCollection ? "تعديل سند قبض" : "سند قبض جديد"}</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>رقم السند *</Label>
-                  <Input required value={formData.receipt_number} onChange={(e) => setFormData({...formData, receipt_number: e.target.value})} />
-                </div>
-                <div className="space-y-2">
-                  <Label>التاريخ *</Label>
-                  <Input type="date" required value={formData.receipt_date} onChange={(e) => setFormData({...formData, receipt_date: e.target.value})} />
-                </div>
-                <div className="space-y-2">
-                  <Label>العميل *</Label>
-                  <Select required value={formData.customer_id} onValueChange={(value) => setFormData({...formData, customer_id: value})}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="اختر العميل" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {customers.map((customer: any) => (
-                        <SelectItem key={customer.id} value={customer.id}>{customer.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>المبلغ *</Label>
-                  <Input type="number" step="0.01" required value={formData.amount} onChange={(e) => setFormData({...formData, amount: e.target.value})} />
-                </div>
-                <div className="space-y-2">
-                  <Label>طريقة الدفع *</Label>
-                  <Select value={formData.payment_method} onValueChange={(value: any) => setFormData({...formData, payment_method: value})}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="cash">نقداً</SelectItem>
-                      <SelectItem value="bank_transfer">تحويل بنكي</SelectItem>
-                      <SelectItem value="check">شيك</SelectItem>
-                      <SelectItem value="credit_card">بطاقة ائتمان</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                {formData.payment_method === "cash" && (
-                  <div className="space-y-2">
-                    <Label>الصندوق *</Label>
-                    <Select value={formData.cash_box_id} onValueChange={(value) => setFormData({...formData, cash_box_id: value})}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="اختر الصندوق" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {cashBoxes.map((box: any) => (
-                          <SelectItem key={box.id} value={box.id}>{box.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-                {formData.payment_method !== "cash" && (
-                  <div className="space-y-2">
-                    <Label>الحساب البنكي *</Label>
-                    <Select value={formData.bank_account_id} onValueChange={(value) => setFormData({...formData, bank_account_id: value})}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="اختر الحساب" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {bankAccounts.map((acc: any) => (
-                          <SelectItem key={acc.id} value={acc.id}>{acc.bank_name} - {acc.account_number}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label>ملاحظات</Label>
-                <Input value={formData.notes} onChange={(e) => setFormData({...formData, notes: e.target.value})} />
-              </div>
-              <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" onClick={() => setIsAddOpen(false)}>إلغاء</Button>
-                <Button type="submit" disabled={mutation.isPending}>
-                  {mutation.isPending ? "جاري الحفظ..." : "حفظ"}
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
+    <div className="space-y-4">
+      <ListPageHeader
+        title="التحصيلات"
+        breadcrumbs={[
+          { label: "الرئيسية", href: "/" },
+          { label: "نظام المبيعات" },
+          { label: "التحصيلات" },
+        ]}
+        showAdd={false}
+        showSearch={false}
+      />
 
       <Card>
         <CardHeader>
