@@ -40,11 +40,17 @@ export default function SalesReports() {
   const totalUnpaid = totalSales - totalPaid;
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">تقارير المبيعات</h1>
-        <p className="text-muted-foreground">التقارير التحليلية للمبيعات</p>
-      </div>
+    <div className="space-y-4">
+      <ListPageHeader
+        title="تقارير المبيعات"
+        breadcrumbs={[
+          { label: "الرئيسية", href: "/" },
+          { label: "نظام المبيعات" },
+          { label: "تقارير المبيعات" },
+        ]}
+        showAdd={false}
+        showSearch={false}
+      />
 
       <div className="grid gap-4 md:grid-cols-4">
         <Card>

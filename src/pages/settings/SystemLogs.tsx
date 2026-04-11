@@ -3,11 +3,17 @@ import { ListPageHeader } from "@/components/ListPageHeader";
 
 export default function SystemLogs() {
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">سجلات النظام</h1>
-        <p className="text-muted-foreground">تتبع العمليات وسجل التغييرات</p>
-      </div>
+    <div className="space-y-4">
+      <ListPageHeader
+        title="سجلات النظام"
+        breadcrumbs={[
+          { label: "الرئيسية", href: "/" },
+          { label: "الإعدادات" },
+          { label: "سجلات النظام" },
+        ]}
+        showAdd={false}
+        showSearch={false}
+      />
 
       <Card>
         <CardHeader>

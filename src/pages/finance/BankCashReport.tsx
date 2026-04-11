@@ -217,14 +217,18 @@ export default function BankCashReport() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">تقرير حركة البنوك والصناديق</h1>
-          <p className="text-muted-foreground">
-            عرض جميع الحركات المالية المسجلة على حسابات البنوك والصناديق النقدية
-          </p>
-        </div>
+        <ListPageHeader
+        title="تقرير حركة البنوك والصناديق"
+        breadcrumbs={[
+          { label: "الرئيسية", href: "/" },
+          { label: "النظام المالي" },
+          { label: "تقرير حركة البنوك والصناديق" },
+        ]}
+        showAdd={false}
+        showSearch={false}
+      />
         <div className="flex gap-2">
           <Button variant="outline" onClick={handlePrint}>
             <Printer className="h-4 w-4 me-2" />
