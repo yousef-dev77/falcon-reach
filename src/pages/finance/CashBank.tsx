@@ -176,13 +176,17 @@ export default function CashBank() {
   const totalBankBalance = bankAccounts.reduce((sum, acc) => sum + (acc.current_balance || 0), 0);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">الصناديق والبنوك</h1>
-          <p className="text-muted-foreground">إدارة الحسابات النقدية والبنكية والعمليات المالية</p>
-        </div>
-      </div>
+    <div className="space-y-4">
+      <ListPageHeader
+        title="الصناديق والبنوك"
+        breadcrumbs={[
+          { label: "الرئيسية", href: "/" },
+          { label: "النظام المالي" },
+          { label: "الصناديق والبنوك" },
+        ]}
+        showAdd={false}
+        showSearch={false}
+      />
 
       <div className="grid gap-4 md:grid-cols-2 mb-6">
         <Card>

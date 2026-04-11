@@ -9,6 +9,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { ListPageHeader } from "@/components/ListPageHeader";
 
 export default function Warehouses() {
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -97,52 +98,17 @@ export default function Warehouses() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">المستودعات</h1>
-          <p className="text-muted-foreground">إدارة المستودعات والفروع</p>
-        </div>
-        <Dialog open={isAddOpen} onOpenChange={(open) => {
-          setIsAddOpen(open);
-          if (!open) {
-            setEditingWarehouse(null);
-            resetForm();
-          }
-        }}>
-          <DialogTrigger asChild>
-            <Button className="bg-primary hover:bg-primary/90">
-              <Plus className="mr-2 h-4 w-4" />
-              إضافة مستودع
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>{editingWarehouse ? "تعديل مستودع" : "إضافة مستودع جديد"}</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label>كود المستودع *</Label>
-                <Input required value={formData.code} onChange={(e) => setFormData({...formData, code: e.target.value})} />
-              </div>
-              <div className="space-y-2">
-                <Label>اسم المستودع *</Label>
-                <Input required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
-              </div>
-              <div className="space-y-2">
-                <Label>العنوان</Label>
-                <Input value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})} />
-              </div>
-              <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" onClick={() => setIsAddOpen(false)}>إلغاء</Button>
-                <Button type="submit" disabled={mutation.isPending}>
-                  {mutation.isPending ? "جاري الحفظ..." : "حفظ"}
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
+    <div className="space-y-4">
+      <ListPageHeader
+        title="المستودعات"
+        breadcrumbs={[
+          { label: "الرئيسية", href: "/" },
+          { label: "النظام المخزني" },
+          { label: "المستودعات" },
+        ]}
+        showAdd={false}
+        showSearch={false}
+      />
 
       {isLoading ? (
         <div className="text-center py-12">جاري التحميل...</div>

@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowDown, ArrowUp, DollarSign, Package, ShoppingCart, TrendingUp, Users, Wallet } from "lucide-react";
+import { ListPageHeader } from "@/components/ListPageHeader";
 
 export default function Dashboard() {
   const stats = [
@@ -20,11 +21,16 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">لوحة التحكم الرئيسية</h1>
-        <p className="text-muted-foreground">نظرة شاملة على أداء النظام</p>
-      </div>
+    <div className="space-y-4">
+      <ListPageHeader
+        title="لوحة التحكم الرئيسية"
+        breadcrumbs={[{ label: "الرئيسية" }]}
+        showAdd={false}
+        showSearch={false}
+        showPrint={false}
+        showExport={false}
+        showRefresh={false}
+      />
 
       {/* اللوحة المالية */}
       <div>

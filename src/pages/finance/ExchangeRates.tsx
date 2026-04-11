@@ -34,6 +34,7 @@ import { toast } from "sonner";
 import { Plus, Edit, TrendingUp, Lock } from "lucide-react";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
+import { ListPageHeader } from "@/components/ListPageHeader";
 
 interface ExchangeRate {
   id: string;
@@ -165,103 +166,17 @@ export default function ExchangeRates() {
   };
 
   return (
-    <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">أسعار الصرف</h1>
-            <p className="text-muted-foreground mt-1">
-              إدارة أسعار صرف العملات مقابل العملة الأساسية
-            </p>
-          </div>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={() => resetForm()}>
-                <Plus className="ml-2 h-4 w-4" />
-                إضافة سعر صرف
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-md">
-              <DialogHeader>
-                <DialogTitle>
-                  {editingRate ? "تعديل سعر الصرف" : "إضافة سعر صرف جديد"}
-                </DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="currency">العملة</Label>
-                  <Select
-                    value={formData.currency_id}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, currency_id: value })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="اختر العملة" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {currencies?.map((currency) => (
-                        <SelectItem key={currency.id} value={currency.id}>
-                          {currency.code} - {currency.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="rate_date">تاريخ السريان</Label>
-                  <Input
-                    id="rate_date"
-                    type="date"
-                    value={formData.rate_date}
-                    onChange={(e) =>
-                      setFormData({ ...formData, rate_date: e.target.value })
-                    }
-                    required
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="buy_rate">سعر الشراء</Label>
-                    <Input
-                      id="buy_rate"
-                      type="number"
-                      step="0.0001"
-                      value={formData.buy_rate}
-                      onChange={(e) =>
-                        setFormData({ ...formData, buy_rate: e.target.value })
-                      }
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="sell_rate">سعر البيع</Label>
-                    <Input
-                      id="sell_rate"
-                      type="number"
-                      step="0.0001"
-                      value={formData.sell_rate}
-                      onChange={(e) =>
-                        setFormData({ ...formData, sell_rate: e.target.value })
-                      }
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="flex gap-2 justify-end">
-                  <Button type="button" variant="outline" onClick={resetForm}>
-                    إلغاء
-                  </Button>
-                  <Button type="submit" disabled={saveMutation.isPending}>
-                    {saveMutation.isPending ? "جاري الحفظ..." : "حفظ"}
-                  </Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
-        </div>
+    <div className="space-y-4">
+      <ListPageHeader
+        title="أسعار الصرف"
+        breadcrumbs={[
+          { label: "الرئيسية", href: "/" },
+          { label: "النظام المالي" },
+          { label: "أسعار الصرف" },
+        ]}
+        showAdd={false}
+        showSearch={false}
+      />
 
         <Card>
           <CardHeader>

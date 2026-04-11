@@ -24,6 +24,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Plus, Eye, Trash2, FileText, ArrowLeft } from "lucide-react";
+import { ListPageHeader } from "@/components/ListPageHeader";
 
 interface BankStatement {
   id: string;
@@ -215,7 +216,7 @@ export default function BankStatements() {
   // Detail view for a specific statement
   if (selectedStatement) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="icon" onClick={() => setSelectedStatement(null)}>
@@ -395,18 +396,16 @@ export default function BankStatements() {
   // Main list view
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">كشوفات الحسابات البنكية</h1>
-          <p className="text-muted-foreground">
-            إدخال كشوفات البنك الخارجية للمطابقة البنكية
-          </p>
-        </div>
-        <Button onClick={() => setIsCreateOpen(true)}>
-          <Plus className="ml-2 h-4 w-4" />
-          كشف جديد
-        </Button>
-      </div>
+      <ListPageHeader
+        title="كشوفات البنك"
+        breadcrumbs={[
+          { label: "الرئيسية", href: "/" },
+          { label: "النظام المالي" },
+          { label: "كشوفات البنك" },
+        ]}
+        showAdd={false}
+        showSearch={false}
+      />
 
       <Card>
         <CardHeader>

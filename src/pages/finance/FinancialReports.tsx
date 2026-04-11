@@ -21,6 +21,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { format, startOfYear, endOfYear } from "date-fns";
+import { ListPageHeader } from "@/components/ListPageHeader";
 
 type AccountWithBalance = {
   id: string;
@@ -159,12 +160,18 @@ export default function FinancialReports() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">التقارير المالية</h1>
-          <p className="text-muted-foreground">القوائم والتقارير المالية</p>
-        </div>
+        <ListPageHeader
+        title="التقارير المالية"
+        breadcrumbs={[
+          { label: "الرئيسية", href: "/" },
+          { label: "النظام المالي" },
+          { label: "التقارير المالية" },
+        ]}
+        showAdd={false}
+        showSearch={false}
+      />
         <div className="flex gap-2">
           <Button variant="outline" size="sm">
             <Download className="h-4 w-4 ml-2" />

@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, Trash2, Loader2, Eye, AlertCircle } from "lucide-react";
+import { ListPageHeader } from "@/components/ListPageHeader";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -81,6 +82,7 @@ export default function JournalEntries() {
     { account_id: "", debit_amount: 0, credit_amount: 0, description: "" },
   ]);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     fetchEntries();
@@ -456,8 +458,15 @@ export default function JournalEntries() {
   const totalDebit = lines.reduce((sum, l) => sum + (l.debit_amount || 0), 0);
   const totalCredit = lines.reduce((sum, l) => sum + (l.credit_amount || 0), 0);
 
-  const manualEntries = entries.filter((e) => !e.reference);
-  const autoEntries = entries.filter((e) => e.reference);
+  const filteredEntries = entries.filter((e) => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    return e.entry_number.toLowerCase().includes(q) ||
+      (e.description && e.description.toLowerCase().includes(q)) ||
+      (e.reference && e.reference.toLowerCase().includes(q));
+  });
+  const manualEntries = filteredEntries.filter((e) => !e.reference);
+  const autoEntries = filteredEntries.filter((e) => e.reference);
 
   if (loading) {
     return (
@@ -468,19 +477,25 @@ export default function JournalEntries() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">القيود اليومية</h1>
-          <p className="text-muted-foreground">سجل القيود المحاسبية</p>
-        </div>
+    <div className="space-y-4">
+      <ListPageHeader
+        title="القيود اليومية"
+        breadcrumbs={[
+          { label: "الرئيسية", href: "/" },
+          { label: "النظام المالي" },
+          { label: "القيود اليومية" },
+        ]}
+        onAdd={() => { resetForm(); setIsDialogOpen(true); }}
+        addLabel="إضافة قيد جديد"
+        onRefresh={() => fetchEntries()}
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchPlaceholder="بحث في القيود..."
+      />
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-primary hover:bg-primary/90" onClick={() => resetForm()}>
-              <Plus className="ml-2 h-4 w-4" />
-              إضافة قيد جديد
-            </Button>
-          </DialogTrigger>
+          <div className="hidden">
+            <DialogTrigger />
+          </div>
           <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{editingEntry ? "تعديل القيد" : "إضافة قيد جديد"}</DialogTitle>
@@ -678,7 +693,6 @@ export default function JournalEntries() {
             </form>
           </DialogContent>
         </Dialog>
-      </div>
 
       <div className="grid gap-4 md:grid-cols-3">
         <Card>

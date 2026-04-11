@@ -332,86 +332,17 @@ export default function FiscalPeriods() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">الفترات المحاسبية</h1>
-          <p className="text-muted-foreground">إدارة السنوات والفترات المالية</p>
-        </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={openAddDialog}>
-              <Plus className="ml-2 h-4 w-4" />
-              إضافة فترة
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>{editingPeriod ? "تعديل الفترة" : "إضافة فترة جديدة"}</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>رمز الفترة</Label>
-                  <Input
-                    value={formData.code}
-                    onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                    placeholder="FY-2025-01"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>اسم الفترة</Label>
-                  <Input
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="السنة المالية 2025"
-                    required
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>تاريخ البداية</Label>
-                  <Input
-                    type="date"
-                    value={formData.start_date}
-                    onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>تاريخ النهاية</Label>
-                  <Input
-                    type="date"
-                    value={formData.end_date}
-                    onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
-                    required
-                  />
-                </div>
-              </div>
-              {formData.start_date && formData.end_date && (
-                <div className="p-3 bg-muted rounded-lg">
-                  <p className="text-sm text-muted-foreground">
-                    مدة الفترة:{" "}
-                    <span className="font-bold">
-                      {differenceInDays(new Date(formData.end_date), new Date(formData.start_date)) + 1} يوم
-                    </span>
-                  </p>
-                </div>
-              )}
-              <div className="flex gap-2">
-                <Button type="submit" className="flex-1">
-                  {editingPeriod ? "تحديث" : "إضافة"}
-                </Button>
-                <Button type="button" variant="outline" onClick={resetForm}>
-                  إلغاء
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
+    <div className="space-y-4">
+      <ListPageHeader
+        title="الفترات المحاسبية"
+        breadcrumbs={[
+          { label: "الرئيسية", href: "/" },
+          { label: "النظام المالي" },
+          { label: "الفترات المحاسبية" },
+        ]}
+        showAdd={false}
+        showSearch={false}
+      />
 
       <div className="grid gap-4 md:grid-cols-4">
         <Card>

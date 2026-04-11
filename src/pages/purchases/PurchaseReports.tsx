@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { CreditCard, UserPlus, Receipt } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ListPageHeader } from "@/components/ListPageHeader";
 
 export default function PurchaseReports() {
   const { data: suppliers = [] } = useQuery({
@@ -39,11 +40,17 @@ export default function PurchaseReports() {
   const totalUnpaid = totalPurchases - totalPaid;
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">تقارير المشتريات</h1>
-        <p className="text-muted-foreground">التقارير التحليلية للمشتريات</p>
-      </div>
+    <div className="space-y-4">
+      <ListPageHeader
+        title="تقارير المشتريات"
+        breadcrumbs={[
+          { label: "الرئيسية", href: "/" },
+          { label: "نظام المشتريات" },
+          { label: "تقارير المشتريات" },
+        ]}
+        showAdd={false}
+        showSearch={false}
+      />
 
       <div className="grid gap-4 md:grid-cols-4">
         <Card>

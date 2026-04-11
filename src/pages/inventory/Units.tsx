@@ -10,6 +10,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ListPageHeader } from "@/components/ListPageHeader";
 
 export default function Units() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -81,47 +82,17 @@ export default function Units() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">وحدات القياس</h1>
-          <p className="text-muted-foreground">إدارة وحدات القياس</p>
-        </div>
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-primary hover:bg-primary/90" onClick={resetForm}>
-              <Plus className="mr-2 h-4 w-4" />
-              إضافة وحدة
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>إضافة وحدة جديدة</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <Label htmlFor="code">رمز الوحدة</Label>
-                <Input
-                  id="code"
-                  value={formData.code}
-                  onChange={(e) => setFormData({...formData, code: e.target.value})}
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="name">اسم الوحدة</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData({...formData, name: e.target.value})}
-                  required
-                />
-              </div>
-              <Button type="submit" className="w-full">حفظ</Button>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
+    <div className="space-y-4">
+      <ListPageHeader
+        title="وحدات القياس"
+        breadcrumbs={[
+          { label: "الرئيسية", href: "/" },
+          { label: "النظام المخزني" },
+          { label: "وحدات القياس" },
+        ]}
+        showAdd={false}
+        showSearch={false}
+      />
 
       <Card>
         <CardHeader>

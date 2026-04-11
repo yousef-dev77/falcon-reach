@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { ListPageHeader } from "@/components/ListPageHeader";
 
 type FixedAsset = {
   id: string;
@@ -194,170 +195,17 @@ export default function FixedAssets() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">الأصول الثابتة</h1>
-          <p className="text-muted-foreground">إدارة الأصول الثابتة والإهلاك</p>
-        </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-primary hover:bg-primary/90" onClick={() => resetForm()}>
-              <Plus className="ml-2 h-4 w-4" />
-              إضافة أصل ثابت
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>{editingAsset ? "تعديل الأصل" : "إضافة أصل جديد"}</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>رمز الأصل</Label>
-                  <Input
-                    value={formData.code}
-                    onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>اسم الأصل</Label>
-                  <Input
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    required
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label>الوصف</Label>
-                <Input
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>الفئة</Label>
-                  <Select
-                    value={formData.category}
-                    onValueChange={(value) => setFormData({ ...formData, category: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="اختر الفئة" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="buildings">مباني</SelectItem>
-                      <SelectItem value="vehicles">سيارات</SelectItem>
-                      <SelectItem value="equipment">معدات</SelectItem>
-                      <SelectItem value="furniture">أثاث</SelectItem>
-                      <SelectItem value="computers">أجهزة حاسوب</SelectItem>
-                      <SelectItem value="other">أخرى</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>تاريخ الشراء</Label>
-                  <Input
-                    type="date"
-                    value={formData.purchase_date}
-                    onChange={(e) => setFormData({ ...formData, purchase_date: e.target.value })}
-                    required
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>تكلفة الشراء</Label>
-                  <Input
-                    type="number"
-                    value={formData.purchase_cost}
-                    onChange={(e) => setFormData({ ...formData, purchase_cost: parseFloat(e.target.value) || 0 })}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>القيمة التخريدية</Label>
-                  <Input
-                    type="number"
-                    value={formData.salvage_value}
-                    onChange={(e) => setFormData({ ...formData, salvage_value: parseFloat(e.target.value) || 0 })}
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>العمر الإنتاجي (سنوات)</Label>
-                  <Input
-                    type="number"
-                    value={formData.useful_life_years}
-                    onChange={(e) => setFormData({ ...formData, useful_life_years: parseInt(e.target.value) || 5 })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>طريقة الإهلاك</Label>
-                  <Select
-                    value={formData.depreciation_method}
-                    onValueChange={(value) => setFormData({ ...formData, depreciation_method: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="straight_line">القسط الثابت</SelectItem>
-                      <SelectItem value="declining_balance">القسط المتناقص</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>الموقع</Label>
-                  <Input
-                    value={formData.location}
-                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>الحالة</Label>
-                  <Select
-                    value={formData.status}
-                    onValueChange={(value) => setFormData({ ...formData, status: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="active">نشط</SelectItem>
-                      <SelectItem value="disposed">مستبعد</SelectItem>
-                      <SelectItem value="under_maintenance">تحت الصيانة</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              
-              <div className="p-3 bg-muted rounded-lg">
-                <p className="text-sm text-muted-foreground">
-                  الإهلاك السنوي:{" "}
-                  <span className="font-bold">
-                    {calculateDepreciation(formData.purchase_cost, formData.salvage_value, formData.useful_life_years).toLocaleString()} ر.س
-                  </span>
-                </p>
-              </div>
-
-              <div className="flex gap-2">
-                <Button type="submit" className="flex-1">
-                  {editingAsset ? "تحديث" : "إضافة"}
-                </Button>
-                <Button type="button" variant="outline" onClick={resetForm}>
-                  إلغاء
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
+    <div className="space-y-4">
+      <ListPageHeader
+        title="الأصول الثابتة"
+        breadcrumbs={[
+          { label: "الرئيسية", href: "/" },
+          { label: "النظام المالي" },
+          { label: "الأصول الثابتة" },
+        ]}
+        showAdd={false}
+        showSearch={false}
+      />
 
       <div className="grid gap-4 md:grid-cols-4">
         <Card>

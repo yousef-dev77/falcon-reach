@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Search, FileText, Loader2, Download, Printer } from "lucide-react";
+import { ListPageHeader } from "@/components/ListPageHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format, startOfMonth, endOfMonth } from "date-fns";
@@ -178,25 +179,19 @@ export default function GeneralLedger() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">الأستاذ العام</h1>
-          <p className="text-muted-foreground">كشف حساب الأستاذ العام مع حركات القيود</p>
-        </div>
-        {ledgerEntries.length > 0 && (
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm">
-              <Download className="h-4 w-4 ml-2" />
-              تصدير Excel
-            </Button>
-            <Button variant="outline" size="sm">
-              <Printer className="h-4 w-4 ml-2" />
-              طباعة
-            </Button>
-          </div>
-        )}
-      </div>
+    <div className="space-y-4">
+      <ListPageHeader
+        title="الأستاذ العام"
+        breadcrumbs={[
+          { label: "الرئيسية", href: "/" },
+          { label: "النظام المالي" },
+          { label: "الأستاذ العام" },
+        ]}
+        showAdd={false}
+        onRefresh={() => fetchLedgerEntries()}
+        onPrint={() => window.print()}
+        showSearch={false}
+      />
 
       <Card>
         <CardHeader>

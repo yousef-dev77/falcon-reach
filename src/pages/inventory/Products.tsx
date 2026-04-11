@@ -7,6 +7,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Search, Edit, Trash2 } from "lucide-react";
+import { ListPageHeader } from "@/components/ListPageHeader";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -155,12 +156,21 @@ export default function Products() {
   );
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">الأصناف والمنتجات</h1>
-          <p className="text-muted-foreground">إدارة الأصناف والمنتجات</p>
-        </div>
+    <div className="space-y-4">
+      <ListPageHeader
+        title="الأصناف والمنتجات"
+        breadcrumbs={[
+          { label: "الرئيسية", href: "/" },
+          { label: "النظام المخزني" },
+          { label: "الأصناف والمنتجات" },
+        ]}
+        onAdd={() => { setEditingProduct(null); resetForm(); setIsAddOpen(true); }}
+        addLabel="إضافة صنف"
+        onRefresh={() => queryClient.invalidateQueries({ queryKey: ["products"] })}
+        searchValue={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder="بحث في الأصناف..."
+      />
         <Dialog open={isAddOpen} onOpenChange={(open) => {
           setIsAddOpen(open);
           if (!open) {
@@ -168,12 +178,7 @@ export default function Products() {
             resetForm();
           }
         }}>
-          <DialogTrigger asChild>
-            <Button className="bg-primary hover:bg-primary/90">
-              <Plus className="mr-2 h-4 w-4" />
-              إضافة صنف
-            </Button>
-          </DialogTrigger>
+          <div className="hidden"><DialogTrigger /></div>
           <DialogContent className="max-w-3xl">
             <DialogHeader>
               <DialogTitle>{editingProduct ? "تعديل منتج" : "إضافة منتج جديد"}</DialogTitle>
@@ -253,16 +258,9 @@ export default function Products() {
             </form>
           </DialogContent>
         </Dialog>
-      </div>
 
       <Card>
-        <CardHeader>
-          <div className="relative">
-            <Search className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="ابحث عن صنف..." className="pr-10" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
-          </div>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           {isLoading ? (
             <div className="text-center py-12">جاري التحميل...</div>
           ) : filteredProducts.length === 0 ? (

@@ -25,6 +25,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Plus, Edit, Coins, Star } from "lucide-react";
+import { ListPageHeader } from "@/components/ListPageHeader";
 
 interface Currency {
   id: string;
@@ -140,122 +141,17 @@ export default function Currencies() {
   };
 
   return (
-    <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">العملات</h1>
-            <p className="text-muted-foreground mt-1">
-              إدارة العملات وأسعار الصرف
-            </p>
-          </div>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={() => resetForm()}>
-                <Plus className="ml-2 h-4 w-4" />
-                إضافة عملة
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-md">
-              <DialogHeader>
-                <DialogTitle>
-                  {editingCurrency ? "تعديل العملة" : "إضافة عملة جديدة"}
-                </DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="code">رمز العملة</Label>
-                    <Input
-                      id="code"
-                      value={formData.code}
-                      onChange={(e) =>
-                        setFormData({ ...formData, code: e.target.value })
-                      }
-                      placeholder="USD"
-                      maxLength={3}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="symbol">الرمز</Label>
-                    <Input
-                      id="symbol"
-                      value={formData.symbol}
-                      onChange={(e) =>
-                        setFormData({ ...formData, symbol: e.target.value })
-                      }
-                      placeholder="$"
-                      maxLength={5}
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="name">اسم العملة</Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, name: e.target.value })
-                    }
-                    placeholder="دولار أمريكي"
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="exchange_rate">سعر الصرف</Label>
-                  <Input
-                    id="exchange_rate"
-                    type="number"
-                    step="0.0001"
-                    value={formData.exchange_rate}
-                    onChange={(e) =>
-                      setFormData({ ...formData, exchange_rate: e.target.value })
-                    }
-                    required
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    سعر الصرف مقابل العملة الأساسية
-                  </p>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Switch
-                      id="is_base"
-                      checked={formData.is_base}
-                      onCheckedChange={(checked) =>
-                        setFormData({ ...formData, is_base: checked })
-                      }
-                    />
-                    <Label htmlFor="is_base">العملة الأساسية</Label>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Switch
-                      id="is_active"
-                      checked={formData.is_active}
-                      onCheckedChange={(checked) =>
-                        setFormData({ ...formData, is_active: checked })
-                      }
-                    />
-                    <Label htmlFor="is_active">نشطة</Label>
-                  </div>
-                </div>
-
-                <div className="flex gap-2 justify-end">
-                  <Button type="button" variant="outline" onClick={resetForm}>
-                    إلغاء
-                  </Button>
-                  <Button type="submit" disabled={saveMutation.isPending}>
-                    {saveMutation.isPending ? "جاري الحفظ..." : "حفظ"}
-                  </Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
-        </div>
+    <div className="space-y-4">
+      <ListPageHeader
+        title="العملات"
+        breadcrumbs={[
+          { label: "الرئيسية", href: "/" },
+          { label: "النظام المالي" },
+          { label: "العملات" },
+        ]}
+        showAdd={false}
+        showSearch={false}
+      />
 
         <Card>
           <CardHeader>

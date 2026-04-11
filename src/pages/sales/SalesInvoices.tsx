@@ -1,20 +1,21 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus } from "lucide-react";
+import { ListPageHeader } from "@/components/ListPageHeader";
 
 export default function SalesInvoices() {
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">فواتير المبيعات</h1>
-          <p className="text-muted-foreground">إدارة فواتير المبيعات</p>
-        </div>
-        <Button className="bg-primary hover:bg-primary/90">
-          <Plus className="mr-2 h-4 w-4" />
-          فاتورة جديدة
-        </Button>
-      </div>
+    <div className="space-y-4">
+      <ListPageHeader
+        title="فواتير المبيعات"
+        breadcrumbs={[
+          { label: "الرئيسية", href: "/" },
+          { label: "نظام المبيعات" },
+          { label: "فواتير المبيعات" },
+        ]}
+        showAdd={false}
+        showSearch={false}
+      />
 
       <div className="grid gap-4 md:grid-cols-4 mb-6">
         <Card>

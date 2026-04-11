@@ -12,6 +12,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { ListPageHeader } from "@/components/ListPageHeader";
 
 export default function Payments() {
   const { user } = useAuth();
@@ -145,115 +146,17 @@ export default function Payments() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">المدفوعات</h1>
-          <p className="text-muted-foreground">إدارة سندات الصرف والمدفوعات</p>
-        </div>
-        <Dialog open={isAddOpen} onOpenChange={(open) => {
-          setIsAddOpen(open);
-          if (!open) {
-            setEditingPayment(null);
-            resetForm();
-          }
-        }}>
-          <DialogTrigger asChild>
-            <Button className="bg-primary hover:bg-primary/90">
-              <Plus className="mr-2 h-4 w-4" />
-              سند صرف جديد
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>{editingPayment ? "تعديل سند صرف" : "سند صرف جديد"}</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>رقم السند *</Label>
-                  <Input required value={formData.payment_number} onChange={(e) => setFormData({...formData, payment_number: e.target.value})} />
-                </div>
-                <div className="space-y-2">
-                  <Label>التاريخ *</Label>
-                  <Input type="date" required value={formData.payment_date} onChange={(e) => setFormData({...formData, payment_date: e.target.value})} />
-                </div>
-                <div className="space-y-2">
-                  <Label>المورد *</Label>
-                  <Select required value={formData.supplier_id} onValueChange={(value) => setFormData({...formData, supplier_id: value})}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="اختر المورد" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {suppliers.map((supplier: any) => (
-                        <SelectItem key={supplier.id} value={supplier.id}>{supplier.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>المبلغ *</Label>
-                  <Input type="number" step="0.01" required value={formData.amount} onChange={(e) => setFormData({...formData, amount: e.target.value})} />
-                </div>
-                <div className="space-y-2">
-                  <Label>طريقة الدفع *</Label>
-                  <Select value={formData.payment_method} onValueChange={(value: any) => setFormData({...formData, payment_method: value})}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="cash">نقداً</SelectItem>
-                      <SelectItem value="bank_transfer">تحويل بنكي</SelectItem>
-                      <SelectItem value="check">شيك</SelectItem>
-                      <SelectItem value="credit_card">بطاقة ائتمان</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                {formData.payment_method === "cash" && (
-                  <div className="space-y-2">
-                    <Label>الصندوق *</Label>
-                    <Select value={formData.cash_box_id} onValueChange={(value) => setFormData({...formData, cash_box_id: value})}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="اختر الصندوق" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {cashBoxes.map((box: any) => (
-                          <SelectItem key={box.id} value={box.id}>{box.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-                {formData.payment_method !== "cash" && (
-                  <div className="space-y-2">
-                    <Label>الحساب البنكي *</Label>
-                    <Select value={formData.bank_account_id} onValueChange={(value) => setFormData({...formData, bank_account_id: value})}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="اختر الحساب" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {bankAccounts.map((acc: any) => (
-                          <SelectItem key={acc.id} value={acc.id}>{acc.bank_name} - {acc.account_number}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label>ملاحظات</Label>
-                <Input value={formData.notes} onChange={(e) => setFormData({...formData, notes: e.target.value})} />
-              </div>
-              <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" onClick={() => setIsAddOpen(false)}>إلغاء</Button>
-                <Button type="submit" disabled={mutation.isPending}>
-                  {mutation.isPending ? "جاري الحفظ..." : "حفظ"}
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
+    <div className="space-y-4">
+      <ListPageHeader
+        title="المدفوعات"
+        breadcrumbs={[
+          { label: "الرئيسية", href: "/" },
+          { label: "نظام المشتريات" },
+          { label: "المدفوعات" },
+        ]}
+        showAdd={false}
+        showSearch={false}
+      />
 
       <Card>
         <CardHeader>

@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { format, startOfMonth, endOfMonth } from "date-fns";
+import { ListPageHeader } from "@/components/ListPageHeader";
 
 type ExpenseRevenue = {
   id: string;
@@ -196,136 +197,17 @@ export default function ExpensesRevenue() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">المصاريف والإيرادات</h1>
-          <p className="text-muted-foreground">إدارة المصاريف والإيرادات</p>
-        </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-primary hover:bg-primary/90" onClick={() => resetForm()}>
-              <Plus className="ml-2 h-4 w-4" />
-              إضافة عملية
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>{editingTransaction ? "تعديل العملية" : "إضافة عملية جديدة"}</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>رقم العملية</Label>
-                  <Input
-                    value={formData.transaction_number}
-                    onChange={(e) => setFormData({ ...formData, transaction_number: e.target.value })}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>التاريخ</Label>
-                  <Input
-                    type="date"
-                    value={formData.transaction_date}
-                    onChange={(e) => setFormData({ ...formData, transaction_date: e.target.value })}
-                    required
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label>نوع العملية</Label>
-                <Select
-                  value={formData.transaction_type}
-                  onValueChange={(value) => setFormData({ ...formData, transaction_type: value as "expense" | "revenue" })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="expense">مصروف</SelectItem>
-                    <SelectItem value="revenue">إيراد</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>الفئة</Label>
-                  <Select
-                    value={formData.category}
-                    onValueChange={(value) => setFormData({ ...formData, category: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="اختر الفئة" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {formData.transaction_type === "expense" ? (
-                        <>
-                          <SelectItem value="salaries">رواتب</SelectItem>
-                          <SelectItem value="rent">إيجار</SelectItem>
-                          <SelectItem value="utilities">كهرباء وماء</SelectItem>
-                          <SelectItem value="maintenance">صيانة</SelectItem>
-                          <SelectItem value="marketing">تسويق</SelectItem>
-                          <SelectItem value="office">مكتبية</SelectItem>
-                          <SelectItem value="other">أخرى</SelectItem>
-                        </>
-                      ) : (
-                        <>
-                          <SelectItem value="sales">مبيعات</SelectItem>
-                          <SelectItem value="services">خدمات</SelectItem>
-                          <SelectItem value="investments">استثمارات</SelectItem>
-                          <SelectItem value="other">أخرى</SelectItem>
-                        </>
-                      )}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>المبلغ</Label>
-                  <Input
-                    type="number"
-                    value={formData.amount}
-                    onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) || 0 })}
-                    required
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label>الوصف</Label>
-                <Input
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>طريقة الدفع</Label>
-                <Select
-                  value={formData.payment_method}
-                  onValueChange={(value) => setFormData({ ...formData, payment_method: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="cash">نقدي</SelectItem>
-                    <SelectItem value="bank_transfer">تحويل بنكي</SelectItem>
-                    <SelectItem value="check">شيك</SelectItem>
-                    <SelectItem value="credit_card">بطاقة ائتمان</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex gap-2">
-                <Button type="submit" className="flex-1">
-                  {editingTransaction ? "تحديث" : "إضافة"}
-                </Button>
-                <Button type="button" variant="outline" onClick={resetForm}>
-                  إلغاء
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
+    <div className="space-y-4">
+      <ListPageHeader
+        title="المصاريف والإيرادات"
+        breadcrumbs={[
+          { label: "الرئيسية", href: "/" },
+          { label: "النظام المالي" },
+          { label: "المصاريف والإيرادات" },
+        ]}
+        showAdd={false}
+        showSearch={false}
+      />
 
       <div className="grid gap-4 md:grid-cols-3">
         <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => openAddDialog("revenue")}>

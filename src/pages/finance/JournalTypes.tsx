@@ -32,6 +32,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Plus, Edit, FileType, Zap } from "lucide-react";
+import { ListPageHeader } from "@/components/ListPageHeader";
 
 interface JournalType {
   id: string;
@@ -258,199 +259,17 @@ export default function JournalTypes() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">الدفاتر اليومية</h1>
-          <p className="text-muted-foreground mt-1">
-            إدارة أنواع الدفاتر المحاسبية (عام، بنك، صندوق، مبيعات، مشتريات)
-          </p>
-        </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => resetForm()}>
-              <Plus className="ml-2 h-4 w-4" />
-              إضافة دفتر
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-lg">
-            <DialogHeader>
-              <DialogTitle>
-                {editingType ? "تعديل الدفتر" : "إضافة دفتر جديد"}
-              </DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="code">الرمز</Label>
-                  <Input
-                    id="code"
-                    value={formData.code}
-                    onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                    placeholder="BNK1"
-                    maxLength={10}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="name">الاسم</Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="بنك الكريمي"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>نوع الدفتر</Label>
-                <Select
-                  value={formData.type_category}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, type_category: value, bank_account_id: "", cash_box_id: "" })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="general">عام</SelectItem>
-                    <SelectItem value="bank">بنك</SelectItem>
-                    <SelectItem value="cash">صندوق</SelectItem>
-                    <SelectItem value="sales">مبيعات</SelectItem>
-                    <SelectItem value="purchases">مشتريات</SelectItem>
-                    <SelectItem value="adjustment">تسوية</SelectItem>
-                    <SelectItem value="opening">افتتاحي</SelectItem>
-                    <SelectItem value="closing">إقفال</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Bank Account selector - shown only for bank type */}
-              {formData.type_category === 'bank' && (
-                <div className="space-y-2">
-                  <Label>الحساب البنكي *</Label>
-                  <Select
-                    value={formData.bank_account_id}
-                    onValueChange={(value) => setFormData({ ...formData, bank_account_id: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="اختر الحساب البنكي..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {bankAccounts.map((bank) => (
-                        <SelectItem key={bank.id} value={bank.id}>
-                          {bank.code} - {bank.bank_name} ({bank.account_number})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-
-              {/* Cash Box selector - shown only for cash type */}
-              {formData.type_category === 'cash' && (
-                <div className="space-y-2">
-                  <Label>الصندوق النقدي *</Label>
-                  <Select
-                    value={formData.cash_box_id}
-                    onValueChange={(value) => setFormData({ ...formData, cash_box_id: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="اختر الصندوق..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {cashBoxes.map((cash) => (
-                        <SelectItem key={cash.id} value={cash.id}>
-                          {cash.code} - {cash.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-
-              <div className="space-y-2">
-                <Label>الحساب المدين الافتراضي (اختياري)</Label>
-                <Select
-                  value={formData.default_debit_account_id || "none"}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, default_debit_account_id: value === "none" ? "" : value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="اختر حساب..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">بدون</SelectItem>
-                    {accounts?.map((account) => (
-                      <SelectItem key={account.id} value={account.id}>
-                        {account.code} - {account.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>الحساب الدائن الافتراضي (اختياري)</Label>
-                <Select
-                  value={formData.default_credit_account_id || "none"}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, default_credit_account_id: value === "none" ? "" : value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="اختر حساب..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">بدون</SelectItem>
-                    {accounts?.map((account) => (
-                      <SelectItem key={account.id} value={account.id}>
-                        {account.code} - {account.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Switch
-                    id="is_auto_generated"
-                    checked={formData.is_auto_generated}
-                    onCheckedChange={(checked) =>
-                      setFormData({ ...formData, is_auto_generated: checked })
-                    }
-                  />
-                  <Label htmlFor="is_auto_generated">آلي (لا يمكن الإدخال يدوياً)</Label>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Switch
-                    id="is_active"
-                    checked={formData.is_active}
-                    onCheckedChange={(checked) =>
-                      setFormData({ ...formData, is_active: checked })
-                    }
-                  />
-                  <Label htmlFor="is_active">نشط</Label>
-                </div>
-              </div>
-
-              <div className="flex gap-2 justify-end">
-                <Button type="button" variant="outline" onClick={resetForm}>
-                  إلغاء
-                </Button>
-                <Button type="submit" disabled={saveMutation.isPending}>
-                  {saveMutation.isPending ? "جاري الحفظ..." : "حفظ"}
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
+    <div className="space-y-4">
+      <ListPageHeader
+        title="أنواع القيود"
+        breadcrumbs={[
+          { label: "الرئيسية", href: "/" },
+          { label: "النظام المالي" },
+          { label: "أنواع القيود" },
+        ]}
+        showAdd={false}
+        showSearch={false}
+      />
 
       <Card>
         <CardHeader>
