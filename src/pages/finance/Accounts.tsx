@@ -513,7 +513,6 @@ export default function Accounts() {
             </form>
           </DialogContent>
         </Dialog>
-      </div>
 
       <Card>
         <CardHeader>

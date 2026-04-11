@@ -258,7 +258,6 @@ export default function Products() {
             </form>
           </DialogContent>
         </Dialog>
-      </div>
 
       <Card>
         <CardHeader>
