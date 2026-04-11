@@ -458,8 +458,15 @@ export default function JournalEntries() {
   const totalDebit = lines.reduce((sum, l) => sum + (l.debit_amount || 0), 0);
   const totalCredit = lines.reduce((sum, l) => sum + (l.credit_amount || 0), 0);
 
-  const manualEntries = entries.filter((e) => !e.reference);
-  const autoEntries = entries.filter((e) => e.reference);
+  const filteredEntries = entries.filter((e) => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    return e.entry_number.toLowerCase().includes(q) ||
+      (e.description && e.description.toLowerCase().includes(q)) ||
+      (e.reference && e.reference.toLowerCase().includes(q));
+  });
+  const manualEntries = filteredEntries.filter((e) => !e.reference);
+  const autoEntries = filteredEntries.filter((e) => e.reference);
 
   if (loading) {
     return (
