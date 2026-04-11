@@ -44,6 +44,7 @@ import { toast } from "sonner";
 import { Calendar, Lock, Play, CheckCircle, AlertTriangle, TrendingUp, TrendingDown } from "lucide-react";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
+import { ListPageHeader } from "@/components/ListPageHeader";
 
 interface FiscalPeriod {
   id: string;

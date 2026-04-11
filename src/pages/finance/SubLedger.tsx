@@ -25,6 +25,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, Truck, Building2, Wallet, Search, FileText } from "lucide-react";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
+import { ListPageHeader } from "@/components/ListPageHeader";
 
 type LedgerType = "customers" | "suppliers" | "bank_accounts" | "cash_boxes";
 

@@ -17,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Settings, Building2, Calculator, Package, ShoppingCart, Banknote } from "lucide-react";
 import { useSystemSettings, useUpdateSystemSetting, usePostableAccounts } from "@/hooks/useSystemSettings";
+import { ListPageHeader } from "@/components/ListPageHeader";
 
 interface Account {
   id: string;

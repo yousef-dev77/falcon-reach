@@ -32,6 +32,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Plus, Edit, FileType, Zap } from "lucide-react";
+import { ListPageHeader } from "@/components/ListPageHeader";
 
 interface JournalType {
   id: string;

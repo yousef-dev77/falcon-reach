@@ -21,6 +21,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { format, startOfYear, endOfYear } from "date-fns";
+import { ListPageHeader } from "@/components/ListPageHeader";
 
 type AccountWithBalance = {
   id: string;

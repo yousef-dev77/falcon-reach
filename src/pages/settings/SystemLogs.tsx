@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ListPageHeader } from "@/components/ListPageHeader";
 
 export default function SystemLogs() {
   return (

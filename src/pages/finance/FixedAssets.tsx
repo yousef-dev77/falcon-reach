@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { ListPageHeader } from "@/components/ListPageHeader";
 
 type FixedAsset = {
   id: string;

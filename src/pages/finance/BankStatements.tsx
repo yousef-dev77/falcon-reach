@@ -24,6 +24,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Plus, Eye, Trash2, FileText, ArrowLeft } from "lucide-react";
+import { ListPageHeader } from "@/components/ListPageHeader";
 
 interface BankStatement {
   id: string;

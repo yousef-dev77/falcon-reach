@@ -10,6 +10,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ListPageHeader } from "@/components/ListPageHeader";
 
 export default function Units() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);

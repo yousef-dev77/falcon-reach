@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { DollarSign, TrendingUp, Users, Receipt } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ListPageHeader } from "@/components/ListPageHeader";
 
 export default function SalesReports() {
   const { data: customers = [] } = useQuery({

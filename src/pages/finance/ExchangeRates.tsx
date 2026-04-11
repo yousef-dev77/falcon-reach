@@ -34,6 +34,7 @@ import { toast } from "sonner";
 import { Plus, Edit, TrendingUp, Lock } from "lucide-react";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
+import { ListPageHeader } from "@/components/ListPageHeader";
 
 interface ExchangeRate {
   id: string;

@@ -36,6 +36,7 @@ import { toast } from "sonner";
 import { Plus, FileText, CheckCircle, AlertCircle, Building2 } from "lucide-react";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
+import { ListPageHeader } from "@/components/ListPageHeader";
 
 interface BankStatement {
   id: string;

@@ -24,6 +24,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Building2, Wallet, Search, FileDown, Printer } from "lucide-react";
 import { format } from "date-fns";
+import { ListPageHeader } from "@/components/ListPageHeader";
 
 interface MovementLine {
   id: string;

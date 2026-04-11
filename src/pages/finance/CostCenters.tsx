@@ -12,6 +12,7 @@ import { Plus, Edit, Trash2, Loader2, Target, ChevronRight, FolderTree } from "l
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
+import { ListPageHeader } from "@/components/ListPageHeader";
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
