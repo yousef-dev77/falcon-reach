@@ -268,15 +268,19 @@ export default function GeneralSettings() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex items-center gap-3">
         <Settings className="h-8 w-8 text-primary" />
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">الإعدادات العامة</h1>
-          <p className="text-muted-foreground">
-            إعدادات النظام المالي والمخزني والافتراضيات
-          </p>
-        </div>
+        <ListPageHeader
+        title="الإعدادات العامة"
+        breadcrumbs={[
+          { label: "الرئيسية", href: "/" },
+          { label: "الإعدادات" },
+          { label: "الإعدادات العامة" },
+        ]}
+        showAdd={false}
+        showSearch={false}
+      />
       </div>
 
       <Tabs defaultValue="general" className="w-full">

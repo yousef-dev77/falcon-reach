@@ -195,13 +195,17 @@ export default function SubLedger() {
   ) || { debit: 0, credit: 0 };
 
   return (
-    <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">دفتر الأستاذ المساعد</h1>
-          <p className="text-muted-foreground mt-1">
-            كشف حساب تفصيلي للعملاء والموردين والبنوك والصناديق
-          </p>
-        </div>
+    <div className="space-y-4">
+        <ListPageHeader
+        title="دفتر الأستاذ المساعد"
+        breadcrumbs={[
+          { label: "الرئيسية", href: "/" },
+          { label: "النظام المالي" },
+          { label: "دفتر الأستاذ المساعد" },
+        ]}
+        showAdd={false}
+        showSearch={false}
+      />
 
         <Tabs value={ledgerType} onValueChange={(v) => { setLedgerType(v as LedgerType); setSelectedEntity(""); }}>
           <TabsList className="grid grid-cols-4 w-full max-w-xl">
