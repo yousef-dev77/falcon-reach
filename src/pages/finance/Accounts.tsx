@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { ChevronDown, ChevronRight, Plus, Search, Edit, Trash2, Loader2 } from "lucide-react";
+import { ListPageHeader } from "@/components/ListPageHeader";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -320,19 +321,23 @@ export default function Accounts() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">شجرة الحسابات</h1>
-          <p className="text-muted-foreground">إدارة الحسابات المالية بنظام شجري</p>
-        </div>
+    <div className="space-y-4">
+      <ListPageHeader
+        title="شجرة الحسابات"
+        breadcrumbs={[
+          { label: "الرئيسية", href: "/" },
+          { label: "النظام المالي" },
+          { label: "شجرة الحسابات" },
+        ]}
+        onAdd={() => { resetForm(); setIsDialogOpen(true); }}
+        addLabel="إضافة حساب جديد"
+        onRefresh={() => fetchAccounts()}
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchPlaceholder="بحث في الحسابات..."
+      />
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-primary hover:bg-primary/90" onClick={() => resetForm()}>
-              <Plus className="ml-2 h-4 w-4" />
-              إضافة حساب جديد
-            </Button>
-          </DialogTrigger>
+          <div className="hidden"><DialogTrigger /></div>
           <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{editingAccount ? "تعديل الحساب" : "إضافة حساب جديد"}</DialogTitle>
