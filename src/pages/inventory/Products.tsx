@@ -260,13 +260,7 @@ export default function Products() {
         </Dialog>
 
       <Card>
-        <CardHeader>
-          <div className="relative">
-            <Search className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="ابحث عن صنف..." className="pr-10" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
-          </div>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           {isLoading ? (
             <div className="text-center py-12">جاري التحميل...</div>
           ) : filteredProducts.length === 0 ? (

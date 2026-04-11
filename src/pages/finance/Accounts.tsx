@@ -515,20 +515,7 @@ export default function Accounts() {
         </Dialog>
 
       <Card>
-        <CardHeader>
-          <div className="flex items-center gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="ابحث عن حساب برقم الحساب أو الاسم..."
-                className="pr-10"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           {accountTree.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               لا توجد حسابات. ابدأ بإضافة حساب جديد.
