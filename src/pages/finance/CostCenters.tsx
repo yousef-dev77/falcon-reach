@@ -11,7 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { Plus, Edit, Trash2, Loader2, Target, ChevronRight, FolderTree } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import ListPageHeader from "@/components/ListPageHeader";
+import { ListPageHeader } from "@/components/ListPageHeader";
 import {
   AlertDialog,
   AlertDialogAction,
