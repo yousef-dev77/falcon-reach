@@ -17,6 +17,7 @@ import { Plus, Edit, Shield, Building2, UserCheck, Users, Crown, Package, Filter
 import { UserFormDialog } from "@/components/settings/UserFormDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePermissions } from "@/hooks/usePermissions";
+import ListPageHeader from "@/components/ListPageHeader";
 import {
   Select,
   SelectContent,
