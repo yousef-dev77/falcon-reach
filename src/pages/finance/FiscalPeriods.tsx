@@ -11,6 +11,7 @@ import { Plus, Edit, Trash2, Loader2, Calendar, Lock, Unlock, AlertTriangle } fr
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format, differenceInDays } from "date-fns";
+import { ListPageHeader } from "@/components/ListPageHeader";
 import {
   AlertDialog,
   AlertDialogAction,
