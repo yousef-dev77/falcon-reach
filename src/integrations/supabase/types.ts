@@ -196,6 +196,7 @@ export type Database = {
         Row: {
           adjustment_journal_id: string | null
           bank_account_id: string
+          bank_statement_id: string | null
           book_balance: number
           created_at: string
           created_by: string
@@ -209,6 +210,7 @@ export type Database = {
         Insert: {
           adjustment_journal_id?: string | null
           bank_account_id: string
+          bank_statement_id?: string | null
           book_balance?: number
           created_at?: string
           created_by: string
@@ -222,6 +224,7 @@ export type Database = {
         Update: {
           adjustment_journal_id?: string | null
           bank_account_id?: string
+          bank_statement_id?: string | null
           book_balance?: number
           created_at?: string
           created_by?: string
@@ -247,6 +250,13 @@ export type Database = {
             referencedRelation: "bank_accounts"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "bank_reconciliations_bank_statement_id_fkey"
+            columns: ["bank_statement_id"]
+            isOneToOne: false
+            referencedRelation: "bank_statements"
+            referencedColumns: ["id"]
+          },
         ]
       }
       bank_statement_lines: {
@@ -259,6 +269,7 @@ export type Database = {
           is_matched: boolean | null
           match_difference: number | null
           matched_entry_id: string | null
+          reconciliation_id: string | null
           reference: string | null
           statement_id: string
           transaction_date: string
@@ -272,6 +283,7 @@ export type Database = {
           is_matched?: boolean | null
           match_difference?: number | null
           matched_entry_id?: string | null
+          reconciliation_id?: string | null
           reference?: string | null
           statement_id: string
           transaction_date: string
@@ -285,6 +297,7 @@ export type Database = {
           is_matched?: boolean | null
           match_difference?: number | null
           matched_entry_id?: string | null
+          reconciliation_id?: string | null
           reference?: string | null
           statement_id?: string
           transaction_date?: string
@@ -295,6 +308,13 @@ export type Database = {
             columns: ["matched_entry_id"]
             isOneToOne: false
             referencedRelation: "journal_entry_lines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_statement_lines_reconciliation_id_fkey"
+            columns: ["reconciliation_id"]
+            isOneToOne: false
+            referencedRelation: "bank_reconciliations"
             referencedColumns: ["id"]
           },
           {
@@ -313,6 +333,7 @@ export type Database = {
           created_at: string
           created_by: string
           id: string
+          journal_type_id: string | null
           opening_balance: number
           statement_date: string
           statement_number: string | null
@@ -325,6 +346,7 @@ export type Database = {
           created_at?: string
           created_by: string
           id?: string
+          journal_type_id?: string | null
           opening_balance?: number
           statement_date: string
           statement_number?: string | null
@@ -337,6 +359,7 @@ export type Database = {
           created_at?: string
           created_by?: string
           id?: string
+          journal_type_id?: string | null
           opening_balance?: number
           statement_date?: string
           statement_number?: string | null
@@ -349,6 +372,13 @@ export type Database = {
             columns: ["bank_account_id"]
             isOneToOne: false
             referencedRelation: "bank_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_statements_journal_type_id_fkey"
+            columns: ["journal_type_id"]
+            isOneToOne: false
+            referencedRelation: "journal_types"
             referencedColumns: ["id"]
           },
         ]
