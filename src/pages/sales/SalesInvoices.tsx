@@ -43,7 +43,7 @@ const statusVariants: Record<string, "default" | "secondary" | "destructive" | "
 
 export default function SalesInvoices() {
   const { user } = useAuth();
-  const { currentBranch } = useBranch();
+  const { activeBranch } = useBranch();
   const [invoices, setInvoices] = useState<any[]>([]);
   const [customers, setCustomers] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
