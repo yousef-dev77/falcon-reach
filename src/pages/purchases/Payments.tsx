@@ -76,8 +76,36 @@ export default function Payments() {
         const { error } = await supabase.from("payments").update(data).eq("id", editingPayment.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("payments").insert([{ ...data, created_by: user?.id }]);
+        // Insert payment
+        const { data: newPayment, error } = await supabase.from("payments").insert([{ ...data, created_by: user?.id }]).select().single();
         if (error) throw error;
+
+        // Auto-generate journal entry
+        try {
+          const { createAutoJournalEntry, getLinkedAccount, getJournalTypeForAccount } = await import("@/hooks/useAutoJournalEntry");
+          
+          const cashOrBankAccountId = await getLinkedAccount(data.bank_account_id, data.cash_box_id);
+          const supplierAccount = await getSupplierAccount(data.supplier_id);
+          const journalTypeId = await getJournalTypeForAccount(data.bank_account_id, data.cash_box_id);
+          
+          if (cashOrBankAccountId && supplierAccount) {
+            await createAutoJournalEntry({
+              entry_date: data.payment_date,
+              description: `سند صرف رقم ${data.payment_number}`,
+              reference: data.payment_number,
+              created_by: user!.id,
+              journal_type_id: journalTypeId || undefined,
+              lines: [
+                { account_id: supplierAccount, debit_amount: data.amount, credit_amount: 0, description: `دفع لمورد - ${data.payment_number}` },
+                { account_id: cashOrBankAccountId, debit_amount: 0, credit_amount: data.amount, description: `دفع لمورد - ${data.payment_number}` },
+              ],
+            });
+            toast.info("تم إنشاء القيد المحاسبي تلقائياً");
+          }
+        } catch (journalError) {
+          console.error("Failed to create auto journal entry:", journalError);
+          toast.warning("تم حفظ السند لكن لم يتم إنشاء القيد تلقائياً - تحقق من ربط الحسابات");
+        }
       }
     },
     onSuccess: () => {
@@ -91,6 +119,11 @@ export default function Payments() {
       toast.error("حدث خطأ، حاول مرة أخرى");
     }
   });
+
+  const getSupplierAccount = async (supplierId: string) => {
+    const { data } = await supabase.from("suppliers").select("account_id").eq("id", supplierId).single();
+    return data?.account_id || null;
+  };
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
