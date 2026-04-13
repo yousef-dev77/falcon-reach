@@ -139,7 +139,7 @@ export default function SalesInvoices() {
       invoice_date: formData.invoice_date,
       customer_id: formData.customer_id,
       warehouse_id: formData.warehouse_id || null,
-      branch_id: currentBranch?.id || null,
+      branch_id: activeBranch?.id || null,
       subtotal,
       discount_amount: discountTotal,
       tax_amount: taxTotal,
