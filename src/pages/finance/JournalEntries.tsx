@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, Loader2, Eye, AlertCircle } from "lucide-react";
+import { Plus, Edit, Trash2, Loader2, Eye, AlertCircle, CheckCircle2 } from "lucide-react";
 import { ListPageHeader } from "@/components/ListPageHeader";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -347,6 +347,43 @@ export default function JournalEntries() {
         fetchEntries();
         resetForm();
       }
+    }
+  };
+
+  const handlePost = async (id: string) => {
+    const entry = entries.find(e => e.id === id);
+    if (!entry || entry.is_posted) return;
+
+    // Verify entry has balanced lines
+    const { data: lines } = await supabase
+      .from("journal_entry_lines")
+      .select("debit_amount, credit_amount")
+      .eq("journal_entry_id", id);
+
+    if (!lines || lines.length < 2) {
+      toast.error("القيد يجب أن يحتوي على سطرين على الأقل");
+      return;
+    }
+
+    const totalDebit = lines.reduce((s, l) => s + (l.debit_amount || 0), 0);
+    const totalCredit = lines.reduce((s, l) => s + (l.credit_amount || 0), 0);
+
+    if (Math.abs(totalDebit - totalCredit) > 0.01) {
+      toast.error("القيد غير متوازن - لا يمكن ترحيله");
+      return;
+    }
+
+    const { error } = await supabase
+      .from("journal_entries")
+      .update({ is_posted: true, approved_by: user?.id })
+      .eq("id", id);
+
+    if (error) {
+      toast.error(error.message || "خطأ في ترحيل القيد");
+      console.error(error);
+    } else {
+      toast.success("تم ترحيل القيد بنجاح");
+      fetchEntries();
     }
   };
 
@@ -759,6 +796,14 @@ export default function JournalEntries() {
                         </Button>
                         {!entry.is_posted && (
                           <>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => handlePost(entry.id)}
+                              title="ترحيل القيد"
+                            >
+                              <CheckCircle2 className="h-4 w-4 text-green-600" />
+                            </Button>
                             <Button variant="ghost" size="icon" onClick={() => handleEdit(entry)}>
                               <Edit className="h-4 w-4" />
                             </Button>
@@ -781,7 +826,15 @@ export default function JournalEntries() {
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle>تفاصيل القيد</DialogTitle>
+            <div className="flex items-center justify-between">
+              <DialogTitle>تفاصيل القيد</DialogTitle>
+              {viewingEntry && !viewingEntry.is_posted && (
+                <Button size="sm" onClick={() => { handlePost(viewingEntry.id); setIsViewDialogOpen(false); }}>
+                  <CheckCircle2 className="h-4 w-4 ml-2" />
+                  ترحيل القيد
+                </Button>
+              )}
+            </div>
           </DialogHeader>
           {viewingEntry && (
             <div className="space-y-4">
