@@ -1,18 +1,27 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { ChevronDown, ChevronRight, Plus, Search, Edit, Trash2, Loader2 } from "lucide-react";
+import { ChevronDown, ChevronRight, Plus, FolderOpen, Folder, FileText, Trash2, Pause, Loader2, Save, X } from "lucide-react";
 import { ListPageHeader } from "@/components/ListPageHeader";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type Account = {
   id: string;
@@ -24,6 +33,7 @@ type Account = {
   parent_id: string | null;
   level: number;
   is_active: boolean;
+  is_frozen: boolean | null;
   allow_manual_entry: boolean;
   opening_balance: number;
   reconcile: boolean;
@@ -54,14 +64,6 @@ const internalTypeLabels: Record<string, string> = {
   other: "أخرى",
 };
 
-const accountTypeColors: Record<string, string> = {
-  asset: "text-primary",
-  liability: "text-secondary",
-  equity: "text-accent",
-  revenue: "text-green-600",
-  expense: "text-red-600",
-};
-
 const accountGroups = [
   { value: "balance_sheet", label: "الميزانية العمومية" },
   { value: "income_statement", label: "قائمة الدخل" },
@@ -74,8 +76,11 @@ export default function Accounts() {
   const [currencies, setCurrencies] = useState<{ id: string; code: string; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingAccount, setEditingAccount] = useState<Account | null>(null);
+  const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
+  const [addParentId, setAddParentId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     code: "",
     name: "",
@@ -97,19 +102,9 @@ export default function Accounts() {
   const fetchAccounts = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from("accounts")
-        .select("*")
-        .order("code");
-
+      const { data, error } = await supabase.from("accounts").select("*").order("code");
       if (error) {
-        if (error.code === '42P01') {
-          // Table doesn't exist yet
-          setAccounts([]);
-        } else {
-          toast.error("خطأ في جلب الحسابات");
-          console.error(error);
-        }
+        if (error.code !== '42P01') toast.error("خطأ في جلب الحسابات");
       } else {
         setAccounts((data || []) as Account[]);
       }
@@ -123,64 +118,82 @@ export default function Accounts() {
     try {
       const { data, error } = await supabase.from("currencies").select("id, code, name").eq("is_active", true);
       if (!error && data) setCurrencies(data);
-    } catch (e) {
-      // Table may not exist yet
-      console.log("Currencies table not available");
-    }
+    } catch (e) { /* ignore */ }
   };
 
-  const buildTree = (accounts: Account[]): Account[] => {
+  const buildTree = (accs: Account[]): Account[] => {
     const map = new Map<string, Account>();
     const roots: Account[] = [];
-
-    accounts.forEach((acc) => {
-      map.set(acc.id, { ...acc, children: [] });
-    });
-
-    accounts.forEach((acc) => {
-      const node = map.get(acc.id)!;
-      if (acc.parent_id && map.has(acc.parent_id)) {
-        map.get(acc.parent_id)!.children!.push(node);
+    accs.forEach((a) => map.set(a.id, { ...a, children: [] }));
+    accs.forEach((a) => {
+      const node = map.get(a.id)!;
+      if (a.parent_id && map.has(a.parent_id)) {
+        map.get(a.parent_id)!.children!.push(node);
       } else {
         roots.push(node);
       }
     });
-
     return roots;
   };
 
-  const getParentLevel = (parentId: string | null): number => {
-    if (!parentId) return 0;
-    const parent = accounts.find(a => a.id === parentId);
-    return parent ? parent.level : 0;
+  const handleSelectAccount = (account: Account) => {
+    setSelectedAccount(account);
+    setIsEditing(false);
+    setIsAdding(false);
+    setFormData({
+      code: account.code,
+      name: account.name,
+      account_type: account.account_type,
+      internal_type: account.internal_type || "other",
+      account_group: account.account_group || "",
+      parent_id: account.parent_id || "",
+      allow_manual_entry: account.allow_manual_entry ?? true,
+      opening_balance: account.opening_balance || 0,
+      reconcile: account.reconcile ?? false,
+      currency_id: account.currency_id || "",
+    });
   };
 
-  const validateCode = (code: string, excludeId?: string): boolean => {
-    const exists = accounts.some(a => a.code === code && a.id !== excludeId);
-    if (exists) {
-      toast.error("رقم الحساب موجود مسبقاً");
-      return false;
-    }
-    return true;
+  const handleStartEdit = () => {
+    setIsEditing(true);
+    setIsAdding(false);
+  };
+
+  const handleAddChild = (parentId: string | null) => {
+    const parent = parentId ? accounts.find(a => a.id === parentId) : null;
+    setIsAdding(true);
+    setIsEditing(false);
+    setAddParentId(parentId);
+    setSelectedAccount(null);
+    setFormData({
+      code: "",
+      name: "",
+      account_type: parent?.account_type || "asset",
+      internal_type: "other",
+      account_group: parent?.account_group || "",
+      parent_id: parentId || "",
+      allow_manual_entry: true,
+      opening_balance: 0,
+      reconcile: false,
+      currency_id: "",
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) {
-      toast.error("يجب تسجيل الدخول أولاً");
-      return;
-    }
-
+    if (!user) { toast.error("يجب تسجيل الدخول أولاً"); return; }
     if (!formData.code.trim() || !formData.name.trim()) {
       toast.error("يرجى ملء جميع الحقول المطلوبة");
       return;
     }
 
-    if (!validateCode(formData.code, editingAccount?.id)) {
-      return;
-    }
+    const codeExists = accounts.some(a => a.code === formData.code && a.id !== selectedAccount?.id);
+    if (codeExists) { toast.error("رقم الحساب موجود مسبقاً"); return; }
 
-    const parentLevel = getParentLevel(formData.parent_id || null);
+    const parentLevel = formData.parent_id
+      ? (accounts.find(a => a.id === formData.parent_id)?.level || 0)
+      : 0;
+
     const accountData = {
       code: formData.code.trim(),
       name: formData.name.trim(),
@@ -195,122 +208,59 @@ export default function Accounts() {
       currency_id: formData.currency_id || null,
     };
 
-    if (editingAccount) {
-      // Check if trying to make a parent account postable
-      const hasChildren = accounts.some(a => a.parent_id === editingAccount.id);
+    if (isEditing && selectedAccount) {
+      const hasChildren = accounts.some(a => a.parent_id === selectedAccount.id);
       if (hasChildren && formData.allow_manual_entry) {
         toast.error("لا يمكن السماح بالقيد على حساب له حسابات فرعية");
         return;
       }
-
-      const { error } = await supabase
-        .from("accounts")
-        .update(accountData)
-        .eq("id", editingAccount.id);
-
-      if (error) {
-        toast.error("خطأ في تحديث الحساب");
-        console.error(error);
-      } else {
+      const { error } = await supabase.from("accounts").update(accountData).eq("id", selectedAccount.id);
+      if (error) { toast.error("خطأ في تحديث الحساب"); }
+      else {
         toast.success("تم تحديث الحساب بنجاح");
         fetchAccounts();
-        resetForm();
+        setIsEditing(false);
       }
     } else {
-      const { error } = await supabase.from("accounts").insert(accountData);
-
-      if (error) {
-        toast.error("خطأ في إضافة الحساب");
-        console.error(error);
-      } else {
+      const { data, error } = await supabase.from("accounts").insert(accountData).select().single();
+      if (error) { toast.error("خطأ في إضافة الحساب"); }
+      else {
         toast.success("تم إضافة الحساب بنجاح");
         fetchAccounts();
-        resetForm();
+        setIsAdding(false);
+        if (data) handleSelectAccount(data as Account);
       }
     }
   };
 
-  const handleDelete = async (id: string) => {
-    // Check if account has children
-    const hasChildren = accounts.some(a => a.parent_id === id);
-    if (hasChildren) {
-      toast.error("لا يمكن حذف حساب له حسابات فرعية");
-      return;
-    }
+  const confirmDelete = async () => {
+    if (!deletingId) return;
+    const hasChildren = accounts.some(a => a.parent_id === deletingId);
+    if (hasChildren) { toast.error("لا يمكن حذف حساب له حسابات فرعية"); setDeletingId(null); return; }
 
-    // Check if account has journal entries
-    const { data: entries } = await supabase
-      .from("journal_entry_lines")
-      .select("id")
-      .eq("account_id", id)
-      .limit(1);
+    const { data: entries } = await supabase.from("journal_entry_lines").select("id").eq("account_id", deletingId).limit(1);
+    if (entries && entries.length > 0) { toast.error("لا يمكن حذف حساب له قيود محاسبية"); setDeletingId(null); return; }
 
-    if (entries && entries.length > 0) {
-      toast.error("لا يمكن حذف حساب له قيود محاسبية");
-      return;
-    }
-
-    if (!confirm("هل أنت متأكد من حذف هذا الحساب؟")) return;
-
-    const { error } = await supabase.from("accounts").delete().eq("id", id);
-
-    if (error) {
-      toast.error("خطأ في حذف الحساب");
-      console.error(error);
-    } else {
+    const { error } = await supabase.from("accounts").delete().eq("id", deletingId);
+    if (error) { toast.error("خطأ في حذف الحساب"); }
+    else {
       toast.success("تم حذف الحساب بنجاح");
+      if (selectedAccount?.id === deletingId) { setSelectedAccount(null); }
       fetchAccounts();
     }
+    setDeletingId(null);
   };
 
-  const handleEdit = (account: Account) => {
-    setEditingAccount(account);
-    setFormData({
-      code: account.code,
-      name: account.name,
-      account_type: account.account_type,
-      internal_type: account.internal_type || "other",
-      account_group: account.account_group || "",
-      parent_id: account.parent_id || "",
-      allow_manual_entry: account.allow_manual_entry ?? true,
-      opening_balance: account.opening_balance || 0,
-      reconcile: account.reconcile ?? false,
-      currency_id: account.currency_id || "",
-    });
-    setIsDialogOpen(true);
-  };
-
-  const resetForm = () => {
-    setFormData({
-      code: "",
-      name: "",
-      account_type: "asset",
-      internal_type: "other",
-      account_group: "",
-      parent_id: "",
-      allow_manual_entry: true,
-      opening_balance: 0,
-      reconcile: false,
-      currency_id: "",
-    });
-    setEditingAccount(null);
-    setIsDialogOpen(false);
+  const handleFreeze = async (account: Account) => {
+    const { error } = await supabase.from("accounts").update({ is_frozen: !account.is_frozen }).eq("id", account.id);
+    if (error) toast.error("خطأ في تحديث الحساب");
+    else { toast.success(account.is_frozen ? "تم إلغاء تجميد الحساب" : "تم تجميد الحساب"); fetchAccounts(); }
   };
 
   const filteredAccounts = accounts.filter(
-    (acc) =>
-      acc.name.includes(searchQuery) || acc.code.includes(searchQuery)
+    (acc) => acc.name.includes(searchQuery) || acc.code.includes(searchQuery)
   );
-
   const accountTree = buildTree(filteredAccounts);
-  
-  // Get accounts that can be parents (accounts without allow_manual_entry or have children potential)
-  const getAvailableParents = () => {
-    return accounts.filter(acc => {
-      if (editingAccount && acc.id === editingAccount.id) return false;
-      return true;
-    });
-  };
 
   if (loading) {
     return (
@@ -319,6 +269,10 @@ export default function Accounts() {
       </div>
     );
   }
+
+  const showDetails = selectedAccount || isAdding;
+  const hasChildren = selectedAccount ? accounts.some(a => a.parent_id === selectedAccount.id) : false;
+  const isLeaf = selectedAccount ? !hasChildren : false;
 
   return (
     <div className="space-y-4">
@@ -329,316 +283,370 @@ export default function Accounts() {
           { label: "النظام المالي" },
           { label: "شجرة الحسابات" },
         ]}
-        onAdd={() => { resetForm(); setIsDialogOpen(true); }}
-        addLabel="إضافة حساب جديد"
+        onAdd={() => handleAddChild(null)}
+        addLabel="إضافة حساب"
         onRefresh={() => fetchAccounts()}
         searchValue={searchQuery}
         onSearchChange={setSearchQuery}
         searchPlaceholder="بحث في الحسابات..."
       />
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <div className="hidden"><DialogTrigger /></div>
-          <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>{editingAccount ? "تعديل الحساب" : "إضافة حساب جديد"}</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>رقم الحساب <span className="text-destructive">*</span></Label>
-                  <Input
-                    value={formData.code}
-                    onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                    placeholder="مثال: 1101"
-                    required
-                    maxLength={20}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>اسم الحساب <span className="text-destructive">*</span></Label>
-                  <Input
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="مثال: الصندوق الرئيسي"
-                    required
-                    maxLength={100}
-                  />
-                </div>
-              </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>نوع الحساب</Label>
-                  <Select
-                    value={formData.account_type}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, account_type: value as Account["account_type"] })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="asset">أصول</SelectItem>
-                      <SelectItem value="liability">التزامات</SelectItem>
-                      <SelectItem value="equity">حقوق ملكية</SelectItem>
-                      <SelectItem value="revenue">إيرادات</SelectItem>
-                      <SelectItem value="expense">مصروفات</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>النوع التفصيلي</Label>
-                  <Select
-                    value={formData.internal_type}
-                    onValueChange={(value) => setFormData({ ...formData, internal_type: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(internalTypeLabels).map(([value, label]) => (
-                        <SelectItem key={value} value={value}>
-                          {label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>الحساب الرئيسي</Label>
-                  <Select
-                    value={formData.parent_id || "none"}
-                    onValueChange={(value) => setFormData({ ...formData, parent_id: value === "none" ? "" : value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="اختر الحساب الرئيسي" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">بدون حساب رئيسي</SelectItem>
-                      {getAvailableParents().map((acc) => (
-                        <SelectItem key={acc.id} value={acc.id}>
-                          {acc.code} - {acc.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>مجموعة الحساب</Label>
-                  <Select
-                    value={formData.account_group || "none"}
-                    onValueChange={(value) => setFormData({ ...formData, account_group: value === "none" ? "" : value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="اختر المجموعة" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">بدون مجموعة</SelectItem>
-                      {accountGroups.map((group) => (
-                        <SelectItem key={group.value} value={group.value}>
-                          {group.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>العملة</Label>
-                  <Select
-                    value={formData.currency_id || "none"}
-                    onValueChange={(value) => setFormData({ ...formData, currency_id: value === "none" ? "" : value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="العملة الافتراضية" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">العملة الافتراضية</SelectItem>
-                      {currencies.map((currency) => (
-                        <SelectItem key={currency.id} value={currency.id}>
-                          {currency.code} - {currency.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>الرصيد الافتتاحي</Label>
-                  <Input
-                    type="number"
-                    value={formData.opening_balance || ""}
-                    onChange={(e) => setFormData({ ...formData, opening_balance: parseFloat(e.target.value) || 0 })}
-                    placeholder="0.00"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex items-center gap-3 p-3 border rounded-lg">
-                  <Switch
-                    id="allow_manual_entry"
-                    checked={formData.allow_manual_entry}
-                    onCheckedChange={(checked) => setFormData({ ...formData, allow_manual_entry: checked })}
-                  />
-                  <Label htmlFor="allow_manual_entry" className="cursor-pointer">
-                    السماح بالقيد اليدوي
-                  </Label>
-                </div>
-                <div className="flex items-center gap-3 p-3 border rounded-lg">
-                  <Switch
-                    id="reconcile"
-                    checked={formData.reconcile}
-                    onCheckedChange={(checked) => setFormData({ ...formData, reconcile: checked })}
-                  />
-                  <Label htmlFor="reconcile" className="cursor-pointer">
-                    تفعيل المطابقة
-                  </Label>
-                </div>
-              </div>
-
-              <div className="flex gap-2">
-                <Button type="submit" className="flex-1">
-                  {editingAccount ? "تحديث" : "إضافة"}
-                </Button>
-                <Button type="button" variant="outline" onClick={resetForm}>
-                  إلغاء
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
-
-      <Card>
-        <CardContent className="pt-6">
-          {accountTree.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              لا توجد حسابات. ابدأ بإضافة حساب جديد.
+      <div className="flex gap-4 flex-col lg:flex-row">
+        {/* Tree Panel */}
+        <Card className="lg:w-1/2 w-full">
+          <div className="p-4 border-b flex items-center justify-between">
+            <div className="flex items-center gap-2 text-lg font-semibold">
+              <FolderOpen className="h-5 w-5 text-primary" />
+              <span>دليل الحسابات</span>
             </div>
-          ) : (
-            <div className="space-y-2">
-              {accountTree.map((account) => (
-                <AccountTreeNode
-                  key={account.id}
-                  account={account}
-                  level={0}
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
-                  allAccounts={accounts}
-                />
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+          </div>
+          <CardContent className="pt-4 max-h-[70vh] overflow-y-auto">
+            {accountTree.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">
+                لا توجد حسابات. ابدأ بإضافة حساب جديد.
+              </div>
+            ) : (
+              <div className="space-y-0.5">
+                {accountTree.map((account) => (
+                  <TreeNode
+                    key={account.id}
+                    account={account}
+                    level={0}
+                    selectedId={selectedAccount?.id || null}
+                    onSelect={handleSelectAccount}
+                    onAddChild={handleAddChild}
+                    onDelete={(id) => setDeletingId(id)}
+                    onFreeze={handleFreeze}
+                    allAccounts={accounts}
+                  />
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Details Panel */}
+        <Card className="lg:w-1/2 w-full">
+          <div className="p-4 border-b bg-primary text-primary-foreground rounded-t-lg">
+            <h2 className="text-lg font-semibold text-center">
+              {isAdding ? "إضافة حساب جديد" : selectedAccount ? "إدارة تفاصيل الحساب" : "اختر حساباً لعرض التفاصيل"}
+            </h2>
+          </div>
+          <CardContent className="pt-6">
+            {!showDetails ? (
+              <div className="text-center py-20 text-muted-foreground">
+                <FolderOpen className="h-16 w-16 mx-auto mb-4 opacity-30" />
+                <p>اختر حساباً من الشجرة لعرض تفاصيله</p>
+                <p className="text-sm mt-2">أو اضغط (+) لإضافة حساب جديد</p>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-5">
+                {/* Row 1: Name */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>اسم الحساب (عربي) <span className="text-destructive">*</span></Label>
+                    <Input
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      placeholder="مثال: الصندوق الرئيسي"
+                      disabled={!isEditing && !isAdding}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>كود الحساب <span className="text-destructive">*</span></Label>
+                    <Input
+                      value={formData.code}
+                      onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                      placeholder="مثال: 1111"
+                      disabled={!isEditing && !isAdding}
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Row 2: Parent + Level */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>العلاقة مع الحساب الأب</Label>
+                    <Select
+                      value={formData.parent_id || "none"}
+                      onValueChange={(v) => setFormData({ ...formData, parent_id: v === "none" ? "" : v })}
+                      disabled={!isEditing && !isAdding}
+                    >
+                      <SelectTrigger><SelectValue placeholder="بدون حساب رئيسي" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">بدون حساب رئيسي</SelectItem>
+                        {accounts.filter(a => a.id !== selectedAccount?.id).map((a) => (
+                          <SelectItem key={a.id} value={a.id}>{a.code} - {a.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>رقم العقدة</Label>
+                    <div className="flex items-center gap-2 p-2 border rounded-md bg-muted/30 h-10">
+                      <span className="text-sm font-mono">
+                        {selectedAccount?.level || (formData.parent_id ? (accounts.find(a => a.id === formData.parent_id)?.level || 0) + 1 : 1)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Row 3: Flags */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-center gap-3 p-3 border rounded-lg">
+                    <Switch
+                      id="is_leaf"
+                      checked={formData.allow_manual_entry}
+                      onCheckedChange={(v) => setFormData({ ...formData, allow_manual_entry: v })}
+                      disabled={!isEditing && !isAdding}
+                    />
+                    <Label htmlFor="is_leaf" className="cursor-pointer">هل هو حساب فرعي (قابل للقيد)</Label>
+                  </div>
+                  <div className="flex items-center gap-3 p-3 border rounded-lg">
+                    <Switch
+                      id="reconcile"
+                      checked={formData.reconcile}
+                      onCheckedChange={(v) => setFormData({ ...formData, reconcile: v })}
+                      disabled={!isEditing && !isAdding}
+                    />
+                    <Label htmlFor="reconcile" className="cursor-pointer">السماح بالتسوية</Label>
+                  </div>
+                </div>
+
+                {/* Row 4: Account Type + Internal Type */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>نوع الحساب</Label>
+                    <Select
+                      value={formData.account_type}
+                      onValueChange={(v) => setFormData({ ...formData, account_type: v as Account["account_type"] })}
+                      disabled={!isEditing && !isAdding}
+                    >
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(accountTypeLabels).map(([v, l]) => (
+                          <SelectItem key={v} value={v}>{l}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>النوع التفصيلي</Label>
+                    <Select
+                      value={formData.internal_type}
+                      onValueChange={(v) => setFormData({ ...formData, internal_type: v })}
+                      disabled={!isEditing && !isAdding}
+                    >
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(internalTypeLabels).map(([v, l]) => (
+                          <SelectItem key={v} value={v}>{l}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* Row 5: Currency + Opening Balance */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>العملة</Label>
+                    <Select
+                      value={formData.currency_id || "none"}
+                      onValueChange={(v) => setFormData({ ...formData, currency_id: v === "none" ? "" : v })}
+                      disabled={!isEditing && !isAdding}
+                    >
+                      <SelectTrigger><SelectValue placeholder="العملة الافتراضية" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">العملة الافتراضية</SelectItem>
+                        {currencies.map((c) => (
+                          <SelectItem key={c.id} value={c.id}>{c.code} - {c.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>الرصيد الافتتاحي</Label>
+                    <Input
+                      type="number"
+                      value={formData.opening_balance || ""}
+                      onChange={(e) => setFormData({ ...formData, opening_balance: parseFloat(e.target.value) || 0 })}
+                      placeholder="0.00"
+                      disabled={!isEditing && !isAdding}
+                    />
+                  </div>
+                </div>
+
+                {/* Row 6: Account Group */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>نوع التقرير</Label>
+                    <Select
+                      value={formData.account_group || "none"}
+                      onValueChange={(v) => setFormData({ ...formData, account_group: v === "none" ? "" : v })}
+                      disabled={!isEditing && !isAdding}
+                    >
+                      <SelectTrigger><SelectValue placeholder="اختر المجموعة" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">بدون مجموعة</SelectItem>
+                        {accountGroups.map((g) => (
+                          <SelectItem key={g.value} value={g.value}>{g.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                {(isEditing || isAdding) && (
+                  <div className="flex gap-2 pt-4 border-t">
+                    <Button type="submit" className="flex-1 gap-2">
+                      <Save className="h-4 w-4" />
+                      {isAdding ? "حفظ" : "تحديث"}
+                    </Button>
+                    <Button type="button" variant="outline" onClick={() => { setIsEditing(false); setIsAdding(false); }} className="gap-2">
+                      <X className="h-4 w-4" />
+                      إلغاء
+                    </Button>
+                  </div>
+                )}
+
+                {selectedAccount && !isEditing && !isAdding && (
+                  <div className="flex gap-2 pt-4 border-t">
+                    <Button type="button" onClick={handleStartEdit} className="flex-1">
+                      تعديل الحساب
+                    </Button>
+                  </div>
+                )}
+              </form>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={!!deletingId} onOpenChange={() => setDeletingId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>تأكيد الحذف</AlertDialogTitle>
+            <AlertDialogDescription>هل أنت متأكد من حذف هذا الحساب؟ لا يمكن التراجع.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground">حذف</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
 
-function AccountTreeNode({
+/* ─────────────── Tree Node Component ─────────────── */
+
+function TreeNode({
   account,
   level,
-  onEdit,
+  selectedId,
+  onSelect,
+  onAddChild,
   onDelete,
+  onFreeze,
   allAccounts,
 }: {
   account: Account;
   level: number;
-  onEdit: (account: Account) => void;
+  selectedId: string | null;
+  onSelect: (a: Account) => void;
+  onAddChild: (parentId: string | null) => void;
   onDelete: (id: string) => void;
+  onFreeze: (a: Account) => void;
   allAccounts: Account[];
 }) {
-  const [isOpen, setIsOpen] = useState(level === 0);
+  const [isOpen, setIsOpen] = useState(level < 2);
   const hasChildren = account.children && account.children.length > 0;
-  const paddingRight = `${level * 1.5}rem`;
-  const isPostable = account.allow_manual_entry && !hasChildren;
+  const isLeaf = !hasChildren;
+  const isSelected = selectedId === account.id;
+  const paddingStart = `${level * 1.25 + 0.5}rem`;
 
   return (
     <div>
-      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-        <CollapsibleTrigger asChild>
-          <div
-            className={`flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 cursor-pointer transition-colors border ${
-              isPostable ? "border-l-4 border-l-green-500" : ""
-            }`}
-            style={{ paddingRight }}
+      <div
+        className={`flex items-center justify-between py-2 px-2 rounded cursor-pointer transition-colors group ${
+          isSelected ? "bg-primary/10 border border-primary/30" : "hover:bg-muted/50"
+        }`}
+        style={{ paddingInlineStart: paddingStart }}
+        onClick={() => onSelect(account)}
+      >
+        <div className="flex items-center gap-1.5 min-w-0 flex-1">
+          {hasChildren ? (
+            <button
+              onClick={(e) => { e.stopPropagation(); setIsOpen(!isOpen); }}
+              className="p-0.5 hover:bg-muted rounded"
+            >
+              {isOpen ? <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />}
+            </button>
+          ) : (
+            <div className="w-5" />
+          )}
+          {hasChildren ? (
+            isOpen ? <FolderOpen className="h-4 w-4 text-primary shrink-0" /> : <Folder className="h-4 w-4 text-primary shrink-0" />
+          ) : (
+            <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
+          )}
+          <span className={`text-sm truncate ${isSelected ? "font-semibold" : ""} ${account.is_frozen ? "text-muted-foreground line-through" : ""}`}>
+            {account.name} - {account.code}
+          </span>
+        </div>
+
+        {/* Action Buttons - visible on hover or when selected */}
+        <div className={`flex items-center gap-0.5 shrink-0 ${isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"} transition-opacity`}>
+          <button
+            onClick={(e) => { e.stopPropagation(); onAddChild(account.id); }}
+            className="p-1 rounded hover:bg-primary/10 text-primary"
+            title="إضافة حساب فرعي"
           >
-            <div className="flex items-center gap-2">
-              {hasChildren && (
-                <div className="text-muted-foreground">
-                  {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                </div>
-              )}
-              {!hasChildren && <div className="w-4" />}
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className={`font-semibold ${accountTypeColors[account.account_type] || ""}`}>
-                    {account.name}
-                  </span>
-                  <span className="text-sm text-muted-foreground">({account.code})</span>
-                  <Badge variant="secondary" className="text-xs">
-                    المستوى {account.level}
-                  </Badge>
-                  {isPostable && (
-                    <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">
-                      قابل للقيد
-                    </span>
-                  )}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {accountTypeLabels[account.account_type]}
-                  {account.internal_type && account.internal_type !== "other" && (
-                    <> • {internalTypeLabels[account.internal_type]}</>
-                  )}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onEdit(account);
-                }}
+            <Plus className="h-4 w-4" />
+          </button>
+          {isLeaf && (
+            <>
+              <button
+                onClick={(e) => { e.stopPropagation(); onDelete(account.id); }}
+                className="p-1 rounded hover:bg-destructive/10 text-destructive"
+                title="حذف"
               >
-                <Edit className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDelete(account.id);
-                }}
+                <Trash2 className="h-4 w-4" />
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); onFreeze(account); }}
+                className={`p-1 rounded ${account.is_frozen ? "text-green-600 hover:bg-green-50" : "text-orange-500 hover:bg-orange-50"}`}
+                title={account.is_frozen ? "إلغاء التجميد" : "تجميد"}
               >
-                <Trash2 className="h-4 w-4 text-destructive" />
-              </Button>
-            </div>
-          </div>
-        </CollapsibleTrigger>
-        {hasChildren && (
-          <CollapsibleContent>
-            <div className="mt-1 space-y-1">
-              {account.children!.map((child) => (
-                <AccountTreeNode
-                  key={child.id}
-                  account={child}
-                  level={level + 1}
-                  onEdit={onEdit}
-                  onDelete={onDelete}
-                  allAccounts={allAccounts}
-                />
-              ))}
-            </div>
-          </CollapsibleContent>
-        )}
-      </Collapsible>
+                <Pause className="h-4 w-4" />
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+
+      {hasChildren && isOpen && (
+        <div>
+          {account.children!.map((child) => (
+            <TreeNode
+              key={child.id}
+              account={child}
+              level={level + 1}
+              selectedId={selectedId}
+              onSelect={onSelect}
+              onAddChild={onAddChild}
+              onDelete={onDelete}
+              onFreeze={onFreeze}
+              allAccounts={allAccounts}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
