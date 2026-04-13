@@ -334,16 +334,53 @@ export default function FiscalPeriods() {
 
   return (
     <div className="space-y-4">
-      <ListPageHeader
-        title="الفترات المحاسبية"
-        breadcrumbs={[
-          { label: "الرئيسية", href: "/" },
-          { label: "النظام المالي" },
-          { label: "الفترات المحاسبية" },
-        ]}
-        showAdd={false}
-        showSearch={false}
-      />
+      <div className="flex items-center justify-between">
+        <ListPageHeader
+          title="الفترات المحاسبية"
+          breadcrumbs={[
+            { label: "الرئيسية", href: "/" },
+            { label: "النظام المالي" },
+            { label: "الفترات المحاسبية" },
+          ]}
+          showAdd={false}
+          showSearch={false}
+        />
+        <Button onClick={openAddDialog}>
+          <Plus className="h-4 w-4 ml-2" />
+          إضافة فترة
+        </Button>
+      </div>
+
+      {/* Add/Edit Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{editingPeriod ? "تعديل الفترة" : "إضافة فترة محاسبية جديدة"}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="code">رمز الفترة</Label>
+              <Input id="code" value={formData.code} onChange={(e) => setFormData({...formData, code: e.target.value})} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="name">اسم الفترة</Label>
+              <Input id="name" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} placeholder="مثال: السنة المالية 2025" required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="start_date">تاريخ البداية</Label>
+              <Input id="start_date" type="date" value={formData.start_date} onChange={(e) => setFormData({...formData, start_date: e.target.value})} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="end_date">تاريخ النهاية</Label>
+              <Input id="end_date" type="date" value={formData.end_date} onChange={(e) => setFormData({...formData, end_date: e.target.value})} required />
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button type="button" variant="outline" onClick={resetForm}>إلغاء</Button>
+              <Button type="submit">{editingPeriod ? "تحديث" : "إضافة"}</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
