@@ -350,6 +350,43 @@ export default function JournalEntries() {
     }
   };
 
+  const handlePost = async (id: string) => {
+    const entry = entries.find(e => e.id === id);
+    if (!entry || entry.is_posted) return;
+
+    // Verify entry has balanced lines
+    const { data: lines } = await supabase
+      .from("journal_entry_lines")
+      .select("debit_amount, credit_amount")
+      .eq("journal_entry_id", id);
+
+    if (!lines || lines.length < 2) {
+      toast.error("القيد يجب أن يحتوي على سطرين على الأقل");
+      return;
+    }
+
+    const totalDebit = lines.reduce((s, l) => s + (l.debit_amount || 0), 0);
+    const totalCredit = lines.reduce((s, l) => s + (l.credit_amount || 0), 0);
+
+    if (Math.abs(totalDebit - totalCredit) > 0.01) {
+      toast.error("القيد غير متوازن - لا يمكن ترحيله");
+      return;
+    }
+
+    const { error } = await supabase
+      .from("journal_entries")
+      .update({ is_posted: true, approved_by: user?.id })
+      .eq("id", id);
+
+    if (error) {
+      toast.error(error.message || "خطأ في ترحيل القيد");
+      console.error(error);
+    } else {
+      toast.success("تم ترحيل القيد بنجاح");
+      fetchEntries();
+    }
+  };
+
   const handleDelete = async (id: string) => {
     const entry = entries.find(e => e.id === id);
     if (entry?.is_posted) {
