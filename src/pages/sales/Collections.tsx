@@ -2,10 +2,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { Plus, Edit, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -13,6 +14,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { ListPageHeader } from "@/components/ListPageHeader";
+
+const paymentMethodLabels: Record<string, string> = {
+  cash: "نقدي",
+  bank_transfer: "تحويل بنكي",
+  check: "شيك",
+  credit_card: "بطاقة ائتمان",
+};
 
 export default function Collections() {
   const { user } = useAuth();
@@ -24,7 +32,7 @@ export default function Collections() {
     receipt_date: new Date().toISOString().split('T')[0],
     customer_id: "",
     amount: "",
-    payment_method: "cash" as const,
+    payment_method: "cash" as "cash" | "bank_transfer" | "check" | "credit_card",
     cash_box_id: "",
     bank_account_id: "",
     notes: ""
@@ -46,7 +54,7 @@ export default function Collections() {
   const { data: customers = [] } = useQuery({
     queryKey: ["customers"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("customers").select("*").eq("is_active", true);
+      const { data, error } = await supabase.from("customers").select("*").eq("is_active", true).order("name");
       if (error) throw error;
       return data;
     }
@@ -70,20 +78,27 @@ export default function Collections() {
     }
   });
 
+  const generateNumber = () => {
+    const count = collections.length + 1;
+    return `COL-${String(count).padStart(5, '0')}`;
+  };
+
+  const getCustomerAccount = async (customerId: string) => {
+    const { data } = await supabase.from("customers").select("account_id").eq("id", customerId).single();
+    return data?.account_id || null;
+  };
+
   const mutation = useMutation({
     mutationFn: async (data: any) => {
       if (editingCollection) {
         const { error } = await supabase.from("collections").update(data).eq("id", editingCollection.id);
         if (error) throw error;
       } else {
-        // Insert collection
-        const { data: newCollection, error } = await supabase.from("collections").insert([{ ...data, created_by: user?.id }]).select().single();
+        const { data: newCol, error } = await supabase.from("collections").insert([{ ...data, created_by: user?.id }]).select().single();
         if (error) throw error;
 
-        // Auto-generate journal entry
         try {
           const { createAutoJournalEntry, getLinkedAccount, getJournalTypeForAccount } = await import("@/hooks/useAutoJournalEntry");
-          
           const cashOrBankAccountId = await getLinkedAccount(data.bank_account_id, data.cash_box_id);
           const customerAccount = await getCustomerAccount(data.customer_id);
           const journalTypeId = await getJournalTypeForAccount(data.bank_account_id, data.cash_box_id);
@@ -104,26 +119,17 @@ export default function Collections() {
           }
         } catch (journalError) {
           console.error("Failed to create auto journal entry:", journalError);
-          toast.warning("تم حفظ السند لكن لم يتم إنشاء القيد تلقائياً - تحقق من ربط الحسابات");
+          toast.warning("تم حفظ السند لكن لم يتم إنشاء القيد تلقائياً");
         }
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["collections"] });
-      toast.success(editingCollection ? "تم تحديث سند القبض بنجاح" : "تم إضافة سند القبض بنجاح");
-      setIsAddOpen(false);
-      setEditingCollection(null);
-      resetForm();
+      toast.success(editingCollection ? "تم تحديث سند القبض" : "تم إضافة سند القبض");
+      closeDialog();
     },
-    onError: () => {
-      toast.error("حدث خطأ، حاول مرة أخرى");
-    }
+    onError: () => toast.error("حدث خطأ، حاول مرة أخرى")
   });
-
-  const getCustomerAccount = async (customerId: string) => {
-    const { data } = await supabase.from("customers").select("account_id").eq("id", customerId).single();
-    return data?.account_id || null;
-  };
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
@@ -132,17 +138,21 @@ export default function Collections() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["collections"] });
-      toast.success("تم حذف سند القبض بنجاح");
+      toast.success("تم حذف سند القبض");
       setDeletingId(null);
     },
-    onError: () => {
-      toast.error("حدث خطأ، حاول مرة أخرى");
-    }
+    onError: () => toast.error("حدث خطأ، حاول مرة أخرى")
   });
 
-  const resetForm = () => {
+  const closeDialog = () => {
+    setIsAddOpen(false);
+    setEditingCollection(null);
+  };
+
+  const openAdd = () => {
+    setEditingCollection(null);
     setFormData({
-      receipt_number: "",
+      receipt_number: generateNumber(),
       receipt_date: new Date().toISOString().split('T')[0],
       customer_id: "",
       amount: "",
@@ -151,15 +161,25 @@ export default function Collections() {
       bank_account_id: "",
       notes: ""
     });
+    setIsAddOpen(true);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.customer_id) { toast.error("اختر العميل"); return; }
+    if (!formData.amount || parseFloat(formData.amount) <= 0) { toast.error("أدخل المبلغ"); return; }
+    if (formData.payment_method === "cash" && !formData.cash_box_id) { toast.error("اختر الصندوق"); return; }
+    if (formData.payment_method !== "cash" && !formData.bank_account_id) { toast.error("اختر الحساب البنكي"); return; }
+
     mutation.mutate({
-      ...formData,
+      receipt_number: formData.receipt_number,
+      receipt_date: formData.receipt_date,
+      customer_id: formData.customer_id,
       amount: parseFloat(formData.amount),
+      payment_method: formData.payment_method,
       cash_box_id: formData.payment_method === "cash" ? formData.cash_box_id : null,
-      bank_account_id: formData.payment_method !== "cash" ? formData.bank_account_id : null
+      bank_account_id: formData.payment_method !== "cash" ? formData.bank_account_id : null,
+      notes: formData.notes || null
     });
   };
 
@@ -180,26 +200,32 @@ export default function Collections() {
 
   return (
     <div className="space-y-4">
-      <ListPageHeader
-        title="التحصيلات"
-        breadcrumbs={[
-          { label: "الرئيسية", href: "/" },
-          { label: "نظام المبيعات" },
-          { label: "التحصيلات" },
-        ]}
-        showAdd={false}
-        showSearch={false}
-      />
+      <div className="flex items-center justify-between">
+        <ListPageHeader
+          title="سندات القبض"
+          breadcrumbs={[
+            { label: "الرئيسية", href: "/" },
+            { label: "نظام المبيعات" },
+            { label: "سندات القبض" },
+          ]}
+          showAdd={false}
+          showSearch={false}
+        />
+        <Button onClick={openAdd}>
+          <Plus className="h-4 w-4 ml-2" />
+          إضافة سند قبض
+        </Button>
+      </div>
 
       <Card>
         <CardHeader>
-          <h3 className="text-lg font-semibold">سجل التحصيلات</h3>
+          <h3 className="text-lg font-semibold">سجل سندات القبض</h3>
         </CardHeader>
         <CardContent>
           {isLoading ? (
             <div className="text-center py-12">جاري التحميل...</div>
           ) : collections.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">لا توجد تحصيلات مسجلة</div>
+            <div className="text-center py-12 text-muted-foreground">لا توجد سندات قبض مسجلة</div>
           ) : (
             <Table>
               <TableHeader>
@@ -213,20 +239,20 @@ export default function Collections() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {collections.map((collection: any) => (
-                  <TableRow key={collection.id}>
-                    <TableCell>{collection.receipt_number}</TableCell>
-                    <TableCell>{new Date(collection.receipt_date).toLocaleDateString('ar-SA')}</TableCell>
-                    <TableCell>{collection.customers?.name}</TableCell>
-                    <TableCell>{collection.amount} ر.س</TableCell>
-                    <TableCell>{collection.payment_method}</TableCell>
+                {collections.map((col: any) => (
+                  <TableRow key={col.id}>
+                    <TableCell className="font-mono">{col.receipt_number}</TableCell>
+                    <TableCell>{new Date(col.receipt_date).toLocaleDateString('ar-SA')}</TableCell>
+                    <TableCell>{col.customers?.name}</TableCell>
+                    <TableCell>{Number(col.amount).toLocaleString()}</TableCell>
+                    <TableCell>{paymentMethodLabels[col.payment_method] || col.payment_method}</TableCell>
                     <TableCell>
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm" onClick={() => handleEdit(collection)}>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="icon" onClick={() => handleEdit(col)}>
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="outline" size="sm" onClick={() => setDeletingId(collection.id)}>
-                          <Trash2 className="h-4 w-4" />
+                        <Button variant="ghost" size="icon" onClick={() => setDeletingId(col.id)}>
+                          <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       </div>
                     </TableCell>
@@ -237,6 +263,83 @@ export default function Collections() {
           )}
         </CardContent>
       </Card>
+
+      {/* Add/Edit Dialog */}
+      <Dialog open={isAddOpen} onOpenChange={(open) => { if (!open) closeDialog(); }}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{editingCollection ? "تعديل سند القبض" : "إضافة سند قبض جديد"}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>رقم السند</Label>
+                <Input value={formData.receipt_number} onChange={e => setFormData({...formData, receipt_number: e.target.value})} required />
+              </div>
+              <div className="space-y-2">
+                <Label>التاريخ</Label>
+                <Input type="date" value={formData.receipt_date} onChange={e => setFormData({...formData, receipt_date: e.target.value})} required />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>العميل</Label>
+              <Select value={formData.customer_id} onValueChange={v => setFormData({...formData, customer_id: v})}>
+                <SelectTrigger><SelectValue placeholder="اختر العميل" /></SelectTrigger>
+                <SelectContent>
+                  {customers.map((c: any) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>المبلغ</Label>
+                <Input type="number" min="0" step="0.01" value={formData.amount} onChange={e => setFormData({...formData, amount: e.target.value})} required />
+              </div>
+              <div className="space-y-2">
+                <Label>طريقة الدفع</Label>
+                <Select value={formData.payment_method} onValueChange={(v: any) => setFormData({...formData, payment_method: v})}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="cash">نقدي</SelectItem>
+                    <SelectItem value="bank_transfer">تحويل بنكي</SelectItem>
+                    <SelectItem value="check">شيك</SelectItem>
+                    <SelectItem value="credit_card">بطاقة ائتمان</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            {formData.payment_method === "cash" ? (
+              <div className="space-y-2">
+                <Label>الصندوق</Label>
+                <Select value={formData.cash_box_id} onValueChange={v => setFormData({...formData, cash_box_id: v})}>
+                  <SelectTrigger><SelectValue placeholder="اختر الصندوق" /></SelectTrigger>
+                  <SelectContent>
+                    {cashBoxes.map((c: any) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <Label>الحساب البنكي</Label>
+                <Select value={formData.bank_account_id} onValueChange={v => setFormData({...formData, bank_account_id: v})}>
+                  <SelectTrigger><SelectValue placeholder="اختر الحساب البنكي" /></SelectTrigger>
+                  <SelectContent>
+                    {bankAccounts.map((b: any) => <SelectItem key={b.id} value={b.id}>{b.bank_name} - {b.account_number}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            <div className="space-y-2">
+              <Label>ملاحظات</Label>
+              <Textarea value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})} />
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button type="button" variant="outline" onClick={closeDialog}>إلغاء</Button>
+              <Button type="submit" disabled={mutation.isPending}>{editingCollection ? "تحديث" : "إضافة"}</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={!!deletingId} onOpenChange={() => setDeletingId(null)}>
         <AlertDialogContent>
