@@ -76,8 +76,36 @@ export default function Collections() {
         const { error } = await supabase.from("collections").update(data).eq("id", editingCollection.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("collections").insert([{ ...data, created_by: user?.id }]);
+        // Insert collection
+        const { data: newCollection, error } = await supabase.from("collections").insert([{ ...data, created_by: user?.id }]).select().single();
         if (error) throw error;
+
+        // Auto-generate journal entry
+        try {
+          const { createAutoJournalEntry, getLinkedAccount, getJournalTypeForAccount } = await import("@/hooks/useAutoJournalEntry");
+          
+          const cashOrBankAccountId = await getLinkedAccount(data.bank_account_id, data.cash_box_id);
+          const customerAccount = await getCustomerAccount(data.customer_id);
+          const journalTypeId = await getJournalTypeForAccount(data.bank_account_id, data.cash_box_id);
+          
+          if (cashOrBankAccountId && customerAccount) {
+            await createAutoJournalEntry({
+              entry_date: data.receipt_date,
+              description: `سند قبض رقم ${data.receipt_number}`,
+              reference: data.receipt_number,
+              created_by: user!.id,
+              journal_type_id: journalTypeId || undefined,
+              lines: [
+                { account_id: cashOrBankAccountId, debit_amount: data.amount, credit_amount: 0, description: `قبض من عميل - ${data.receipt_number}` },
+                { account_id: customerAccount, debit_amount: 0, credit_amount: data.amount, description: `قبض من عميل - ${data.receipt_number}` },
+              ],
+            });
+            toast.info("تم إنشاء القيد المحاسبي تلقائياً");
+          }
+        } catch (journalError) {
+          console.error("Failed to create auto journal entry:", journalError);
+          toast.warning("تم حفظ السند لكن لم يتم إنشاء القيد تلقائياً - تحقق من ربط الحسابات");
+        }
       }
     },
     onSuccess: () => {
@@ -91,6 +119,11 @@ export default function Collections() {
       toast.error("حدث خطأ، حاول مرة أخرى");
     }
   });
+
+  const getCustomerAccount = async (customerId: string) => {
+    const { data } = await supabase.from("customers").select("account_id").eq("id", customerId).single();
+    return data?.account_id || null;
+  };
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
