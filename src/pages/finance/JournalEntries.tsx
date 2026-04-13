@@ -826,7 +826,15 @@ export default function JournalEntries() {
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle>تفاصيل القيد</DialogTitle>
+            <div className="flex items-center justify-between">
+              <DialogTitle>تفاصيل القيد</DialogTitle>
+              {viewingEntry && !viewingEntry.is_posted && (
+                <Button size="sm" onClick={() => { handlePost(viewingEntry.id); setIsViewDialogOpen(false); }}>
+                  <CheckCircle2 className="h-4 w-4 ml-2" />
+                  ترحيل القيد
+                </Button>
+              )}
+            </div>
           </DialogHeader>
           {viewingEntry && (
             <div className="space-y-4">
