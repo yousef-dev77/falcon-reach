@@ -796,6 +796,14 @@ export default function JournalEntries() {
                         </Button>
                         {!entry.is_posted && (
                           <>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => handlePost(entry.id)}
+                              title="ترحيل القيد"
+                            >
+                              <CheckCircle2 className="h-4 w-4 text-green-600" />
+                            </Button>
                             <Button variant="ghost" size="icon" onClick={() => handleEdit(entry)}>
                               <Edit className="h-4 w-4" />
                             </Button>
