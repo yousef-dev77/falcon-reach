@@ -132,8 +132,12 @@ export default function Customers() {
           { label: "نظام المبيعات" },
           { label: "العملاء" },
         ]}
-        showAdd={false}
-        showSearch={false}
+        onAdd={() => { resetForm(); setEditingCustomer(null); setIsAddOpen(true); }}
+        addLabel="إضافة عميل"
+        onRefresh={() => queryClient.invalidateQueries({ queryKey: ["customers"] })}
+        searchValue={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder="ابحث عن عميل..."
       />
 
       <Card>

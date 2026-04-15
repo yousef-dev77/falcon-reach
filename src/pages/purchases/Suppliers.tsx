@@ -128,8 +128,12 @@ export default function Suppliers() {
           { label: "نظام المشتريات" },
           { label: "الموردين" },
         ]}
-        showAdd={false}
-        showSearch={false}
+        onAdd={() => { resetForm(); setEditingSupplier(null); setIsAddOpen(true); }}
+        addLabel="إضافة مورد"
+        onRefresh={() => queryClient.invalidateQueries({ queryKey: ["suppliers"] })}
+        searchValue={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder="ابحث عن مورد..."
       />
 
       <Card>
