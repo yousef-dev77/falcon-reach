@@ -137,13 +137,7 @@ export default function Suppliers() {
       />
 
       <Card>
-        <CardHeader>
-          <div className="relative">
-            <Search className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="ابحث عن مورد..." className="pr-10" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
-          </div>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           {isLoading ? (
             <div className="text-center py-12">جاري التحميل...</div>
           ) : filteredSuppliers.length === 0 ? (
