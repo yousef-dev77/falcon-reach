@@ -106,8 +106,9 @@ export default function Warehouses() {
           { label: "النظام المخزني" },
           { label: "المستودعات" },
         ]}
-        showAdd={false}
-        showSearch={false}
+        onAdd={() => { resetForm(); setEditingWarehouse(null); setIsAddOpen(true); }}
+        addLabel="إضافة مستودع"
+        onRefresh={() => queryClient.invalidateQueries({ queryKey: ["warehouses"] })}
       />
 
       {isLoading ? (
@@ -141,6 +142,25 @@ export default function Warehouses() {
           ))}
         </div>
       )}
+
+      <Dialog open={isAddOpen} onOpenChange={(open) => { setIsAddOpen(open); if (!open) { setEditingWarehouse(null); resetForm(); } }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{editingWarehouse ? "تعديل مستودع" : "إضافة مستودع جديد"}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label>الكود</Label><Input value={formData.code} onChange={e => setFormData({...formData, code: e.target.value})} required /></div>
+              <div><Label>الاسم</Label><Input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required /></div>
+            </div>
+            <div><Label>العنوان</Label><Input value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} /></div>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button type="button" variant="outline" onClick={() => setIsAddOpen(false)}>إلغاء</Button>
+              <Button type="submit">{editingWarehouse ? "تحديث" : "حفظ"}</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={!!deletingId} onOpenChange={() => setDeletingId(null)}>
         <AlertDialogContent>

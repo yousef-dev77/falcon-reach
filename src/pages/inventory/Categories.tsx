@@ -90,8 +90,9 @@ export default function Categories() {
           { label: "النظام المخزني" },
           { label: "فئات المنتجات" },
         ]}
-        showAdd={false}
-        showSearch={false}
+        onAdd={() => { resetForm(); setIsAddDialogOpen(true); }}
+        addLabel="إضافة فئة"
+        onRefresh={() => queryClient.invalidateQueries({ queryKey: ["product_categories"] })}
       />
 
       <Card>
@@ -151,6 +152,25 @@ export default function Categories() {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>إضافة فئة جديدة</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label>رمز الفئة</Label>
+              <Input value={formData.code} onChange={(e) => setFormData({...formData, code: e.target.value})} required />
+            </div>
+            <div>
+              <Label>اسم الفئة</Label>
+              <Input value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} required />
+            </div>
+            <Button type="submit" className="w-full">حفظ</Button>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
