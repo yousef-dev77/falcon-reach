@@ -90,8 +90,9 @@ export default function Units() {
           { label: "النظام المخزني" },
           { label: "وحدات القياس" },
         ]}
-        showAdd={false}
-        showSearch={false}
+        onAdd={() => { resetForm(); setIsAddDialogOpen(true); }}
+        addLabel="إضافة وحدة"
+        onRefresh={() => queryClient.invalidateQueries({ queryKey: ["units_of_measure"] })}
       />
 
       <Card>
@@ -151,6 +152,25 @@ export default function Units() {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>إضافة وحدة جديدة</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label>رمز الوحدة</Label>
+              <Input value={formData.code} onChange={(e) => setFormData({...formData, code: e.target.value})} required />
+            </div>
+            <div>
+              <Label>اسم الوحدة</Label>
+              <Input value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} required />
+            </div>
+            <Button type="submit" className="w-full">حفظ</Button>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
