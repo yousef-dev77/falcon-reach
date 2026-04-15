@@ -128,18 +128,16 @@ export default function Suppliers() {
           { label: "نظام المشتريات" },
           { label: "الموردين" },
         ]}
-        showAdd={false}
-        showSearch={false}
+        onAdd={() => { resetForm(); setEditingSupplier(null); setIsAddOpen(true); }}
+        addLabel="إضافة مورد"
+        onRefresh={() => queryClient.invalidateQueries({ queryKey: ["suppliers"] })}
+        searchValue={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder="ابحث عن مورد..."
       />
 
       <Card>
-        <CardHeader>
-          <div className="relative">
-            <Search className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="ابحث عن مورد..." className="pr-10" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
-          </div>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           {isLoading ? (
             <div className="text-center py-12">جاري التحميل...</div>
           ) : filteredSuppliers.length === 0 ? (
@@ -181,6 +179,29 @@ export default function Suppliers() {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={isAddOpen} onOpenChange={(open) => { setIsAddOpen(open); if (!open) { setEditingSupplier(null); resetForm(); } }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{editingSupplier ? "تعديل مورد" : "إضافة مورد جديد"}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label>الكود</Label><Input value={formData.code} onChange={e => setFormData({...formData, code: e.target.value})} required /></div>
+              <div><Label>الاسم</Label><Input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required /></div>
+              <div><Label>الهاتف</Label><Input value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} /></div>
+              <div><Label>البريد الإلكتروني</Label><Input type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} /></div>
+              <div><Label>الرقم الضريبي</Label><Input value={formData.tax_number} onChange={e => setFormData({...formData, tax_number: e.target.value})} /></div>
+              <div><Label>مدة السداد (يوم)</Label><Input type="number" value={formData.payment_terms} onChange={e => setFormData({...formData, payment_terms: e.target.value})} /></div>
+            </div>
+            <div><Label>العنوان</Label><Input value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} /></div>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button type="button" variant="outline" onClick={() => setIsAddOpen(false)}>إلغاء</Button>
+              <Button type="submit">{editingSupplier ? "تحديث" : "حفظ"}</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={!!deletingId} onOpenChange={() => setDeletingId(null)}>
         <AlertDialogContent>

@@ -238,14 +238,13 @@ export default function PurchaseInvoices() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <ListPageHeader
-          title="فواتير المشتريات"
-          breadcrumbs={[{ label: "الرئيسية", href: "/" }, { label: "نظام المشتريات" }, { label: "فواتير المشتريات" }]}
-          showAdd={false} showSearch={false}
-        />
-        <Button onClick={openAdd}><Plus className="h-4 w-4 ml-2" />إنشاء فاتورة</Button>
-      </div>
+      <ListPageHeader
+        title="فواتير المشتريات"
+        breadcrumbs={[{ label: "الرئيسية", href: "/" }, { label: "نظام المشتريات" }, { label: "فواتير المشتريات" }]}
+        onAdd={openAdd}
+        addLabel="إنشاء فاتورة"
+        onRefresh={fetchAll}
+      />
 
       <div className="grid gap-4 md:grid-cols-4">
         <Card><CardHeader className="pb-2"><CardTitle className="text-sm">إجمالي الفواتير</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{invoices.length}</div></CardContent></Card>

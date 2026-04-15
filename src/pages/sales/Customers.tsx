@@ -132,18 +132,16 @@ export default function Customers() {
           { label: "نظام المبيعات" },
           { label: "العملاء" },
         ]}
-        showAdd={false}
-        showSearch={false}
+        onAdd={() => { resetForm(); setEditingCustomer(null); setIsAddOpen(true); }}
+        addLabel="إضافة عميل"
+        onRefresh={() => queryClient.invalidateQueries({ queryKey: ["customers"] })}
+        searchValue={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder="ابحث عن عميل..."
       />
 
       <Card>
-        <CardHeader>
-          <div className="relative">
-            <Search className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="ابحث عن عميل..." className="pr-10" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
-          </div>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           {isLoading ? (
             <div className="text-center py-12">جاري التحميل...</div>
           ) : filteredCustomers.length === 0 ? (
@@ -185,6 +183,30 @@ export default function Customers() {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={isAddOpen} onOpenChange={(open) => { setIsAddOpen(open); if (!open) { setEditingCustomer(null); resetForm(); } }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{editingCustomer ? "تعديل عميل" : "إضافة عميل جديد"}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label>الكود</Label><Input value={formData.code} onChange={e => setFormData({...formData, code: e.target.value})} required /></div>
+              <div><Label>الاسم</Label><Input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required /></div>
+              <div><Label>الهاتف</Label><Input value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} /></div>
+              <div><Label>البريد الإلكتروني</Label><Input type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} /></div>
+              <div><Label>الرقم الضريبي</Label><Input value={formData.tax_number} onChange={e => setFormData({...formData, tax_number: e.target.value})} /></div>
+              <div><Label>حد الائتمان</Label><Input type="number" value={formData.credit_limit} onChange={e => setFormData({...formData, credit_limit: e.target.value})} /></div>
+              <div><Label>مدة السداد (يوم)</Label><Input type="number" value={formData.payment_terms} onChange={e => setFormData({...formData, payment_terms: e.target.value})} /></div>
+            </div>
+            <div><Label>العنوان</Label><Input value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} /></div>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button type="button" variant="outline" onClick={() => setIsAddOpen(false)}>إلغاء</Button>
+              <Button type="submit">{editingCustomer ? "تحديث" : "حفظ"}</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={!!deletingId} onOpenChange={() => setDeletingId(null)}>
         <AlertDialogContent>
