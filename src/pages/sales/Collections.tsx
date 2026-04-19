@@ -7,13 +7,15 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Edit, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Plus, Eye, Trash2, Link2 } from "lucide-react";
+import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { ListPageHeader } from "@/components/ListPageHeader";
+import { InvoiceAllocationTable, AllocationRow, InvoiceItem } from "@/components/InvoiceAllocationTable";
 
 const paymentMethodLabels: Record<string, string> = {
   cash: "نقدي",
@@ -25,8 +27,9 @@ const paymentMethodLabels: Record<string, string> = {
 export default function Collections() {
   const { user } = useAuth();
   const [isAddOpen, setIsAddOpen] = useState(false);
-  const [editingCollection, setEditingCollection] = useState<any>(null);
+  const [viewingId, setViewingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [allocations, setAllocations] = useState<AllocationRow[]>([]);
   const [formData, setFormData] = useState({
     receipt_number: "",
     receipt_date: new Date().toISOString().split('T')[0],
@@ -44,7 +47,7 @@ export default function Collections() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("collections")
-        .select("*, customers(name)")
+        .select("*, customers(name), collection_allocations(id, allocated_amount, invoice_id, sales_invoices(invoice_number))")
         .order("receipt_date", { ascending: false });
       if (error) throw error;
       return data;
@@ -78,6 +81,32 @@ export default function Collections() {
     }
   });
 
+  // Unpaid invoices for the selected customer
+  const { data: customerInvoices = [] } = useQuery({
+    queryKey: ["customer_unpaid_invoices", formData.customer_id],
+    enabled: !!formData.customer_id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("sales_invoices")
+        .select("id, invoice_number, invoice_date, total_amount, paid_amount, status")
+        .eq("customer_id", formData.customer_id)
+        .neq("status", "draft")
+        .neq("status", "cancelled")
+        .order("invoice_date", { ascending: true });
+      if (error) throw error;
+      return (data || [])
+        .map(inv => ({
+          id: inv.id,
+          invoice_number: inv.invoice_number,
+          invoice_date: inv.invoice_date,
+          total_amount: Number(inv.total_amount) || 0,
+          paid_amount: Number(inv.paid_amount) || 0,
+          remaining: (Number(inv.total_amount) || 0) - (Number(inv.paid_amount) || 0),
+        }))
+        .filter(inv => inv.remaining > 0.01) as InvoiceItem[];
+    }
+  });
+
   const generateNumber = () => {
     const count = collections.length + 1;
     return `COL-${String(count).padStart(5, '0')}`;
@@ -88,47 +117,59 @@ export default function Collections() {
     return data?.account_id || null;
   };
 
-  const mutation = useMutation({
+  const createMutation = useMutation({
     mutationFn: async (data: any) => {
-      if (editingCollection) {
-        const { error } = await supabase.from("collections").update(data).eq("id", editingCollection.id);
-        if (error) throw error;
-      } else {
-        const { data: newCol, error } = await supabase.from("collections").insert([{ ...data, created_by: user?.id }]).select().single();
-        if (error) throw error;
+      const { data: newCol, error } = await supabase
+        .from("collections")
+        .insert([{ ...data.collection, created_by: user?.id }])
+        .select().single();
+      if (error) throw error;
 
-        try {
-          const { createAutoJournalEntry, getLinkedAccount, getJournalTypeForAccount } = await import("@/hooks/useAutoJournalEntry");
-          const cashOrBankAccountId = await getLinkedAccount(data.bank_account_id, data.cash_box_id);
-          const customerAccount = await getCustomerAccount(data.customer_id);
-          const journalTypeId = await getJournalTypeForAccount(data.bank_account_id, data.cash_box_id);
-          
-          if (cashOrBankAccountId && customerAccount) {
-            await createAutoJournalEntry({
-              entry_date: data.receipt_date,
-              description: `سند قبض رقم ${data.receipt_number}`,
-              reference: data.receipt_number,
-              created_by: user!.id,
-              journal_type_id: journalTypeId || undefined,
-              lines: [
-                { account_id: cashOrBankAccountId, debit_amount: data.amount, credit_amount: 0, description: `قبض من عميل - ${data.receipt_number}` },
-                { account_id: customerAccount, debit_amount: 0, credit_amount: data.amount, description: `قبض من عميل - ${data.receipt_number}` },
-              ],
-            });
-            toast.info("تم إنشاء القيد المحاسبي تلقائياً");
-          }
-        } catch (journalError) {
-          console.error("Failed to create auto journal entry:", journalError);
-          toast.warning("تم حفظ السند لكن لم يتم إنشاء القيد تلقائياً");
+      // 1. Insert allocations (triggers will update invoice paid_amount + status)
+      if (data.allocations.length > 0) {
+        const allocRows = data.allocations.map((a: AllocationRow) => ({
+          collection_id: newCol.id,
+          invoice_id: a.invoice_id,
+          allocated_amount: a.allocated_amount,
+        }));
+        const { error: allocError } = await supabase.from("collection_allocations").insert(allocRows);
+        if (allocError) throw allocError;
+      }
+
+      // 2. Auto-create journal entry
+      try {
+        const { createAutoJournalEntry, getLinkedAccount, getJournalTypeForAccount } = await import("@/hooks/useAutoJournalEntry");
+        const cashOrBankAccountId = await getLinkedAccount(data.collection.bank_account_id, data.collection.cash_box_id);
+        const customerAccount = await getCustomerAccount(data.collection.customer_id);
+        const journalTypeId = await getJournalTypeForAccount(data.collection.bank_account_id, data.collection.cash_box_id);
+
+        if (cashOrBankAccountId && customerAccount) {
+          await createAutoJournalEntry({
+            entry_date: data.collection.receipt_date,
+            description: `سند قبض رقم ${data.collection.receipt_number}`,
+            reference: data.collection.receipt_number,
+            created_by: user!.id,
+            journal_type_id: journalTypeId || undefined,
+            lines: [
+              { account_id: cashOrBankAccountId, debit_amount: data.collection.amount, credit_amount: 0, description: `قبض من عميل - ${data.collection.receipt_number}` },
+              { account_id: customerAccount, debit_amount: 0, credit_amount: data.collection.amount, description: `قبض من عميل - ${data.collection.receipt_number}` },
+            ],
+          });
+        } else {
+          toast.warning("تم الحفظ لكن لم يُنشأ القيد - تأكد من ربط حساب العميل والصندوق/البنك");
         }
+      } catch (err: any) {
+        console.error("Failed to create auto journal entry:", err);
+        toast.warning(`تم حفظ السند لكن فشل القيد: ${err.message || ""}`);
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["collections"] });
-      toast.success(editingCollection ? "تم تحديث سند القبض" : "تم إضافة سند القبض");
+      queryClient.invalidateQueries({ queryKey: ["sales_invoices"] });
+      toast.success("تم إنشاء سند القبض وترحيله بنجاح");
       closeDialog();
     },
-    onError: () => toast.error("حدث خطأ، حاول مرة أخرى")
+    onError: (err: any) => toast.error(err.message || "حدث خطأ، حاول مرة أخرى")
   });
 
   const deleteMutation = useMutation({
@@ -141,16 +182,15 @@ export default function Collections() {
       toast.success("تم حذف سند القبض");
       setDeletingId(null);
     },
-    onError: () => toast.error("حدث خطأ، حاول مرة أخرى")
+    onError: (err: any) => toast.error(err.message || "لا يمكن حذف هذا السند")
   });
 
   const closeDialog = () => {
     setIsAddOpen(false);
-    setEditingCollection(null);
+    setAllocations([]);
   };
 
   const openAdd = () => {
-    setEditingCollection(null);
     setFormData({
       receipt_number: generateNumber(),
       receipt_date: new Date().toISOString().split('T')[0],
@@ -161,42 +201,40 @@ export default function Collections() {
       bank_account_id: "",
       notes: ""
     });
+    setAllocations([]);
     setIsAddOpen(true);
   };
+
+  const totalAllocated = useMemo(
+    () => allocations.reduce((s, a) => s + (Number(a.allocated_amount) || 0), 0),
+    [allocations]
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const amount = parseFloat(formData.amount);
     if (!formData.customer_id) { toast.error("اختر العميل"); return; }
-    if (!formData.amount || parseFloat(formData.amount) <= 0) { toast.error("أدخل المبلغ"); return; }
+    if (!amount || amount <= 0) { toast.error("أدخل المبلغ"); return; }
     if (formData.payment_method === "cash" && !formData.cash_box_id) { toast.error("اختر الصندوق"); return; }
     if (formData.payment_method !== "cash" && !formData.bank_account_id) { toast.error("اختر الحساب البنكي"); return; }
+    if (totalAllocated > amount + 0.01) { toast.error("المخصص للفواتير أكبر من مبلغ السند"); return; }
 
-    mutation.mutate({
-      receipt_number: formData.receipt_number,
-      receipt_date: formData.receipt_date,
-      customer_id: formData.customer_id,
-      amount: parseFloat(formData.amount),
-      payment_method: formData.payment_method,
-      cash_box_id: formData.payment_method === "cash" ? formData.cash_box_id : null,
-      bank_account_id: formData.payment_method !== "cash" ? formData.bank_account_id : null,
-      notes: formData.notes || null
+    createMutation.mutate({
+      collection: {
+        receipt_number: formData.receipt_number,
+        receipt_date: formData.receipt_date,
+        customer_id: formData.customer_id,
+        amount,
+        payment_method: formData.payment_method,
+        cash_box_id: formData.payment_method === "cash" ? formData.cash_box_id : null,
+        bank_account_id: formData.payment_method !== "cash" ? formData.bank_account_id : null,
+        notes: formData.notes || null
+      },
+      allocations,
     });
   };
 
-  const handleEdit = (collection: any) => {
-    setEditingCollection(collection);
-    setFormData({
-      receipt_number: collection.receipt_number,
-      receipt_date: collection.receipt_date,
-      customer_id: collection.customer_id,
-      amount: collection.amount.toString(),
-      payment_method: collection.payment_method,
-      cash_box_id: collection.cash_box_id || "",
-      bank_account_id: collection.bank_account_id || "",
-      notes: collection.notes || ""
-    });
-    setIsAddOpen(true);
-  };
+  const viewingCollection = collections.find((c: any) => c.id === viewingId);
 
   return (
     <div className="space-y-4">
@@ -235,40 +273,53 @@ export default function Collections() {
                   <TableHead>العميل</TableHead>
                   <TableHead>المبلغ</TableHead>
                   <TableHead>طريقة الدفع</TableHead>
+                  <TableHead>الفواتير</TableHead>
                   <TableHead>الإجراءات</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {collections.map((col: any) => (
-                  <TableRow key={col.id}>
-                    <TableCell className="font-mono">{col.receipt_number}</TableCell>
-                    <TableCell>{new Date(col.receipt_date).toLocaleDateString('ar-SA')}</TableCell>
-                    <TableCell>{col.customers?.name}</TableCell>
-                    <TableCell>{Number(col.amount).toLocaleString()}</TableCell>
-                    <TableCell>{paymentMethodLabels[col.payment_method] || col.payment_method}</TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
-                        <Button variant="ghost" size="icon" onClick={() => handleEdit(col)}>
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" onClick={() => setDeletingId(col.id)}>
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {collections.map((col: any) => {
+                  const allocCount = col.collection_allocations?.length || 0;
+                  return (
+                    <TableRow key={col.id}>
+                      <TableCell className="font-mono">{col.receipt_number}</TableCell>
+                      <TableCell>{new Date(col.receipt_date).toLocaleDateString('ar-SA')}</TableCell>
+                      <TableCell>{col.customers?.name}</TableCell>
+                      <TableCell className="font-semibold">{Number(col.amount).toLocaleString()}</TableCell>
+                      <TableCell>{paymentMethodLabels[col.payment_method] || col.payment_method}</TableCell>
+                      <TableCell>
+                        {allocCount > 0 ? (
+                          <Badge variant="secondary" className="gap-1">
+                            <Link2 className="h-3 w-3" /> {allocCount}
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline">على الحساب</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-1">
+                          <Button variant="ghost" size="icon" onClick={() => setViewingId(col.id)}>
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => setDeletingId(col.id)}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           )}
         </CardContent>
       </Card>
 
-      {/* Add/Edit Dialog */}
+      {/* Add Dialog */}
       <Dialog open={isAddOpen} onOpenChange={(open) => { if (!open) closeDialog(); }}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editingCollection ? "تعديل سند القبض" : "إضافة سند قبض جديد"}</DialogTitle>
+            <DialogTitle>إضافة سند قبض جديد</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
@@ -283,7 +334,7 @@ export default function Collections() {
             </div>
             <div className="space-y-2">
               <Label>العميل</Label>
-              <Select value={formData.customer_id} onValueChange={v => setFormData({...formData, customer_id: v})}>
+              <Select value={formData.customer_id} onValueChange={v => { setFormData({...formData, customer_id: v}); setAllocations([]); }}>
                 <SelectTrigger><SelectValue placeholder="اختر العميل" /></SelectTrigger>
                 <SelectContent>
                   {customers.map((c: any) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
@@ -329,15 +380,76 @@ export default function Collections() {
                 </Select>
               </div>
             )}
+
+            {/* Allocation Section */}
+            {formData.customer_id && (
+              <div className="space-y-2 rounded-lg border bg-muted/30 p-3">
+                <Label className="text-base font-semibold">تخصيص المبلغ على فواتير العميل</Label>
+                <p className="text-xs text-muted-foreground">
+                  حدد الفواتير التي تريد تسديدها. ما لا يتم تخصيصه يُسجَّل كمبلغ على الحساب.
+                </p>
+                <InvoiceAllocationTable
+                  invoices={customerInvoices}
+                  totalAmount={parseFloat(formData.amount) || 0}
+                  value={allocations}
+                  onChange={setAllocations}
+                />
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label>ملاحظات</Label>
               <Textarea value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})} />
             </div>
             <div className="flex gap-2 justify-end">
               <Button type="button" variant="outline" onClick={closeDialog}>إلغاء</Button>
-              <Button type="submit" disabled={mutation.isPending}>{editingCollection ? "تحديث" : "إضافة"}</Button>
+              <Button type="submit" disabled={createMutation.isPending}>
+                {createMutation.isPending ? "جاري الحفظ..." : "حفظ وترحيل"}
+              </Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Dialog - shows linked invoices */}
+      <Dialog open={!!viewingId} onOpenChange={(o) => !o && setViewingId(null)}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>تفاصيل سند القبض {viewingCollection?.receipt_number}</DialogTitle>
+          </DialogHeader>
+          {viewingCollection && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div><span className="text-muted-foreground">العميل:</span> <strong>{viewingCollection.customers?.name}</strong></div>
+                <div><span className="text-muted-foreground">التاريخ:</span> <strong>{new Date(viewingCollection.receipt_date).toLocaleDateString('ar-SA')}</strong></div>
+                <div><span className="text-muted-foreground">المبلغ:</span> <strong>{Number(viewingCollection.amount).toLocaleString()}</strong></div>
+                <div><span className="text-muted-foreground">الطريقة:</span> <strong>{paymentMethodLabels[viewingCollection.payment_method]}</strong></div>
+              </div>
+              <div>
+                <h4 className="font-semibold mb-2">الفواتير المسددة بهذا السند</h4>
+                {viewingCollection.collection_allocations?.length > 0 ? (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>رقم الفاتورة</TableHead>
+                        <TableHead>المبلغ المخصص</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {viewingCollection.collection_allocations.map((a: any) => (
+                        <TableRow key={a.id}>
+                          <TableCell className="font-mono">{a.sales_invoices?.invoice_number}</TableCell>
+                          <TableCell>{Number(a.allocated_amount).toLocaleString()}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <p className="text-sm text-muted-foreground">سند على الحساب (غير مخصص لفواتير محددة)</p>
+                )}
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 
@@ -345,7 +457,9 @@ export default function Collections() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>تأكيد الحذف</AlertDialogTitle>
-            <AlertDialogDescription>هل أنت متأكد من حذف هذا السند؟</AlertDialogDescription>
+            <AlertDialogDescription>
+              لا يمكن حذف السندات المرتبطة بفواتير. حذف ممكن فقط للسندات على الحساب.
+            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>إلغاء</AlertDialogCancel>
