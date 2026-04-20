@@ -2341,6 +2341,14 @@ export type Database = {
       }
       is_date_in_open_period: { Args: { check_date: string }; Returns: boolean }
       is_postable_account: { Args: { account_id: string }; Returns: boolean }
+      update_product_weighted_avg_cost: {
+        Args: {
+          _new_quantity: number
+          _new_unit_cost: number
+          _product_id: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       account_type: "asset" | "liability" | "equity" | "revenue" | "expense"
