@@ -172,39 +172,44 @@ export default function SalesInvoices() {
     const inv = invoices.find(i => i.id === id);
     if (!inv || inv.status !== "draft") return;
 
-    // Generate journal entry: Debit Customer, Credit Revenue
     try {
       const { createAutoJournalEntry } = await import("@/hooks/useAutoJournalEntry");
       const customer = await supabase.from("customers").select("account_id").eq("id", inv.customer_id).single();
       
-      if (customer.data?.account_id) {
-        // Find a revenue account (first revenue type account)
+      // جلب حساب الإيرادات الافتراضي من الإعدادات
+      const { data: settingRow } = await supabase.from("system_settings")
+        .select("setting_value").eq("setting_key", "default_sales_revenue_account_id").maybeSingle();
+      let revenueAccountId: string | null = settingRow?.setting_value || null;
+      
+      if (!revenueAccountId) {
         const { data: revenueAccounts } = await supabase.from("accounts")
           .select("id").eq("account_type", "revenue").eq("is_active", true).eq("allow_manual_entry", true).limit(1);
-        
-        if (revenueAccounts && revenueAccounts.length > 0) {
-          await createAutoJournalEntry({
-            entry_date: inv.invoice_date,
-            description: `فاتورة مبيعات رقم ${inv.invoice_number}`,
-            reference: inv.invoice_number,
-            created_by: user!.id,
-            branch_id: inv.branch_id,
-            lines: [
-              { account_id: customer.data.account_id, debit_amount: inv.total_amount, credit_amount: 0, description: `فاتورة مبيعات - ${inv.invoice_number}` },
-              { account_id: revenueAccounts[0].id, debit_amount: 0, credit_amount: inv.total_amount, description: `فاتورة مبيعات - ${inv.invoice_number}` },
-            ],
-          });
-          toast.info("تم إنشاء القيد المحاسبي تلقائياً");
-        }
+        revenueAccountId = revenueAccounts?.[0]?.id || null;
+      }
+      
+      if (customer.data?.account_id && revenueAccountId) {
+        await createAutoJournalEntry({
+          entry_date: inv.invoice_date,
+          description: `فاتورة مبيعات رقم ${inv.invoice_number}`,
+          reference: inv.invoice_number,
+          created_by: user!.id,
+          branch_id: inv.branch_id,
+          lines: [
+            { account_id: customer.data.account_id, debit_amount: inv.total_amount, credit_amount: 0, description: `فاتورة مبيعات - ${inv.invoice_number}` },
+            { account_id: revenueAccountId, debit_amount: 0, credit_amount: inv.total_amount, description: `فاتورة مبيعات - ${inv.invoice_number}` },
+          ],
+        });
+      } else {
+        toast.warning("لم يتم إنشاء القيد المحاسبي - تأكد من ربط حساب العميل وحساب الإيرادات الافتراضي");
       }
     } catch (e) {
       console.error(e);
-      toast.warning("تم تأكيد الفاتورة لكن لم يتم إنشاء القيد تلقائياً");
+      toast.warning("تم تأكيد الفاتورة لكن حدث خطأ في القيد");
     }
 
     const { error } = await supabase.from("sales_invoices").update({ status: "confirmed", approved_by: user?.id }).eq("id", id);
-    if (error) { toast.error("خطأ في تأكيد الفاتورة"); return; }
-    toast.success("تم تأكيد الفاتورة وترحيلها");
+    if (error) { toast.error("خطأ في تأكيد الفاتورة: " + error.message); return; }
+    toast.success("تم تأكيد الفاتورة وترحيلها (مع حركة المخزون و COGS تلقائياً)");
     fetchAll();
   };
 
@@ -267,17 +272,25 @@ export default function SalesInvoices() {
                   <TableHead>التاريخ</TableHead>
                   <TableHead>العميل</TableHead>
                   <TableHead>المبلغ</TableHead>
+                  <TableHead>المدفوع</TableHead>
+                  <TableHead>المتبقي</TableHead>
                   <TableHead>الحالة</TableHead>
                   <TableHead>الإجراءات</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {invoices.map((inv) => (
+                {invoices.map((inv) => {
+                  const total = Number(inv.total_amount || 0);
+                  const paid = Number(inv.paid_amount || 0);
+                  const remaining = Math.max(0, total - paid);
+                  return (
                   <TableRow key={inv.id}>
                     <TableCell className="font-mono">{inv.invoice_number}</TableCell>
                     <TableCell>{new Date(inv.invoice_date).toLocaleDateString('ar-SA')}</TableCell>
                     <TableCell>{inv.customers?.name}</TableCell>
-                    <TableCell>{Number(inv.total_amount || 0).toLocaleString()}</TableCell>
+                    <TableCell>{total.toLocaleString()}</TableCell>
+                    <TableCell className="text-green-600">{paid.toLocaleString()}</TableCell>
+                    <TableCell className={remaining > 0 ? "text-orange-600 font-semibold" : "text-muted-foreground"}>{remaining.toLocaleString()}</TableCell>
                     <TableCell>
                       <Badge variant={statusVariants[inv.status] || "secondary"}>
                         {statusLabels[inv.status] || inv.status}
@@ -299,7 +312,8 @@ export default function SalesInvoices() {
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
+                  );
+                })}
               </TableBody>
             </Table>
           )}

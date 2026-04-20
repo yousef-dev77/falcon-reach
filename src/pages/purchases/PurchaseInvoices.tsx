@@ -176,34 +176,42 @@ export default function PurchaseInvoices() {
       const { createAutoJournalEntry } = await import("@/hooks/useAutoJournalEntry");
       const supplier = await supabase.from("suppliers").select("account_id").eq("id", inv.supplier_id).single();
       
-      if (supplier.data?.account_id) {
-        // Find an expense account
+      // الحساب المدين: المخزون (إن وُجد) وإلا المشتريات وإلا أول حساب مصروف
+      const { data: invSetting } = await supabase.from("system_settings")
+        .select("setting_value").eq("setting_key", "default_inventory_account_id").maybeSingle();
+      const { data: purchSetting } = await supabase.from("system_settings")
+        .select("setting_value").eq("setting_key", "default_purchases_account_id").maybeSingle();
+      
+      let debitAccountId: string | null = invSetting?.setting_value || purchSetting?.setting_value || null;
+      if (!debitAccountId) {
         const { data: expenseAccounts } = await supabase.from("accounts")
           .select("id").eq("account_type", "expense").eq("is_active", true).eq("allow_manual_entry", true).limit(1);
-        
-        if (expenseAccounts && expenseAccounts.length > 0) {
-          await createAutoJournalEntry({
-            entry_date: inv.invoice_date,
-            description: `فاتورة مشتريات رقم ${inv.invoice_number}`,
-            reference: inv.invoice_number,
-            created_by: user!.id,
-            branch_id: inv.branch_id,
-            lines: [
-              { account_id: expenseAccounts[0].id, debit_amount: inv.total_amount, credit_amount: 0, description: `فاتورة مشتريات - ${inv.invoice_number}` },
-              { account_id: supplier.data.account_id, debit_amount: 0, credit_amount: inv.total_amount, description: `فاتورة مشتريات - ${inv.invoice_number}` },
-            ],
-          });
-          toast.info("تم إنشاء القيد المحاسبي تلقائياً");
-        }
+        debitAccountId = expenseAccounts?.[0]?.id || null;
+      }
+      
+      if (supplier.data?.account_id && debitAccountId) {
+        await createAutoJournalEntry({
+          entry_date: inv.invoice_date,
+          description: `فاتورة مشتريات رقم ${inv.invoice_number}`,
+          reference: inv.invoice_number,
+          created_by: user!.id,
+          branch_id: inv.branch_id,
+          lines: [
+            { account_id: debitAccountId, debit_amount: inv.total_amount, credit_amount: 0, description: `فاتورة مشتريات - ${inv.invoice_number}` },
+            { account_id: supplier.data.account_id, debit_amount: 0, credit_amount: inv.total_amount, description: `فاتورة مشتريات - ${inv.invoice_number}` },
+          ],
+        });
+      } else {
+        toast.warning("لم يتم إنشاء القيد - تأكد من ربط حساب المورد وحساب المخزون/المشتريات");
       }
     } catch (e) {
       console.error(e);
-      toast.warning("تم تأكيد الفاتورة لكن لم يتم إنشاء القيد تلقائياً");
+      toast.warning("تم تأكيد الفاتورة لكن حدث خطأ في القيد");
     }
 
     const { error } = await supabase.from("purchase_invoices").update({ status: "confirmed", approved_by: user?.id }).eq("id", id);
-    if (error) { toast.error("خطأ في تأكيد الفاتورة"); return; }
-    toast.success("تم تأكيد الفاتورة وترحيلها");
+    if (error) { toast.error("خطأ في تأكيد الفاتورة: " + error.message); return; }
+    toast.success("تم تأكيد الفاتورة وترحيلها (مع حركة المخزون وتحديث التكلفة تلقائياً)");
     fetchAll();
   };
 
@@ -266,17 +274,25 @@ export default function PurchaseInvoices() {
                   <TableHead>التاريخ</TableHead>
                   <TableHead>المورد</TableHead>
                   <TableHead>المبلغ</TableHead>
+                  <TableHead>المدفوع</TableHead>
+                  <TableHead>المتبقي</TableHead>
                   <TableHead>الحالة</TableHead>
                   <TableHead>الإجراءات</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {invoices.map((inv) => (
+                {invoices.map((inv) => {
+                  const total = Number(inv.total_amount || 0);
+                  const paid = Number(inv.paid_amount || 0);
+                  const remaining = Math.max(0, total - paid);
+                  return (
                   <TableRow key={inv.id}>
                     <TableCell className="font-mono">{inv.invoice_number}</TableCell>
                     <TableCell>{new Date(inv.invoice_date).toLocaleDateString('ar-SA')}</TableCell>
                     <TableCell>{inv.suppliers?.name}</TableCell>
-                    <TableCell>{Number(inv.total_amount || 0).toLocaleString()}</TableCell>
+                    <TableCell>{total.toLocaleString()}</TableCell>
+                    <TableCell className="text-green-600">{paid.toLocaleString()}</TableCell>
+                    <TableCell className={remaining > 0 ? "text-orange-600 font-semibold" : "text-muted-foreground"}>{remaining.toLocaleString()}</TableCell>
                     <TableCell>
                       <Badge variant={statusVariants[inv.status] || "secondary"}>
                         {statusLabels[inv.status] || inv.status}
@@ -298,7 +314,8 @@ export default function PurchaseInvoices() {
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
+                  );
+                })}
               </TableBody>
             </Table>
           )}
