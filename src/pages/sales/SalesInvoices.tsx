@@ -312,7 +312,8 @@ export default function SalesInvoices() {
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
+                  );
+                })}
               </TableBody>
             </Table>
           )}

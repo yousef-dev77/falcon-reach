@@ -314,7 +314,8 @@ export default function PurchaseInvoices() {
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
+                  );
+                })}
               </TableBody>
             </Table>
           )}
