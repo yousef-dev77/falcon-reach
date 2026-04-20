@@ -44,12 +44,14 @@ import InventoryReports from "./pages/inventory/InventoryReports";
 
 // Sales Pages
 import Customers from "./pages/sales/Customers";
+import CustomerStatement from "./pages/sales/CustomerStatement";
 import SalesInvoices from "./pages/sales/SalesInvoices";
 import Collections from "./pages/sales/Collections";
 import SalesReports from "./pages/sales/SalesReports";
 
 // Purchases Pages
 import Suppliers from "./pages/purchases/Suppliers";
+import SupplierStatement from "./pages/purchases/SupplierStatement";
 import PurchaseInvoices from "./pages/purchases/PurchaseInvoices";
 import Payments from "./pages/purchases/Payments";
 import PurchaseReports from "./pages/purchases/PurchaseReports";
@@ -108,12 +110,14 @@ const App = () => (
               
               {/* Sales Routes - Admin + Branch Manager + Sales Manager */}
               <Route path="/sales/customers" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'sales_manager']}><DashboardLayout><Customers /></DashboardLayout></AdminRoute>} />
+              <Route path="/sales/customers/:id/statement" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'sales_manager', 'accountant']}><DashboardLayout><CustomerStatement /></DashboardLayout></AdminRoute>} />
               <Route path="/sales/invoices" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'sales_manager']}><DashboardLayout><SalesInvoices /></DashboardLayout></AdminRoute>} />
               <Route path="/sales/collections" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'sales_manager']}><DashboardLayout><Collections /></DashboardLayout></AdminRoute>} />
               <Route path="/sales/reports" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'sales_manager']}><DashboardLayout><SalesReports /></DashboardLayout></AdminRoute>} />
               
               {/* Purchases Routes - Admin + Branch Manager + Accountant */}
               <Route path="/purchases/suppliers" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'accountant']}><DashboardLayout><Suppliers /></DashboardLayout></AdminRoute>} />
+              <Route path="/purchases/suppliers/:id/statement" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'accountant']}><DashboardLayout><SupplierStatement /></DashboardLayout></AdminRoute>} />
               <Route path="/purchases/invoices" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'accountant']}><DashboardLayout><PurchaseInvoices /></DashboardLayout></AdminRoute>} />
               <Route path="/purchases/payments" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'accountant']}><DashboardLayout><Payments /></DashboardLayout></AdminRoute>} />
               <Route path="/purchases/reports" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'accountant']}><DashboardLayout><PurchaseReports /></DashboardLayout></AdminRoute>} />

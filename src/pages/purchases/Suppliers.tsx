@@ -5,14 +5,16 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Search, Edit, Trash2 } from "lucide-react";
+import { Plus, Search, Edit, Trash2, FileText } from "lucide-react";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ListPageHeader } from "@/components/ListPageHeader";
+import { useNavigate } from "react-router-dom";
 
 export default function Suppliers() {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingSupplier, setEditingSupplier] = useState<any>(null);
@@ -164,10 +166,13 @@ export default function Suppliers() {
                     <TableCell>{supplier.payment_terms} يوم</TableCell>
                     <TableCell>
                       <div className="flex gap-2">
-                        <Button variant="outline" size="sm" onClick={() => handleEdit(supplier)}>
+                        <Button variant="outline" size="sm" onClick={() => navigate(`/purchases/suppliers/${supplier.id}/statement`)} title="كشف الحساب">
+                          <FileText className="h-4 w-4" />
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => handleEdit(supplier)} title="تعديل">
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="outline" size="sm" onClick={() => setDeletingId(supplier.id)}>
+                        <Button variant="outline" size="sm" onClick={() => setDeletingId(supplier.id)} title="حذف">
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
