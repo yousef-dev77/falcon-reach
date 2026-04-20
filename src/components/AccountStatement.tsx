@@ -34,16 +34,25 @@ export function AccountStatement({ type, partyId, partyName, partyCode }: Accoun
   const { data: invoices = [] } = useQuery({
     queryKey: [`${type}-invoices`, partyId],
     queryFn: async () => {
-      const table = isCustomer ? "sales_invoices" : "purchase_invoices";
-      const fk = isCustomer ? "customer_id" : "supplier_id";
-      const { data, error } = await supabase
-        .from(table)
-        .select("id, invoice_number, invoice_date, total_amount, paid_amount, status")
-        .eq(fk, partyId)
-        .neq("status", "draft")
-        .order("invoice_date");
-      if (error) throw error;
-      return data || [];
+      if (isCustomer) {
+        const { data, error } = await supabase
+          .from("sales_invoices")
+          .select("id, invoice_number, invoice_date, total_amount, paid_amount, status")
+          .eq("customer_id", partyId)
+          .neq("status", "draft")
+          .order("invoice_date");
+        if (error) throw error;
+        return (data || []) as any[];
+      } else {
+        const { data, error } = await supabase
+          .from("purchase_invoices")
+          .select("id, invoice_number, invoice_date, total_amount, paid_amount, status")
+          .eq("supplier_id", partyId)
+          .neq("status", "draft")
+          .order("invoice_date");
+        if (error) throw error;
+        return (data || []) as any[];
+      }
     },
   });
 
@@ -51,17 +60,23 @@ export function AccountStatement({ type, partyId, partyName, partyCode }: Accoun
   const { data: vouchers = [] } = useQuery({
     queryKey: [`${type}-vouchers`, partyId],
     queryFn: async () => {
-      const table = isCustomer ? "collections" : "payments";
-      const fk = isCustomer ? "customer_id" : "supplier_id";
-      const numberField = isCustomer ? "receipt_number" : "payment_number";
-      const dateField = isCustomer ? "receipt_date" : "payment_date";
-      const { data, error } = await supabase
-        .from(table)
-        .select(`id, ${numberField}, ${dateField}, amount, payment_method, notes`)
-        .eq(fk, partyId)
-        .order(dateField);
-      if (error) throw error;
-      return (data || []) as any[];
+      if (isCustomer) {
+        const { data, error } = await supabase
+          .from("collections")
+          .select("id, receipt_number, receipt_date, amount, payment_method, notes")
+          .eq("customer_id", partyId)
+          .order("receipt_date");
+        if (error) throw error;
+        return (data || []) as any[];
+      } else {
+        const { data, error } = await supabase
+          .from("payments")
+          .select("id, payment_number, payment_date, amount, payment_method, notes")
+          .eq("supplier_id", partyId)
+          .order("payment_date");
+        if (error) throw error;
+        return (data || []) as any[];
+      }
     },
   });
 
@@ -161,26 +176,26 @@ export function AccountStatement({ type, partyId, partyName, partyCode }: Accoun
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-3 gap-4 mb-6">
-            <Card className="bg-blue-50 dark:bg-blue-950">
+            <Card className="bg-primary/5 border-primary/20">
               <CardContent className="p-4">
                 <p className="text-sm text-muted-foreground">إجمالي المدين</p>
-                <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">
-                  {totalDebit.toLocaleString()} 
+                <p className="text-2xl font-bold text-primary">
+                  {totalDebit.toLocaleString()}
                 </p>
               </CardContent>
             </Card>
-            <Card className="bg-green-50 dark:bg-green-950">
+            <Card className="bg-secondary/10 border-secondary/30">
               <CardContent className="p-4">
                 <p className="text-sm text-muted-foreground">إجمالي الدائن</p>
-                <p className="text-2xl font-bold text-green-700 dark:text-green-300">
+                <p className="text-2xl font-bold text-secondary-foreground">
                   {totalCredit.toLocaleString()}
                 </p>
               </CardContent>
             </Card>
-            <Card className="bg-amber-50 dark:bg-amber-950">
+            <Card className="bg-accent/20 border-accent/40">
               <CardContent className="p-4">
                 <p className="text-sm text-muted-foreground">{balanceLabel}</p>
-                <p className="text-2xl font-bold text-amber-700 dark:text-amber-300">
+                <p className="text-2xl font-bold text-accent-foreground">
                   {Math.abs(finalBalance).toLocaleString()}
                 </p>
               </CardContent>
