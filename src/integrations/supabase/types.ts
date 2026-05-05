@@ -1112,6 +1112,119 @@ export type Database = {
           },
         ]
       }
+      inventory_voucher_lines: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          line_total: number
+          product_id: string
+          quantity: number
+          system_quantity: number | null
+          unit_cost: number
+          variance: number | null
+          voucher_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          line_total?: number
+          product_id: string
+          quantity?: number
+          system_quantity?: number | null
+          unit_cost?: number
+          variance?: number | null
+          voucher_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          line_total?: number
+          product_id?: string
+          quantity?: number
+          system_quantity?: number | null
+          unit_cost?: number
+          variance?: number | null
+          voucher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_voucher_lines_voucher_id_fkey"
+            columns: ["voucher_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_vouchers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_vouchers: {
+        Row: {
+          branch_id: string | null
+          confirmed_at: string | null
+          confirmed_by: string | null
+          counter_account_id: string | null
+          create_journal_entry: boolean
+          created_at: string
+          created_by: string
+          id: string
+          journal_entry_id: string | null
+          notes: string | null
+          reference: string | null
+          status: Database["public"]["Enums"]["inventory_voucher_status"]
+          target_warehouse_id: string | null
+          total_value: number
+          updated_at: string
+          voucher_date: string
+          voucher_number: string
+          voucher_type: Database["public"]["Enums"]["inventory_voucher_type"]
+          warehouse_id: string | null
+        }
+        Insert: {
+          branch_id?: string | null
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          counter_account_id?: string | null
+          create_journal_entry?: boolean
+          created_at?: string
+          created_by: string
+          id?: string
+          journal_entry_id?: string | null
+          notes?: string | null
+          reference?: string | null
+          status?: Database["public"]["Enums"]["inventory_voucher_status"]
+          target_warehouse_id?: string | null
+          total_value?: number
+          updated_at?: string
+          voucher_date?: string
+          voucher_number: string
+          voucher_type: Database["public"]["Enums"]["inventory_voucher_type"]
+          warehouse_id?: string | null
+        }
+        Update: {
+          branch_id?: string | null
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          counter_account_id?: string | null
+          create_journal_entry?: boolean
+          created_at?: string
+          created_by?: string
+          id?: string
+          journal_entry_id?: string | null
+          notes?: string | null
+          reference?: string | null
+          status?: Database["public"]["Enums"]["inventory_voucher_status"]
+          target_warehouse_id?: string | null
+          total_value?: number
+          updated_at?: string
+          voucher_date?: string
+          voucher_number?: string
+          voucher_type?: Database["public"]["Enums"]["inventory_voucher_type"]
+          warehouse_id?: string | null
+        }
+        Relationships: []
+      }
       journal_entries: {
         Row: {
           approved_by: string | null
@@ -1497,58 +1610,76 @@ export type Database = {
       }
       products: {
         Row: {
+          barcode: string | null
           category_id: string | null
           code: string
           cost_price: number | null
           created_at: string
           description: string | null
           id: string
+          image_url: string | null
           is_active: boolean | null
+          is_service: boolean | null
           max_stock_level: number | null
           min_stock_level: number | null
           name: string
+          notes: string | null
           reorder_point: number | null
+          retail_price: number | null
           selling_price: number | null
           supplier_id: string | null
           track_inventory: boolean | null
           unit_id: string | null
           updated_at: string
+          wholesale_price: number | null
         }
         Insert: {
+          barcode?: string | null
           category_id?: string | null
           code: string
           cost_price?: number | null
           created_at?: string
           description?: string | null
           id?: string
+          image_url?: string | null
           is_active?: boolean | null
+          is_service?: boolean | null
           max_stock_level?: number | null
           min_stock_level?: number | null
           name: string
+          notes?: string | null
           reorder_point?: number | null
+          retail_price?: number | null
           selling_price?: number | null
           supplier_id?: string | null
           track_inventory?: boolean | null
           unit_id?: string | null
           updated_at?: string
+          wholesale_price?: number | null
         }
         Update: {
+          barcode?: string | null
           category_id?: string | null
           code?: string
           cost_price?: number | null
           created_at?: string
           description?: string | null
           id?: string
+          image_url?: string | null
           is_active?: boolean | null
+          is_service?: boolean | null
           max_stock_level?: number | null
           min_stock_level?: number | null
           name?: string
+          notes?: string | null
           reorder_point?: number | null
+          retail_price?: number | null
           selling_price?: number | null
           supplier_id?: string | null
           track_inventory?: boolean | null
           unit_id?: string | null
           updated_at?: string
+          wholesale_price?: number | null
         }
         Relationships: [
           {
@@ -2304,9 +2435,36 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      product_stock_balance: {
+        Row: {
+          product_id: string | null
+          quantity: number | null
+          stock_value: number | null
+          warehouse_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_movements_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_movements_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
+      confirm_inventory_voucher: {
+        Args: { _voucher_id: string }
+        Returns: undefined
+      }
       get_next_document_number: {
         Args: { _branch_id: string; _document_type: string }
         Returns: string
@@ -2359,6 +2517,13 @@ export type Database = {
         | "inventory_manager"
         | "user"
       inventory_valuation: "fifo" | "lifo" | "average"
+      inventory_voucher_status: "draft" | "confirmed" | "cancelled"
+      inventory_voucher_type:
+        | "receipt"
+        | "issue"
+        | "transfer"
+        | "count"
+        | "adjustment"
       invoice_status:
         | "draft"
         | "confirmed"
@@ -2503,6 +2668,14 @@ export const Constants = {
         "user",
       ],
       inventory_valuation: ["fifo", "lifo", "average"],
+      inventory_voucher_status: ["draft", "confirmed", "cancelled"],
+      inventory_voucher_type: [
+        "receipt",
+        "issue",
+        "transfer",
+        "count",
+        "adjustment",
+      ],
       invoice_status: [
         "draft",
         "confirmed",
