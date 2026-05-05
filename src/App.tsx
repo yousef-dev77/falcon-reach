@@ -41,6 +41,8 @@ import Categories from "./pages/inventory/Categories";
 import Units from "./pages/inventory/Units";
 import Movements from "./pages/inventory/Movements";
 import InventoryReports from "./pages/inventory/InventoryReports";
+import InventoryVouchers from "./pages/inventory/InventoryVouchers";
+import StockBalance from "./pages/inventory/StockBalance";
 
 // Sales Pages
 import Customers from "./pages/sales/Customers";
@@ -106,6 +108,8 @@ const App = () => (
               <Route path="/inventory/categories" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'inventory_manager']}><DashboardLayout><Categories /></DashboardLayout></AdminRoute>} />
               <Route path="/inventory/units" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'inventory_manager']}><DashboardLayout><Units /></DashboardLayout></AdminRoute>} />
               <Route path="/inventory/movements" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'inventory_manager']}><DashboardLayout><Movements /></DashboardLayout></AdminRoute>} />
+              <Route path="/inventory/vouchers/:type" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'inventory_manager']}><DashboardLayout><InventoryVouchers /></DashboardLayout></AdminRoute>} />
+              <Route path="/inventory/stock-balance" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'inventory_manager']}><DashboardLayout><StockBalance /></DashboardLayout></AdminRoute>} />
               <Route path="/inventory/reports" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'inventory_manager']}><DashboardLayout><InventoryReports /></DashboardLayout></AdminRoute>} />
               
               {/* Sales Routes - Admin + Branch Manager + Sales Manager */}
