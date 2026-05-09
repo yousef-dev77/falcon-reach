@@ -63,7 +63,7 @@ export function ReturnFormBase({ type, open, onOpenChange, onSaved }: Props) {
     (async () => {
       const table = type === "sales" ? "sales_invoices" : "purchase_invoices";
       const col = type === "sales" ? "customer_id" : "supplier_id";
-      const { data } = await supabase.from(table)
+      const { data } = await (supabase.from(table as any) as any)
         .select("id, invoice_number, invoice_date, total_amount")
         .eq(col, partyId).neq("status", "draft").order("invoice_date", { ascending: false });
       setOriginalInvoices(data || []);
