@@ -112,7 +112,7 @@ export function ReturnFormBase({ type, open, onOpenChange, onSaved }: Props) {
         status: "draft",
       };
 
-      const { data: header, error: e1 } = await supabase.from(tableHeader).insert(headerData).select().single();
+      const { data: header, error: e1 } = await (supabase.from(tableHeader as any) as any).insert(headerData).select().single();
       if (e1) throw e1;
 
       const linesData = lines.map(l => ({
@@ -124,7 +124,7 @@ export function ReturnFormBase({ type, open, onOpenChange, onSaved }: Props) {
         tax_percent: l.tax_percent,
         line_total: l.line_total,
       }));
-      const { error: e2 } = await supabase.from(tableLines).insert(linesData);
+      const { error: e2 } = await (supabase.from(tableLines as any) as any).insert(linesData);
       if (e2) throw e2;
 
       toast.success(`تم إنشاء ${returnNumber}`);
