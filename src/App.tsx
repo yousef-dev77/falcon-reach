@@ -33,6 +33,12 @@ import YearEndClosing from "./pages/finance/YearEndClosing";
 import FxAdjustment from "./pages/finance/FxAdjustment";
 import BankCashReport from "./pages/finance/BankCashReport";
 import BankStatements from "./pages/finance/BankStatements";
+import Taxes from "./pages/finance/Taxes";
+import VATDeclaration from "./pages/finance/VATDeclaration";
+import AgingReport from "./pages/finance/AgingReport";
+import AssetDepreciation from "./pages/finance/AssetDepreciation";
+import SalesReturns from "./pages/sales/SalesReturns";
+import PurchaseReturns from "./pages/purchases/PurchaseReturns";
 
 // Inventory Pages
 import Warehouses from "./pages/inventory/Warehouses";
@@ -101,6 +107,12 @@ const App = () => (
               <Route path="/finance/fx-adjustment" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'accountant']}><DashboardLayout><FxAdjustment /></DashboardLayout></AdminRoute>} />
               <Route path="/finance/bank-cash-report" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'accountant']}><DashboardLayout><BankCashReport /></DashboardLayout></AdminRoute>} />
               <Route path="/finance/bank-statements" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'accountant']}><DashboardLayout><BankStatements /></DashboardLayout></AdminRoute>} />
+              <Route path="/finance/taxes" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'accountant']}><DashboardLayout><Taxes /></DashboardLayout></AdminRoute>} />
+              <Route path="/finance/vat-declaration" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'accountant']}><DashboardLayout><VATDeclaration /></DashboardLayout></AdminRoute>} />
+              <Route path="/finance/aging-report" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'accountant']}><DashboardLayout><AgingReport /></DashboardLayout></AdminRoute>} />
+              <Route path="/finance/asset-depreciation" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'accountant']}><DashboardLayout><AssetDepreciation /></DashboardLayout></AdminRoute>} />
+              <Route path="/sales/returns" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'sales_manager']}><DashboardLayout><SalesReturns /></DashboardLayout></AdminRoute>} />
+              <Route path="/purchases/returns" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'accountant']}><DashboardLayout><PurchaseReturns /></DashboardLayout></AdminRoute>} />
               
               {/* Inventory Routes - Admin + Branch Manager + Inventory Manager */}
               <Route path="/inventory/warehouses" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'inventory_manager']}><DashboardLayout><Warehouses /></DashboardLayout></AdminRoute>} />

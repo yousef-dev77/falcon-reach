@@ -90,6 +90,10 @@ const navigationItems = [
       { title: "تقرير حركة البنوك والصناديق", url: "/finance/bank-cash-report", icon: FileBarChart },
       { title: "المصاريف والإيرادات", url: "/finance/expenses-revenue", icon: TrendingUp },
       { title: "الأصول الثابتة", url: "/finance/fixed-assets", icon: LandPlot },
+      { title: "إهلاك الأصول", url: "/finance/asset-depreciation", icon: TrendingUp },
+      { title: "إدارة الضرائب", url: "/finance/taxes", icon: Receipt },
+      { title: "الإقرار الضريبي (VAT)", url: "/finance/vat-declaration", icon: FileBarChart },
+      { title: "تحليل أعمار الذمم", url: "/finance/aging-report", icon: Clock },
     ],
   },
   {
@@ -115,6 +119,7 @@ const navigationItems = [
     items: [
       { title: "العملاء", url: "/sales/customers", icon: Users },
       { title: "فواتير المبيعات", url: "/sales/invoices", icon: Receipt },
+      { title: "مرتجعات المبيعات", url: "/sales/returns", icon: ArrowDownUp },
       { title: "التحصيلات", url: "/sales/collections", icon: DollarSign },
       { title: "تقارير المبيعات", url: "/sales/reports", icon: BarChart3 },
     ],
@@ -125,6 +130,7 @@ const navigationItems = [
     items: [
       { title: "الموردين", url: "/purchases/suppliers", icon: UserPlus },
       { title: "فواتير المشتريات", url: "/purchases/invoices", icon: PackagePlus },
+      { title: "مرتجعات المشتريات", url: "/purchases/returns", icon: ArrowDownUp },
       { title: "المدفوعات", url: "/purchases/payments", icon: CreditCard },
       { title: "تقارير المشتريات", url: "/purchases/reports", icon: FileBarChart },
     ],

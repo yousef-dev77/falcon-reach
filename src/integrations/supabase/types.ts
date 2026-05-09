@@ -89,6 +89,48 @@ export type Database = {
           },
         ]
       }
+      asset_depreciation_schedule: {
+        Row: {
+          accumulated_amount: number
+          asset_id: string
+          book_value: number
+          created_at: string
+          depreciation_amount: number
+          id: string
+          is_posted: boolean
+          journal_entry_id: string | null
+          period_date: string
+          posted_at: string | null
+          posted_by: string | null
+        }
+        Insert: {
+          accumulated_amount?: number
+          asset_id: string
+          book_value?: number
+          created_at?: string
+          depreciation_amount?: number
+          id?: string
+          is_posted?: boolean
+          journal_entry_id?: string | null
+          period_date: string
+          posted_at?: string | null
+          posted_by?: string | null
+        }
+        Update: {
+          accumulated_amount?: number
+          asset_id?: string
+          book_value?: number
+          created_at?: string
+          depreciation_amount?: number
+          id?: string
+          is_posted?: boolean
+          journal_entry_id?: string | null
+          period_date?: string
+          posted_at?: string | null
+          posted_by?: string | null
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action: string
@@ -916,8 +958,11 @@ export type Database = {
           created_at: string
           created_by: string
           current_value: number | null
+          depreciation_account_id: string | null
           depreciation_method: string | null
+          depreciation_start_date: string | null
           description: string | null
+          expense_account_id: string | null
           id: string
           location: string | null
           name: string
@@ -936,8 +981,11 @@ export type Database = {
           created_at?: string
           created_by: string
           current_value?: number | null
+          depreciation_account_id?: string | null
           depreciation_method?: string | null
+          depreciation_start_date?: string | null
           description?: string | null
+          expense_account_id?: string | null
           id?: string
           location?: string | null
           name: string
@@ -956,8 +1004,11 @@ export type Database = {
           created_at?: string
           created_by?: string
           current_value?: number | null
+          depreciation_account_id?: string | null
           depreciation_method?: string | null
+          depreciation_start_date?: string | null
           description?: string | null
+          expense_account_id?: string | null
           id?: string
           location?: string | null
           name?: string
@@ -1745,6 +1796,7 @@ export type Database = {
           line_total: number
           product_id: string
           quantity: number
+          tax_id: string | null
           tax_percent: number | null
           unit_price: number
         }
@@ -1757,6 +1809,7 @@ export type Database = {
           line_total: number
           product_id: string
           quantity: number
+          tax_id?: string | null
           tax_percent?: number | null
           unit_price: number
         }
@@ -1769,6 +1822,7 @@ export type Database = {
           line_total?: number
           product_id?: string
           quantity?: number
+          tax_id?: string | null
           tax_percent?: number | null
           unit_price?: number
         }
@@ -1881,6 +1935,111 @@ export type Database = {
           },
         ]
       }
+      purchase_return_lines: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          line_total: number
+          product_id: string
+          quantity: number
+          return_id: string
+          tax_id: string | null
+          tax_percent: number | null
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          line_total?: number
+          product_id: string
+          quantity?: number
+          return_id: string
+          tax_id?: string | null
+          tax_percent?: number | null
+          unit_price?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          line_total?: number
+          product_id?: string
+          quantity?: number
+          return_id?: string
+          tax_id?: string | null
+          tax_percent?: number | null
+          unit_price?: number
+        }
+        Relationships: []
+      }
+      purchase_returns: {
+        Row: {
+          branch_id: string | null
+          confirmed_at: string | null
+          confirmed_by: string | null
+          created_at: string
+          created_by: string
+          id: string
+          journal_entry_id: string | null
+          notes: string | null
+          original_invoice_id: string | null
+          reason: string | null
+          return_date: string
+          return_number: string
+          status: Database["public"]["Enums"]["return_status"]
+          subtotal: number
+          supplier_id: string
+          tax_amount: number
+          total_amount: number
+          updated_at: string
+          warehouse_id: string | null
+        }
+        Insert: {
+          branch_id?: string | null
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          created_by: string
+          id?: string
+          journal_entry_id?: string | null
+          notes?: string | null
+          original_invoice_id?: string | null
+          reason?: string | null
+          return_date?: string
+          return_number: string
+          status?: Database["public"]["Enums"]["return_status"]
+          subtotal?: number
+          supplier_id: string
+          tax_amount?: number
+          total_amount?: number
+          updated_at?: string
+          warehouse_id?: string | null
+        }
+        Update: {
+          branch_id?: string | null
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          journal_entry_id?: string | null
+          notes?: string | null
+          original_invoice_id?: string | null
+          reason?: string | null
+          return_date?: string
+          return_number?: string
+          status?: Database["public"]["Enums"]["return_status"]
+          subtotal?: number
+          supplier_id?: string
+          tax_amount?: number
+          total_amount?: number
+          updated_at?: string
+          warehouse_id?: string | null
+        }
+        Relationships: []
+      }
       role_permissions: {
         Row: {
           created_at: string
@@ -1920,6 +2079,7 @@ export type Database = {
           line_total: number
           product_id: string
           quantity: number
+          tax_id: string | null
           tax_percent: number | null
           unit_price: number
         }
@@ -1932,6 +2092,7 @@ export type Database = {
           line_total: number
           product_id: string
           quantity: number
+          tax_id?: string | null
           tax_percent?: number | null
           unit_price: number
         }
@@ -1944,6 +2105,7 @@ export type Database = {
           line_total?: number
           product_id?: string
           quantity?: number
+          tax_id?: string | null
           tax_percent?: number | null
           unit_price?: number
         }
@@ -2056,6 +2218,111 @@ export type Database = {
           },
         ]
       }
+      sales_return_lines: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          line_total: number
+          product_id: string
+          quantity: number
+          return_id: string
+          tax_id: string | null
+          tax_percent: number | null
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          line_total?: number
+          product_id: string
+          quantity?: number
+          return_id: string
+          tax_id?: string | null
+          tax_percent?: number | null
+          unit_price?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          line_total?: number
+          product_id?: string
+          quantity?: number
+          return_id?: string
+          tax_id?: string | null
+          tax_percent?: number | null
+          unit_price?: number
+        }
+        Relationships: []
+      }
+      sales_returns: {
+        Row: {
+          branch_id: string | null
+          confirmed_at: string | null
+          confirmed_by: string | null
+          created_at: string
+          created_by: string
+          customer_id: string
+          id: string
+          journal_entry_id: string | null
+          notes: string | null
+          original_invoice_id: string | null
+          reason: string | null
+          return_date: string
+          return_number: string
+          status: Database["public"]["Enums"]["return_status"]
+          subtotal: number
+          tax_amount: number
+          total_amount: number
+          updated_at: string
+          warehouse_id: string | null
+        }
+        Insert: {
+          branch_id?: string | null
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          created_by: string
+          customer_id: string
+          id?: string
+          journal_entry_id?: string | null
+          notes?: string | null
+          original_invoice_id?: string | null
+          reason?: string | null
+          return_date?: string
+          return_number: string
+          status?: Database["public"]["Enums"]["return_status"]
+          subtotal?: number
+          tax_amount?: number
+          total_amount?: number
+          updated_at?: string
+          warehouse_id?: string | null
+        }
+        Update: {
+          branch_id?: string | null
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          created_by?: string
+          customer_id?: string
+          id?: string
+          journal_entry_id?: string | null
+          notes?: string | null
+          original_invoice_id?: string | null
+          reason?: string | null
+          return_date?: string
+          return_number?: string
+          status?: Database["public"]["Enums"]["return_status"]
+          subtotal?: number
+          tax_amount?: number
+          total_amount?: number
+          updated_at?: string
+          warehouse_id?: string | null
+        }
+        Relationships: []
+      }
       suppliers: {
         Row: {
           account_id: string | null
@@ -2138,6 +2405,51 @@ export type Database = {
           setting_key?: string
           setting_type?: string
           setting_value?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      taxes: {
+        Row: {
+          code: string
+          created_at: string
+          description: string | null
+          id: string
+          input_account_id: string | null
+          is_active: boolean | null
+          is_inclusive: boolean | null
+          name: string
+          output_account_id: string | null
+          rate: number
+          tax_type: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          input_account_id?: string | null
+          is_active?: boolean | null
+          is_inclusive?: boolean | null
+          name: string
+          output_account_id?: string | null
+          rate?: number
+          tax_type?: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          input_account_id?: string | null
+          is_active?: boolean | null
+          is_inclusive?: boolean | null
+          name?: string
+          output_account_id?: string | null
+          rate?: number
+          tax_type?: string
           updated_at?: string
         }
         Relationships: []
@@ -2465,6 +2777,12 @@ export type Database = {
         Args: { _voucher_id: string }
         Returns: undefined
       }
+      confirm_purchase_return: { Args: { _return_id: string }; Returns: string }
+      confirm_sales_return: { Args: { _return_id: string }; Returns: string }
+      generate_asset_depreciation_schedule: {
+        Args: { _asset_id: string }
+        Returns: number
+      }
       get_next_document_number: {
         Args: { _branch_id: string; _document_type: string }
         Returns: string
@@ -2499,6 +2817,10 @@ export type Database = {
       }
       is_date_in_open_period: { Args: { check_date: string }; Returns: boolean }
       is_postable_account: { Args: { account_id: string }; Returns: boolean }
+      post_asset_depreciation: {
+        Args: { _schedule_id: string }
+        Returns: string
+      }
       update_product_weighted_avg_cost: {
         Args: {
           _new_quantity: number
@@ -2531,6 +2853,7 @@ export type Database = {
         | "partially_paid"
         | "cancelled"
       payment_method: "cash" | "bank_transfer" | "check" | "credit_card"
+      return_status: "draft" | "confirmed" | "cancelled"
       transaction_type: "debit" | "credit"
     }
     CompositeTypes: {
@@ -2684,6 +3007,7 @@ export const Constants = {
         "cancelled",
       ],
       payment_method: ["cash", "bank_transfer", "check", "credit_card"],
+      return_status: ["draft", "confirmed", "cancelled"],
       transaction_type: ["debit", "credit"],
     },
   },
