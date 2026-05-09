@@ -46,7 +46,7 @@ export function ReturnFormBase({ type, open, onOpenChange, onSaved }: Props) {
     (async () => {
       const partyTable = type === "sales" ? "customers" : "suppliers";
       const [{ data: p }, { data: pr }, { data: w }, { data: t }] = await Promise.all([
-        supabase.from(partyTable).select("id, code, name").eq("is_active", true),
+        (supabase.from(partyTable as any) as any).select("id, code, name").eq("is_active", true),
         supabase.from("products").select("id, code, name, selling_price, cost_price").eq("is_active", true),
         supabase.from("warehouses").select("id, code, name").eq("is_active", true),
         supabase.from("taxes").select("id, code, name, rate").eq("is_active", true),
