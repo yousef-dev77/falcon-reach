@@ -56,7 +56,7 @@ export default function PurchaseRequests() {
     toast.success("تم الحفظ"); setOpen(false); setLines([{ product_id: "", quantity: 1, estimated_price: 0 }]); load();
   };
 
-  const setStatus = async (id: string, status: string) => {
+  const setStatus = async (id: string, status: "draft" | "submitted" | "approved" | "rejected" | "closed") => {
     const patch: any = { status };
     if (status === "approved") { patch.approved_by = user!.id; patch.approved_at = new Date().toISOString(); }
     const { error } = await supabase.from("purchase_requests").update(patch).eq("id", id);
