@@ -59,7 +59,7 @@ export default function Quotations() {
     toast.success("تم"); setOpen(false); setLines([{ product_id: "", quantity: 1, unit_price: 0, tax_id: null, tax_percent: 0, line_total: 0 }]); load();
   };
 
-  const setStatus = async (id: string, status: string) => {
+  const setStatus = async (id: string, status: "draft" | "sent" | "accepted" | "rejected" | "expired") => {
     await supabase.from("quotations").update({ status }).eq("id", id);
     toast.success("تم"); load();
   };
