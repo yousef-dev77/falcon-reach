@@ -39,6 +39,13 @@ import AgingReport from "./pages/finance/AgingReport";
 import AssetDepreciation from "./pages/finance/AssetDepreciation";
 import SalesReturns from "./pages/sales/SalesReturns";
 import PurchaseReturns from "./pages/purchases/PurchaseReturns";
+import PurchaseRequests from "./pages/purchases/PurchaseRequests";
+import PurchaseOrders from "./pages/purchases/PurchaseOrders";
+import GoodsReceipts from "./pages/purchases/GoodsReceipts";
+import LandedCosts from "./pages/purchases/LandedCosts";
+import Quotations from "./pages/sales/Quotations";
+import SalesOrders from "./pages/sales/SalesOrders";
+import DeliveryNotes from "./pages/sales/DeliveryNotes";
 
 // Inventory Pages
 import Warehouses from "./pages/inventory/Warehouses";
@@ -112,8 +119,15 @@ const App = () => (
               <Route path="/finance/aging-report" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'accountant']}><DashboardLayout><AgingReport /></DashboardLayout></AdminRoute>} />
               <Route path="/finance/asset-depreciation" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'accountant']}><DashboardLayout><AssetDepreciation /></DashboardLayout></AdminRoute>} />
               <Route path="/sales/returns" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'sales_manager']}><DashboardLayout><SalesReturns /></DashboardLayout></AdminRoute>} />
+              <Route path="/sales/quotations" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'sales_manager']}><DashboardLayout><Quotations /></DashboardLayout></AdminRoute>} />
+              <Route path="/sales/orders" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'sales_manager']}><DashboardLayout><SalesOrders /></DashboardLayout></AdminRoute>} />
+              <Route path="/sales/delivery-notes" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'sales_manager', 'inventory_manager']}><DashboardLayout><DeliveryNotes /></DashboardLayout></AdminRoute>} />
               <Route path="/purchases/returns" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'accountant']}><DashboardLayout><PurchaseReturns /></DashboardLayout></AdminRoute>} />
-              
+              <Route path="/purchases/requests" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'accountant', 'inventory_manager']}><DashboardLayout><PurchaseRequests /></DashboardLayout></AdminRoute>} />
+              <Route path="/purchases/orders" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'accountant']}><DashboardLayout><PurchaseOrders /></DashboardLayout></AdminRoute>} />
+              <Route path="/purchases/goods-receipts" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'accountant', 'inventory_manager']}><DashboardLayout><GoodsReceipts /></DashboardLayout></AdminRoute>} />
+              <Route path="/purchases/landed-costs" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'accountant']}><DashboardLayout><LandedCosts /></DashboardLayout></AdminRoute>} />
+
               {/* Inventory Routes - Admin + Branch Manager + Inventory Manager */}
               <Route path="/inventory/warehouses" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'inventory_manager']}><DashboardLayout><Warehouses /></DashboardLayout></AdminRoute>} />
               <Route path="/inventory/products" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'inventory_manager']}><DashboardLayout><Products /></DashboardLayout></AdminRoute>} />

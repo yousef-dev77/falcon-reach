@@ -118,6 +118,9 @@ const navigationItems = [
     icon: ShoppingCart,
     items: [
       { title: "العملاء", url: "/sales/customers", icon: Users },
+      { title: "عروض الأسعار", url: "/sales/quotations", icon: FileText },
+      { title: "أوامر البيع", url: "/sales/orders", icon: ShoppingCart },
+      { title: "إذونات التسليم", url: "/sales/delivery-notes", icon: PackagePlus },
       { title: "فواتير المبيعات", url: "/sales/invoices", icon: Receipt },
       { title: "مرتجعات المبيعات", url: "/sales/returns", icon: ArrowDownUp },
       { title: "التحصيلات", url: "/sales/collections", icon: DollarSign },
@@ -129,7 +132,11 @@ const navigationItems = [
     icon: ShoppingBag,
     items: [
       { title: "الموردين", url: "/purchases/suppliers", icon: UserPlus },
-      { title: "فواتير المشتريات", url: "/purchases/invoices", icon: PackagePlus },
+      { title: "طلبات الشراء", url: "/purchases/requests", icon: FileText },
+      { title: "أوامر الشراء", url: "/purchases/orders", icon: ShoppingBag },
+      { title: "إذونات الاستلام", url: "/purchases/goods-receipts", icon: PackagePlus },
+      { title: "فواتير المشتريات", url: "/purchases/invoices", icon: Receipt },
+      { title: "التكاليف الإضافية", url: "/purchases/landed-costs", icon: TrendingUp },
       { title: "مرتجعات المشتريات", url: "/purchases/returns", icon: ArrowDownUp },
       { title: "المدفوعات", url: "/purchases/payments", icon: CreditCard },
       { title: "تقارير المشتريات", url: "/purchases/reports", icon: FileBarChart },
