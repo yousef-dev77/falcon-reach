@@ -104,7 +104,7 @@ export default function POSTerminal() {
 
   const openPay = () => {
     if (cart.length === 0) return toast.error("السلة فارغة");
-    if (config?.require_customer && !customerId) return toast.error("يجب اختيار عميل");
+    if (config?.require_customer && (!customerId || customerId === "walk-in")) return toast.error("يجب اختيار عميل");
     setPayments({ cash: totals.total, card: 0, transfer: 0 });
     setPayDlg(true);
   };
