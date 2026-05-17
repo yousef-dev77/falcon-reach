@@ -1945,6 +1945,382 @@ export type Database = {
         }
         Relationships: []
       }
+      pos_cash_movements: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string
+          id: string
+          movement_type: string
+          reason: string | null
+          session_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by: string
+          id?: string
+          movement_type: string
+          reason?: string | null
+          session_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string
+          id?: string
+          movement_type?: string
+          reason?: string | null
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pos_cash_movements_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "pos_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pos_configs: {
+        Row: {
+          allow_discount: boolean | null
+          allow_price_edit: boolean | null
+          bank_account_id: string | null
+          branch_id: string | null
+          cash_box_id: string | null
+          code: string
+          created_at: string
+          default_tax_id: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          require_customer: boolean | null
+          sales_account_id: string | null
+          updated_at: string
+          warehouse_id: string | null
+        }
+        Insert: {
+          allow_discount?: boolean | null
+          allow_price_edit?: boolean | null
+          bank_account_id?: string | null
+          branch_id?: string | null
+          cash_box_id?: string | null
+          code: string
+          created_at?: string
+          default_tax_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          require_customer?: boolean | null
+          sales_account_id?: string | null
+          updated_at?: string
+          warehouse_id?: string | null
+        }
+        Update: {
+          allow_discount?: boolean | null
+          allow_price_edit?: boolean | null
+          bank_account_id?: string | null
+          branch_id?: string | null
+          cash_box_id?: string | null
+          code?: string
+          created_at?: string
+          default_tax_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          require_customer?: boolean | null
+          sales_account_id?: string | null
+          updated_at?: string
+          warehouse_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pos_configs_bank_account_id_fkey"
+            columns: ["bank_account_id"]
+            isOneToOne: false
+            referencedRelation: "bank_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_configs_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_configs_cash_box_id_fkey"
+            columns: ["cash_box_id"]
+            isOneToOne: false
+            referencedRelation: "cash_boxes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_configs_default_tax_id_fkey"
+            columns: ["default_tax_id"]
+            isOneToOne: false
+            referencedRelation: "taxes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_configs_sales_account_id_fkey"
+            columns: ["sales_account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pos_order_lines: {
+        Row: {
+          created_at: string
+          discount_percent: number
+          id: string
+          line_subtotal: number
+          line_tax: number
+          line_total: number
+          order_id: string
+          product_id: string
+          quantity: number
+          tax_percent: number
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          discount_percent?: number
+          id?: string
+          line_subtotal?: number
+          line_tax?: number
+          line_total?: number
+          order_id: string
+          product_id: string
+          quantity?: number
+          tax_percent?: number
+          unit_price?: number
+        }
+        Update: {
+          created_at?: string
+          discount_percent?: number
+          id?: string
+          line_subtotal?: number
+          line_tax?: number
+          line_total?: number
+          order_id?: string
+          product_id?: string
+          quantity?: number
+          tax_percent?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pos_order_lines_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "pos_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_order_lines_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pos_orders: {
+        Row: {
+          cashier_id: string
+          change_amount: number
+          config_id: string
+          created_at: string
+          customer_id: string | null
+          discount_amount: number
+          id: string
+          notes: string | null
+          order_date: string
+          order_number: string
+          paid_amount: number
+          sales_invoice_id: string | null
+          session_id: string
+          status: Database["public"]["Enums"]["pos_order_status"]
+          subtotal: number
+          tax_amount: number
+          total: number
+        }
+        Insert: {
+          cashier_id: string
+          change_amount?: number
+          config_id: string
+          created_at?: string
+          customer_id?: string | null
+          discount_amount?: number
+          id?: string
+          notes?: string | null
+          order_date?: string
+          order_number: string
+          paid_amount?: number
+          sales_invoice_id?: string | null
+          session_id: string
+          status?: Database["public"]["Enums"]["pos_order_status"]
+          subtotal?: number
+          tax_amount?: number
+          total?: number
+        }
+        Update: {
+          cashier_id?: string
+          change_amount?: number
+          config_id?: string
+          created_at?: string
+          customer_id?: string | null
+          discount_amount?: number
+          id?: string
+          notes?: string | null
+          order_date?: string
+          order_number?: string
+          paid_amount?: number
+          sales_invoice_id?: string | null
+          session_id?: string
+          status?: Database["public"]["Enums"]["pos_order_status"]
+          subtotal?: number
+          tax_amount?: number
+          total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pos_orders_config_id_fkey"
+            columns: ["config_id"]
+            isOneToOne: false
+            referencedRelation: "pos_configs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_orders_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_orders_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "pos_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pos_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          order_id: string
+          payment_method: Database["public"]["Enums"]["pos_payment_method"]
+          reference: string | null
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          id?: string
+          order_id: string
+          payment_method: Database["public"]["Enums"]["pos_payment_method"]
+          reference?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          order_id?: string
+          payment_method?: Database["public"]["Enums"]["pos_payment_method"]
+          reference?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pos_payments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "pos_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pos_sessions: {
+        Row: {
+          cash_difference: number | null
+          cashier_id: string
+          closed_at: string | null
+          closing_balance: number | null
+          config_id: string
+          created_at: string
+          expected_cash: number | null
+          id: string
+          journal_entry_id: string | null
+          notes: string | null
+          opened_at: string
+          opening_balance: number
+          session_number: string
+          status: Database["public"]["Enums"]["pos_session_status"]
+          total_card: number | null
+          total_cash: number | null
+          total_sales: number | null
+          total_tax: number | null
+          total_transfer: number | null
+        }
+        Insert: {
+          cash_difference?: number | null
+          cashier_id: string
+          closed_at?: string | null
+          closing_balance?: number | null
+          config_id: string
+          created_at?: string
+          expected_cash?: number | null
+          id?: string
+          journal_entry_id?: string | null
+          notes?: string | null
+          opened_at?: string
+          opening_balance?: number
+          session_number: string
+          status?: Database["public"]["Enums"]["pos_session_status"]
+          total_card?: number | null
+          total_cash?: number | null
+          total_sales?: number | null
+          total_tax?: number | null
+          total_transfer?: number | null
+        }
+        Update: {
+          cash_difference?: number | null
+          cashier_id?: string
+          closed_at?: string | null
+          closing_balance?: number | null
+          config_id?: string
+          created_at?: string
+          expected_cash?: number | null
+          id?: string
+          journal_entry_id?: string | null
+          notes?: string | null
+          opened_at?: string
+          opening_balance?: number
+          session_number?: string
+          status?: Database["public"]["Enums"]["pos_session_status"]
+          total_card?: number | null
+          total_cash?: number | null
+          total_sales?: number | null
+          total_tax?: number | null
+          total_transfer?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pos_sessions_config_id_fkey"
+            columns: ["config_id"]
+            isOneToOne: false
+            referencedRelation: "pos_configs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_categories: {
         Row: {
           code: string
@@ -3559,6 +3935,10 @@ export type Database = {
       }
     }
     Functions: {
+      close_pos_session: {
+        Args: { _closing_balance: number; _session_id: string }
+        Returns: string
+      }
       confirm_inventory_voucher: {
         Args: { _voucher_id: string }
         Returns: undefined
@@ -3603,6 +3983,11 @@ export type Database = {
       }
       is_date_in_open_period: { Args: { check_date: string }; Returns: boolean }
       is_postable_account: { Args: { account_id: string }; Returns: boolean }
+      open_pos_session: {
+        Args: { _config_id: string; _opening_balance?: number }
+        Returns: string
+      }
+      pay_pos_order: { Args: { _order_id: string }; Returns: undefined }
       post_asset_depreciation: {
         Args: { _schedule_id: string }
         Returns: string
@@ -3652,6 +4037,9 @@ export type Database = {
         | "received"
         | "cancelled"
         | "closed"
+      pos_order_status: "draft" | "paid" | "invoiced" | "cancelled"
+      pos_payment_method: "cash" | "card" | "transfer" | "credit"
+      pos_session_status: "opened" | "closing" | "closed"
       pr_status: "draft" | "submitted" | "approved" | "rejected" | "closed"
       quotation_status: "draft" | "sent" | "accepted" | "rejected" | "expired"
       return_status: "draft" | "confirmed" | "cancelled"
@@ -3826,6 +4214,9 @@ export const Constants = {
         "cancelled",
         "closed",
       ],
+      pos_order_status: ["draft", "paid", "invoiced", "cancelled"],
+      pos_payment_method: ["cash", "card", "transfer", "credit"],
+      pos_session_status: ["opened", "closing", "closed"],
       pr_status: ["draft", "submitted", "approved", "rejected", "closed"],
       quotation_status: ["draft", "sent", "accepted", "rejected", "expired"],
       return_status: ["draft", "confirmed", "cancelled"],
