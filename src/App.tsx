@@ -78,6 +78,13 @@ import GeneralSettings from "./pages/settings/GeneralSettings";
 import SystemLogs from "./pages/settings/SystemLogs";
 import SetupWizard from "./pages/SetupWizard";
 
+// POS
+import POSConfigs from "./pages/pos/POSConfigs";
+import POSSessions from "./pages/pos/POSSessions";
+import POSTerminal from "./pages/pos/POSTerminal";
+import POSOrders from "./pages/pos/POSOrders";
+import POSReports from "./pages/pos/POSReports";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -157,6 +164,13 @@ const App = () => (
               <Route path="/settings/users" element={<AdminRoute allowedRoles={['admin', 'branch_manager']}><DashboardLayout><Users /></DashboardLayout></AdminRoute>} />
               <Route path="/settings/branches" element={<AdminRoute allowedRoles={['admin']}><DashboardLayout><Branches /></DashboardLayout></AdminRoute>} />
               <Route path="/settings/logs" element={<AdminRoute allowedRoles={['admin']}><DashboardLayout><SystemLogs /></DashboardLayout></AdminRoute>} />
+
+              {/* POS Routes */}
+              <Route path="/pos/configs" element={<AdminRoute allowedRoles={['admin', 'branch_manager']}><DashboardLayout><POSConfigs /></DashboardLayout></AdminRoute>} />
+              <Route path="/pos/sessions" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'sales_manager', 'accountant']}><DashboardLayout><POSSessions /></DashboardLayout></AdminRoute>} />
+              <Route path="/pos/orders" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'sales_manager', 'accountant']}><DashboardLayout><POSOrders /></DashboardLayout></AdminRoute>} />
+              <Route path="/pos/reports" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'sales_manager', 'accountant']}><DashboardLayout><POSReports /></DashboardLayout></AdminRoute>} />
+              <Route path="/pos/terminal/:sessionId" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'sales_manager']}><DashboardLayout><POSTerminal /></DashboardLayout></AdminRoute>} />
               
               <Route path="*" element={<NotFound />} />
               </Routes>

@@ -28,6 +28,7 @@ import {
   Home,
   Calendar,
   Target,
+  Monitor,
 } from "lucide-react";
 import {
   Sidebar,
@@ -59,6 +60,7 @@ const moduleRoles: Record<string, string[]> = {
   "النظام المخزني": ["admin", "branch_manager", "inventory_manager"],
   "نظام المبيعات": ["admin", "branch_manager", "sales_manager"],
   "نظام المشتريات": ["admin", "branch_manager", "accountant"],
+  "نقاط البيع (POS)": ["admin", "branch_manager", "sales_manager", "accountant"],
   "الإعدادات": ["admin", "branch_manager"],
 };
 
@@ -140,6 +142,16 @@ const navigationItems = [
       { title: "مرتجعات المشتريات", url: "/purchases/returns", icon: ArrowDownUp },
       { title: "المدفوعات", url: "/purchases/payments", icon: CreditCard },
       { title: "تقارير المشتريات", url: "/purchases/reports", icon: FileBarChart },
+    ],
+  },
+  {
+    title: "نقاط البيع (POS)",
+    icon: Monitor,
+    items: [
+      { title: "جلسات الكاشير", url: "/pos/sessions", icon: Monitor },
+      { title: "فواتير POS", url: "/pos/orders", icon: Receipt },
+      { title: "تقارير POS", url: "/pos/reports", icon: BarChart3 },
+      { title: "إعدادات نقاط البيع", url: "/pos/configs", icon: Settings },
     ],
   },
   {
