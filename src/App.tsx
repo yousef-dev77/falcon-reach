@@ -78,6 +78,13 @@ import GeneralSettings from "./pages/settings/GeneralSettings";
 import SystemLogs from "./pages/settings/SystemLogs";
 import SetupWizard from "./pages/SetupWizard";
 
+// POS
+import POSConfigs from "./pages/pos/POSConfigs";
+import POSSessions from "./pages/pos/POSSessions";
+import POSTerminal from "./pages/pos/POSTerminal";
+import POSOrders from "./pages/pos/POSOrders";
+import POSReports from "./pages/pos/POSReports";
+
 const queryClient = new QueryClient();
 
 const App = () => (
