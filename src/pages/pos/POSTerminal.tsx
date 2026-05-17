@@ -118,7 +118,7 @@ export default function POSTerminal() {
       order_number,
       session_id: session.id,
       config_id: config.id,
-      customer_id: customerId || null,
+      customer_id: customerId && customerId !== "walk-in" ? customerId : null,
       cashier_id: session.cashier_id,
       status: "draft",
       subtotal: totals.subtotal,
