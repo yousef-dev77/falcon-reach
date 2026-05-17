@@ -145,6 +145,16 @@ const navigationItems = [
     ],
   },
   {
+    title: "نقاط البيع (POS)",
+    icon: Monitor,
+    items: [
+      { title: "جلسات الكاشير", url: "/pos/sessions", icon: Play as any },
+      { title: "فواتير POS", url: "/pos/orders", icon: Receipt },
+      { title: "تقارير POS", url: "/pos/reports", icon: BarChart3 },
+      { title: "إعدادات نقاط البيع", url: "/pos/configs", icon: Settings },
+    ],
+  },
+  {
     title: "الإعدادات",
     icon: Settings,
     items: [
