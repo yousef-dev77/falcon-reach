@@ -28,6 +28,7 @@ import {
   Home,
   Calendar,
   Target,
+  Monitor,
 } from "lucide-react";
 import {
   Sidebar,
