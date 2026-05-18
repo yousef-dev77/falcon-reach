@@ -8,7 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { ArrowLeft, Trash2, Plus, Minus, CreditCard, Banknote, Wallet } from "lucide-react";
+import { ArrowLeft, Trash2, Plus, Minus, CreditCard, Banknote, Wallet, UserCircle, RefreshCw } from "lucide-react";
+import { CashierPinDialog, ActiveCashier } from "@/components/pos/CashierPinDialog";
 
 interface CartLine {
   product_id: string;
@@ -34,6 +35,8 @@ export default function POSTerminal() {
   const [payDlg, setPayDlg] = useState(false);
   const [taxRate, setTaxRate] = useState(0);
   const [payments, setPayments] = useState({ cash: 0, card: 0, transfer: 0 });
+  const [cashier, setCashier] = useState<ActiveCashier | null>(null);
+  const [pinOpen, setPinOpen] = useState(true);
   const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -119,7 +122,7 @@ export default function POSTerminal() {
       session_id: session.id,
       config_id: config.id,
       customer_id: customerId && customerId !== "walk-in" ? customerId : null,
-      cashier_id: session.cashier_id,
+      cashier_id: cashier?.user_id || session.cashier_id,
       status: "draft",
       subtotal: totals.subtotal,
       tax_amount: totals.tax,
