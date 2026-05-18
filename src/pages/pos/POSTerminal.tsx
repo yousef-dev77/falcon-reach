@@ -163,6 +163,14 @@ export default function POSTerminal() {
 
   return (
     <div className="h-[calc(100vh-100px)] flex gap-3 p-3 bg-muted/30">
+      <CashierPinDialog
+        open={pinOpen}
+        blocking={!cashier}
+        onClose={() => setPinOpen(false)}
+        onSuccess={(c) => { setCashier(c); setPinOpen(false); toast.success(`أهلاً ${c.full_name}`); }}
+        branchId={session.branch_id || config?.branch_id || null}
+      />
+
       {/* Right: Cart */}
       <div className="w-[380px] flex flex-col bg-card rounded-lg border shadow-sm">
         <div className="bg-primary text-primary-foreground p-3 rounded-t-lg flex items-center justify-between">
@@ -171,6 +179,17 @@ export default function POSTerminal() {
           </Button>
           <div className="text-sm font-mono">{session.session_number}</div>
         </div>
+
+        <div className="px-3 py-2 border-b bg-muted/30 flex items-center justify-between text-sm">
+          <div className="flex items-center gap-1">
+            <UserCircle className="h-4 w-4 text-primary" />
+            <span className="font-medium">{cashier?.full_name || "—"}</span>
+          </div>
+          <Button variant="ghost" size="sm" className="h-7" onClick={() => { setCart([]); setPinOpen(true); }}>
+            <RefreshCw className="h-3 w-3 me-1" /> تبديل كاشير
+          </Button>
+        </div>
+
 
         <div className="p-3 border-b">
           <Select value={customerId} onValueChange={setCustomerId}>
