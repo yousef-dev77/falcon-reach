@@ -152,6 +152,26 @@ export function UserFormDialog({ open, onOpenChange, user, isBranchManager = fal
         throw new Error(result.error || "فشل في إنشاء المستخدم");
       }
 
+      const newUserId = result.user?.id || result.id;
+
+      // Persist POS flags + PIN for the new user
+      if (newUserId) {
+        await supabase
+          .from('profiles')
+          .update({
+            can_override_pos: data.can_override_pos,
+            is_pos_active: data.is_pos_active,
+          } as any)
+          .eq('id', newUserId);
+
+        if (data.pin && data.pin.trim().length >= 4) {
+          await supabase.rpc('set_user_pin' as any, {
+            _user_id: newUserId,
+            _pin: data.pin.trim(),
+          });
+        }
+      }
+
       return result;
     },
     onSuccess: () => {
