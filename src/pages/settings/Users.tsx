@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Plus, Edit, Shield, Building2, UserCheck, Users, Crown, Package, Filter } from "lucide-react";
+import { Plus, Edit, Shield, Building2, UserCheck, Users, Crown, Package, Filter, Calculator } from "lucide-react";
 import { UserFormDialog } from "@/components/settings/UserFormDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -32,6 +32,7 @@ const roleLabels: Record<string, { label: string; color: string; icon: any }> = 
   accountant: { label: "محاسب", color: "bg-blue-500 text-white", icon: UserCheck },
   sales_manager: { label: "مدير مبيعات", color: "bg-green-500 text-white", icon: Users },
   inventory_manager: { label: "مدير مخزون", color: "bg-orange-500 text-white", icon: Package },
+  cashier: { label: "كاشير POS", color: "bg-teal-500 text-white", icon: Calculator },
   user: { label: "مستخدم", color: "bg-muted text-muted-foreground", icon: Users },
 };
 
