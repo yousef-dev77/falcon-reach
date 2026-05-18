@@ -183,16 +183,27 @@ export function UserFormDialog({ open, onOpenChange, user, isBranchManager = fal
 
   const updateUserMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
-      // Update profile
+      // Update profile (incl. POS flags)
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
           full_name: data.full_name,
           phone: data.phone,
-        })
+          can_override_pos: data.can_override_pos,
+          is_pos_active: data.is_pos_active,
+        } as any)
         .eq('id', user.id);
 
       if (profileError) throw profileError;
+
+      // Set PIN if provided
+      if (data.pin && data.pin.trim().length >= 4) {
+        const { error: pinErr } = await supabase.rpc('set_user_pin' as any, {
+          _user_id: user.id,
+          _pin: data.pin.trim(),
+        });
+        if (pinErr) throw pinErr;
+      }
 
       // Update role
       const { error: roleError } = await supabase
