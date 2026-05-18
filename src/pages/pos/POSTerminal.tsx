@@ -8,7 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { ArrowLeft, Trash2, Plus, Minus, CreditCard, Banknote, Wallet } from "lucide-react";
+import { ArrowLeft, Trash2, Plus, Minus, CreditCard, Banknote, Wallet, UserCircle, RefreshCw } from "lucide-react";
+import { CashierPinDialog, ActiveCashier } from "@/components/pos/CashierPinDialog";
 
 interface CartLine {
   product_id: string;
@@ -34,6 +35,8 @@ export default function POSTerminal() {
   const [payDlg, setPayDlg] = useState(false);
   const [taxRate, setTaxRate] = useState(0);
   const [payments, setPayments] = useState({ cash: 0, card: 0, transfer: 0 });
+  const [cashier, setCashier] = useState<ActiveCashier | null>(null);
+  const [pinOpen, setPinOpen] = useState(true);
   const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -119,7 +122,7 @@ export default function POSTerminal() {
       session_id: session.id,
       config_id: config.id,
       customer_id: customerId && customerId !== "walk-in" ? customerId : null,
-      cashier_id: session.cashier_id,
+      cashier_id: cashier?.user_id || session.cashier_id,
       status: "draft",
       subtotal: totals.subtotal,
       tax_amount: totals.tax,
@@ -160,6 +163,14 @@ export default function POSTerminal() {
 
   return (
     <div className="h-[calc(100vh-100px)] flex gap-3 p-3 bg-muted/30">
+      <CashierPinDialog
+        open={pinOpen}
+        blocking={!cashier}
+        onClose={() => setPinOpen(false)}
+        onSuccess={(c) => { setCashier(c); setPinOpen(false); toast.success(`أهلاً ${c.full_name}`); }}
+        branchId={session.branch_id || config?.branch_id || null}
+      />
+
       {/* Right: Cart */}
       <div className="w-[380px] flex flex-col bg-card rounded-lg border shadow-sm">
         <div className="bg-primary text-primary-foreground p-3 rounded-t-lg flex items-center justify-between">
@@ -168,6 +179,17 @@ export default function POSTerminal() {
           </Button>
           <div className="text-sm font-mono">{session.session_number}</div>
         </div>
+
+        <div className="px-3 py-2 border-b bg-muted/30 flex items-center justify-between text-sm">
+          <div className="flex items-center gap-1">
+            <UserCircle className="h-4 w-4 text-primary" />
+            <span className="font-medium">{cashier?.full_name || "—"}</span>
+          </div>
+          <Button variant="ghost" size="sm" className="h-7" onClick={() => { setCart([]); setPinOpen(true); }}>
+            <RefreshCw className="h-3 w-3 me-1" /> تبديل كاشير
+          </Button>
+        </div>
+
 
         <div className="p-3 border-b">
           <Select value={customerId} onValueChange={setCustomerId}>

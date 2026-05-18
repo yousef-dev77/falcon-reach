@@ -41,6 +41,7 @@ const roleLabels: Record<string, string> = {
   accountant: "محاسب",
   sales_manager: "مدير مبيعات",
   inventory_manager: "مدير مخزون",
+  cashier: "كاشير POS",
   user: "مستخدم",
 };
 
@@ -61,6 +62,9 @@ const getInitialFormData = (user?: any) => ({
   is_global: user?.user_roles?.[0]?.is_global || false,
   selectedBranches: user?.user_branch_assignments?.map((b: any) => b.branch_id) || [],
   primaryBranchId: user?.user_branch_assignments?.find((b: any) => b.is_primary)?.branch_id || "",
+  pin: "",
+  can_override_pos: user?.can_override_pos || false,
+  is_pos_active: user?.is_pos_active ?? true,
 });
 
 export function UserFormDialog({ open, onOpenChange, user, isBranchManager = false, allowedBranchIds = [] }: UserFormDialogProps) {
@@ -148,6 +152,26 @@ export function UserFormDialog({ open, onOpenChange, user, isBranchManager = fal
         throw new Error(result.error || "فشل في إنشاء المستخدم");
       }
 
+      const newUserId = result.user?.id || result.id;
+
+      // Persist POS flags + PIN for the new user
+      if (newUserId) {
+        await supabase
+          .from('profiles')
+          .update({
+            can_override_pos: data.can_override_pos,
+            is_pos_active: data.is_pos_active,
+          } as any)
+          .eq('id', newUserId);
+
+        if (data.pin && data.pin.trim().length >= 4) {
+          await supabase.rpc('set_user_pin' as any, {
+            _user_id: newUserId,
+            _pin: data.pin.trim(),
+          });
+        }
+      }
+
       return result;
     },
     onSuccess: () => {
@@ -171,21 +195,35 @@ export function UserFormDialog({ open, onOpenChange, user, isBranchManager = fal
       is_global: false,
       selectedBranches: [],
       primaryBranchId: "",
+      pin: "",
+      can_override_pos: false,
+      is_pos_active: true,
     });
   };
 
   const updateUserMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
-      // Update profile
+      // Update profile (incl. POS flags)
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
           full_name: data.full_name,
           phone: data.phone,
-        })
+          can_override_pos: data.can_override_pos,
+          is_pos_active: data.is_pos_active,
+        } as any)
         .eq('id', user.id);
 
       if (profileError) throw profileError;
+
+      // Set PIN if provided
+      if (data.pin && data.pin.trim().length >= 4) {
+        const { error: pinErr } = await supabase.rpc('set_user_pin' as any, {
+          _user_id: user.id,
+          _pin: data.pin.trim(),
+        });
+        if (pinErr) throw pinErr;
+      }
 
       // Update role
       const { error: roleError } = await supabase
@@ -277,10 +315,11 @@ export function UserFormDialog({ open, onOpenChange, user, isBranchManager = fal
 
         <form onSubmit={handleSubmit}>
           <Tabs defaultValue="info" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="info">البيانات الأساسية</TabsTrigger>
               <TabsTrigger value="branches">الفروع</TabsTrigger>
               <TabsTrigger value="role">الدور والصلاحيات</TabsTrigger>
+              <TabsTrigger value="pos">نقطة البيع</TabsTrigger>
             </TabsList>
 
             <TabsContent value="info" className="space-y-4 mt-4">
@@ -480,6 +519,56 @@ export function UserFormDialog({ open, onOpenChange, user, isBranchManager = fal
                     </div>
                   ))}
                 </ScrollArea>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="pos" className="space-y-4 mt-4">
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  هذه الإعدادات تخص شاشة الكاشير (POS). الـ PIN يُستخدم للدخول السريع وتبديل الكاشيرين على نفس الجهاز.
+                </AlertDescription>
+              </Alert>
+
+              <div className="space-y-2">
+                <Label htmlFor="pin">رمز الدخول السريع (PIN) — 4 إلى 8 أرقام</Label>
+                <Input
+                  id="pin"
+                  type="password"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={8}
+                  placeholder={isEditing ? "اتركه فارغاً لعدم التغيير" : "أدخل PIN رقمي"}
+                  value={formData.pin}
+                  onChange={(e) => setFormData({ ...formData, pin: e.target.value.replace(/\D/g, '') })}
+                />
+                <p className="text-xs text-muted-foreground">
+                  يتم تخزينه مشفّراً. لتعطيل دخول الكاشير بدون كلمة سر، اترك الحقل فارغاً.
+                </p>
+              </div>
+
+              <div className="flex items-center space-x-2 space-x-reverse">
+                <Checkbox
+                  id="is_pos_active"
+                  checked={formData.is_pos_active}
+                  onCheckedChange={(checked) =>
+                    setFormData({ ...formData, is_pos_active: checked as boolean })
+                  }
+                />
+                <Label htmlFor="is_pos_active">مفعّل على نقطة البيع</Label>
+              </div>
+
+              <div className="flex items-center space-x-2 space-x-reverse">
+                <Checkbox
+                  id="can_override_pos"
+                  checked={formData.can_override_pos}
+                  onCheckedChange={(checked) =>
+                    setFormData({ ...formData, can_override_pos: checked as boolean })
+                  }
+                />
+                <Label htmlFor="can_override_pos">
+                  صلاحية مشرف (يُسمح له بالموافقة على الخصومات والإلغاء والاسترجاع)
+                </Label>
               </div>
             </TabsContent>
           </Tabs>

@@ -2459,29 +2459,38 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          can_override_pos: boolean
           created_at: string
           email: string | null
           full_name: string
           id: string
+          is_pos_active: boolean
           phone: string | null
+          pin_hash: string | null
           updated_at: string
         }
         Insert: {
           avatar_url?: string | null
+          can_override_pos?: boolean
           created_at?: string
           email?: string | null
           full_name: string
           id: string
+          is_pos_active?: boolean
           phone?: string | null
+          pin_hash?: string | null
           updated_at?: string
         }
         Update: {
           avatar_url?: string | null
+          can_override_pos?: boolean
           created_at?: string
           email?: string | null
           full_name?: string
           id?: string
+          is_pos_active?: boolean
           phone?: string | null
+          pin_hash?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -3995,6 +4004,10 @@ export type Database = {
       post_delivery_note: { Args: { _dn_id: string }; Returns: undefined }
       post_goods_receipt: { Args: { _grn_id: string }; Returns: undefined }
       post_landed_cost: { Args: { _lc_id: string }; Returns: undefined }
+      set_user_pin: {
+        Args: { _pin: string; _user_id: string }
+        Returns: undefined
+      }
       update_product_weighted_avg_cost: {
         Args: {
           _new_quantity: number
@@ -4002,6 +4015,14 @@ export type Database = {
           _product_id: string
         }
         Returns: undefined
+      }
+      verify_user_pin: {
+        Args: { _branch_id?: string; _pin: string }
+        Returns: {
+          full_name: string
+          is_manager: boolean
+          user_id: string
+        }[]
       }
     }
     Enums: {
@@ -4012,6 +4033,7 @@ export type Database = {
         | "sales_manager"
         | "inventory_manager"
         | "user"
+        | "cashier"
       dn_status: "draft" | "posted" | "cancelled"
       grn_status: "draft" | "posted" | "cancelled"
       inventory_valuation: "fifo" | "lifo" | "average"
@@ -4185,6 +4207,7 @@ export const Constants = {
         "sales_manager",
         "inventory_manager",
         "user",
+        "cashier",
       ],
       dn_status: ["draft", "posted", "cancelled"],
       grn_status: ["draft", "posted", "cancelled"],
