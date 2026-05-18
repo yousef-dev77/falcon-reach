@@ -295,10 +295,11 @@ export function UserFormDialog({ open, onOpenChange, user, isBranchManager = fal
 
         <form onSubmit={handleSubmit}>
           <Tabs defaultValue="info" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="info">البيانات الأساسية</TabsTrigger>
               <TabsTrigger value="branches">الفروع</TabsTrigger>
               <TabsTrigger value="role">الدور والصلاحيات</TabsTrigger>
+              <TabsTrigger value="pos">نقطة البيع</TabsTrigger>
             </TabsList>
 
             <TabsContent value="info" className="space-y-4 mt-4">
