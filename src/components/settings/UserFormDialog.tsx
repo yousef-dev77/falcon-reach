@@ -41,6 +41,7 @@ const roleLabels: Record<string, string> = {
   accountant: "محاسب",
   sales_manager: "مدير مبيعات",
   inventory_manager: "مدير مخزون",
+  cashier: "كاشير POS",
   user: "مستخدم",
 };
 
@@ -61,6 +62,9 @@ const getInitialFormData = (user?: any) => ({
   is_global: user?.user_roles?.[0]?.is_global || false,
   selectedBranches: user?.user_branch_assignments?.map((b: any) => b.branch_id) || [],
   primaryBranchId: user?.user_branch_assignments?.find((b: any) => b.is_primary)?.branch_id || "",
+  pin: "",
+  can_override_pos: user?.can_override_pos || false,
+  is_pos_active: user?.is_pos_active ?? true,
 });
 
 export function UserFormDialog({ open, onOpenChange, user, isBranchManager = false, allowedBranchIds = [] }: UserFormDialogProps) {
