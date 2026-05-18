@@ -501,6 +501,56 @@ export function UserFormDialog({ open, onOpenChange, user, isBranchManager = fal
                 </ScrollArea>
               </div>
             </TabsContent>
+
+            <TabsContent value="pos" className="space-y-4 mt-4">
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  هذه الإعدادات تخص شاشة الكاشير (POS). الـ PIN يُستخدم للدخول السريع وتبديل الكاشيرين على نفس الجهاز.
+                </AlertDescription>
+              </Alert>
+
+              <div className="space-y-2">
+                <Label htmlFor="pin">رمز الدخول السريع (PIN) — 4 إلى 8 أرقام</Label>
+                <Input
+                  id="pin"
+                  type="password"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={8}
+                  placeholder={isEditing ? "اتركه فارغاً لعدم التغيير" : "أدخل PIN رقمي"}
+                  value={formData.pin}
+                  onChange={(e) => setFormData({ ...formData, pin: e.target.value.replace(/\D/g, '') })}
+                />
+                <p className="text-xs text-muted-foreground">
+                  يتم تخزينه مشفّراً. لتعطيل دخول الكاشير بدون كلمة سر، اترك الحقل فارغاً.
+                </p>
+              </div>
+
+              <div className="flex items-center space-x-2 space-x-reverse">
+                <Checkbox
+                  id="is_pos_active"
+                  checked={formData.is_pos_active}
+                  onCheckedChange={(checked) =>
+                    setFormData({ ...formData, is_pos_active: checked as boolean })
+                  }
+                />
+                <Label htmlFor="is_pos_active">مفعّل على نقطة البيع</Label>
+              </div>
+
+              <div className="flex items-center space-x-2 space-x-reverse">
+                <Checkbox
+                  id="can_override_pos"
+                  checked={formData.can_override_pos}
+                  onCheckedChange={(checked) =>
+                    setFormData({ ...formData, can_override_pos: checked as boolean })
+                  }
+                />
+                <Label htmlFor="can_override_pos">
+                  صلاحية مشرف (يُسمح له بالموافقة على الخصومات والإلغاء والاسترجاع)
+                </Label>
+              </div>
+            </TabsContent>
           </Tabs>
 
           <DialogFooter className="mt-6">
