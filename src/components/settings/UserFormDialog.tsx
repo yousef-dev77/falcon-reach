@@ -175,6 +175,9 @@ export function UserFormDialog({ open, onOpenChange, user, isBranchManager = fal
       is_global: false,
       selectedBranches: [],
       primaryBranchId: "",
+      pin: "",
+      can_override_pos: false,
+      is_pos_active: true,
     });
   };
 
