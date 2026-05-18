@@ -60,7 +60,7 @@ export function CashierPinDialog({
         className="max-w-sm"
         onInteractOutside={e => blocking && e.preventDefault()}
         onEscapeKeyDown={e => blocking && e.preventDefault()}
-        hideClose={blocking as any}
+        hideClose={blocking}
       >
         <DialogHeader>
           <DialogTitle className="text-center">{title}</DialogTitle>
