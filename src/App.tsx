@@ -85,6 +85,21 @@ import POSTerminal from "./pages/pos/POSTerminal";
 import POSOrders from "./pages/pos/POSOrders";
 import POSReports from "./pages/pos/POSReports";
 
+// HR
+import HRDashboard from "./pages/hr/HRDashboard";
+import HREmployees from "./pages/hr/Employees";
+import HRDepartments from "./pages/hr/Departments";
+import HRJobTitles from "./pages/hr/JobTitles";
+import HRLeaveTypes from "./pages/hr/LeaveTypes";
+import HRLeaveRequests from "./pages/hr/LeaveRequests";
+import HRAttendance from "./pages/hr/Attendance";
+import HRSalaryComponents from "./pages/hr/SalaryComponents";
+import HRLoans from "./pages/hr/Loans";
+import HRPayrollRuns from "./pages/hr/PayrollRuns";
+import HRPayrollDetail from "./pages/hr/PayrollDetail";
+import HREndOfService from "./pages/hr/EndOfService";
+import HRReports from "./pages/hr/HRReports";
+
 const queryClient = new QueryClient();
 
 const App = () => (
