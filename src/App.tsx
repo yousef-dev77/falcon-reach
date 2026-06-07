@@ -85,6 +85,21 @@ import POSTerminal from "./pages/pos/POSTerminal";
 import POSOrders from "./pages/pos/POSOrders";
 import POSReports from "./pages/pos/POSReports";
 
+// HR
+import HRDashboard from "./pages/hr/HRDashboard";
+import HREmployees from "./pages/hr/Employees";
+import HRDepartments from "./pages/hr/Departments";
+import HRJobTitles from "./pages/hr/JobTitles";
+import HRLeaveTypes from "./pages/hr/LeaveTypes";
+import HRLeaveRequests from "./pages/hr/LeaveRequests";
+import HRAttendance from "./pages/hr/Attendance";
+import HRSalaryComponents from "./pages/hr/SalaryComponents";
+import HRLoans from "./pages/hr/Loans";
+import HRPayrollRuns from "./pages/hr/PayrollRuns";
+import HRPayrollDetail from "./pages/hr/PayrollDetail";
+import HREndOfService from "./pages/hr/EndOfService";
+import HRReports from "./pages/hr/HRReports";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -171,6 +186,21 @@ const App = () => (
               <Route path="/pos/orders" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'sales_manager', 'accountant']}><DashboardLayout><POSOrders /></DashboardLayout></AdminRoute>} />
               <Route path="/pos/reports" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'sales_manager', 'accountant']}><DashboardLayout><POSReports /></DashboardLayout></AdminRoute>} />
               <Route path="/pos/terminal/:sessionId" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'sales_manager', 'cashier']}><DashboardLayout><POSTerminal /></DashboardLayout></AdminRoute>} />
+
+              {/* HR Routes */}
+              <Route path="/hr" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'hr_manager']}><DashboardLayout><HRDashboard /></DashboardLayout></AdminRoute>} />
+              <Route path="/hr/employees" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'hr_manager']}><DashboardLayout><HREmployees /></DashboardLayout></AdminRoute>} />
+              <Route path="/hr/departments" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'hr_manager']}><DashboardLayout><HRDepartments /></DashboardLayout></AdminRoute>} />
+              <Route path="/hr/job-titles" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'hr_manager']}><DashboardLayout><HRJobTitles /></DashboardLayout></AdminRoute>} />
+              <Route path="/hr/leave-types" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'hr_manager']}><DashboardLayout><HRLeaveTypes /></DashboardLayout></AdminRoute>} />
+              <Route path="/hr/leave-requests" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'hr_manager']}><DashboardLayout><HRLeaveRequests /></DashboardLayout></AdminRoute>} />
+              <Route path="/hr/attendance" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'hr_manager']}><DashboardLayout><HRAttendance /></DashboardLayout></AdminRoute>} />
+              <Route path="/hr/salary-components" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'hr_manager']}><DashboardLayout><HRSalaryComponents /></DashboardLayout></AdminRoute>} />
+              <Route path="/hr/loans" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'hr_manager']}><DashboardLayout><HRLoans /></DashboardLayout></AdminRoute>} />
+              <Route path="/hr/payroll" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'hr_manager']}><DashboardLayout><HRPayrollRuns /></DashboardLayout></AdminRoute>} />
+              <Route path="/hr/payroll/:id" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'hr_manager']}><DashboardLayout><HRPayrollDetail /></DashboardLayout></AdminRoute>} />
+              <Route path="/hr/end-of-service" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'hr_manager']}><DashboardLayout><HREndOfService /></DashboardLayout></AdminRoute>} />
+              <Route path="/hr/reports" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'hr_manager']}><DashboardLayout><HRReports /></DashboardLayout></AdminRoute>} />
               
               <Route path="*" element={<NotFound />} />
               </Routes>
