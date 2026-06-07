@@ -156,6 +156,24 @@ const navigationItems = [
     ],
   },
   {
+    title: "الموارد البشرية",
+    icon: Users,
+    items: [
+      { title: "لوحة الموارد البشرية", url: "/hr", icon: Home },
+      { title: "الموظفين", url: "/hr/employees", icon: Users },
+      { title: "الأقسام", url: "/hr/departments", icon: Layers },
+      { title: "المسميات الوظيفية", url: "/hr/job-titles", icon: UserCog },
+      { title: "الحضور اليومي", url: "/hr/attendance", icon: Clock },
+      { title: "أنواع الإجازات", url: "/hr/leave-types", icon: Calendar },
+      { title: "طلبات الإجازات", url: "/hr/leave-requests", icon: FileText },
+      { title: "مكونات الراتب", url: "/hr/salary-components", icon: DollarSign },
+      { title: "سلف الموظفين", url: "/hr/loans", icon: CreditCard },
+      { title: "تشغيل الرواتب", url: "/hr/payroll", icon: Wallet },
+      { title: "نهاية الخدمة", url: "/hr/end-of-service", icon: TrendingUp },
+      { title: "تقارير الموارد البشرية", url: "/hr/reports", icon: BarChart3 },
+    ],
+  },
+  {
     title: "الإعدادات",
     icon: Settings,
     items: [
