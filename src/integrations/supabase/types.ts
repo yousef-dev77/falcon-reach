@@ -4034,6 +4034,7 @@ export type Database = {
         | "inventory_manager"
         | "user"
         | "cashier"
+        | "hr_manager"
       dn_status: "draft" | "posted" | "cancelled"
       grn_status: "draft" | "posted" | "cancelled"
       inventory_valuation: "fifo" | "lifo" | "average"
@@ -4208,6 +4209,7 @@ export const Constants = {
         "inventory_manager",
         "user",
         "cashier",
+        "hr_manager",
       ],
       dn_status: ["draft", "posted", "cancelled"],
       grn_status: ["draft", "posted", "cancelled"],
