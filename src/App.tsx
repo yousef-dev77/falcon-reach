@@ -13,6 +13,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
+import SessionSelector from "./pages/SessionSelector";
 
 // Finance Pages
 import Accounts from "./pages/finance/Accounts";
