@@ -492,6 +492,46 @@ export default function YearEndClosing() {
             )}
           </CardContent>
         </Card>
+
+        {/* Reopen Fiscal Period Dialog (Admin only) */}
+        <AlertDialog open={reopenDialogOpen} onOpenChange={setReopenDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <Unlock className="h-5 w-5 text-amber-500" />
+                إعادة فتح السنة المالية
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                ستقوم بإعادة فتح الفترة «{reopenTarget?.periodName}» للسماح بتعديل القيود.
+                هذا الإجراء يُسجَّل في سجل العمليات ويحتاج إلى تبرير واضح.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className="space-y-2 py-2">
+              <Label>سبب إعادة الفتح <span className="text-destructive">*</span></Label>
+              <Textarea
+                value={reopenReason}
+                onChange={(e) => setReopenReason(e.target.value)}
+                placeholder="مثال: اكتشاف قيد مفقود في شهر ديسمبر يخص ..."
+                rows={3}
+              />
+            </div>
+            <AlertDialogFooter>
+              <AlertDialogCancel>إلغاء</AlertDialogCancel>
+              <AlertDialogAction
+                disabled={reopenReason.trim().length < 5 || reopenMutation.isPending}
+                onClick={() =>
+                  reopenTarget && reopenMutation.mutate({
+                    periodId: reopenTarget.periodId,
+                    reason: reopenReason.trim(),
+                  })
+                }
+                className="bg-amber-600 hover:bg-amber-700"
+              >
+                {reopenMutation.isPending ? "جاري الفتح..." : "تأكيد إعادة الفتح"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
     </div>
   );
 }
