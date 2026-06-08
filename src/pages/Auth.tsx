@@ -136,7 +136,7 @@ export default function Auth() {
       }
 
       toast.success("تم إنشاء الحساب وتسجيل الدخول بنجاح!");
-      navigate("/");
+      navigate("/session");
     } catch (error: any) {
       const msg = String(error?.message || "");
 
@@ -185,7 +185,7 @@ export default function Auth() {
       if (error) throw error;
 
       toast.success("تم تسجيل الدخول بنجاح!");
-      navigate("/");
+      navigate("/session");
     } catch (error: any) {
       const msg = String(error?.message || "").toLowerCase();
       

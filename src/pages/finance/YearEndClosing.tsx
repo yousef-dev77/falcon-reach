@@ -2,6 +2,9 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePermissions } from "@/hooks/usePermissions";
+import { Textarea } from "@/components/ui/textarea";
+import { Unlock } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -80,6 +83,7 @@ interface Account {
 
 export default function YearEndClosing() {
   const { user } = useAuth();
+  const { isAdmin } = usePermissions();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState<string>("");
@@ -89,6 +93,9 @@ export default function YearEndClosing() {
     expenses: number;
     netIncome: number;
   } | null>(null);
+  const [reopenDialogOpen, setReopenDialogOpen] = useState(false);
+  const [reopenTarget, setReopenTarget] = useState<{ periodId: string; periodName: string } | null>(null);
+  const [reopenReason, setReopenReason] = useState("");
 
   const queryClient = useQueryClient();
 
@@ -218,6 +225,25 @@ export default function YearEndClosing() {
     },
   });
 
+  const reopenMutation = useMutation({
+    mutationFn: async ({ periodId, reason }: { periodId: string; reason: string }) => {
+      const { error } = await supabase.rpc("reopen_fiscal_period", {
+        _period_id: periodId,
+        _reason: reason,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["year-end-closings"] });
+      queryClient.invalidateQueries({ queryKey: ["fiscal-periods-for-closing"] });
+      toast.success("تم إعادة فتح السنة المالية. يمكنك الآن تعديل القيود.");
+      setReopenDialogOpen(false);
+      setReopenTarget(null);
+      setReopenReason("");
+    },
+    onError: (e: any) => toast.error(e.message || "تعذر إعادة فتح السنة"),
+  });
+
   const resetForm = () => {
     setSelectedPeriod("");
     setRetainedEarningsAccount("");
@@ -233,6 +259,8 @@ export default function YearEndClosing() {
     switch (status) {
       case "completed":
         return <Badge className="bg-green-500"><CheckCircle className="h-3 w-3 ml-1" />مكتمل</Badge>;
+      case "reopened":
+        return <Badge className="bg-amber-500"><Unlock className="h-3 w-3 ml-1" />معاد فتحه</Badge>;
       case "in_progress":
         return <Badge variant="secondary"><Play className="h-3 w-3 ml-1" />قيد التنفيذ</Badge>;
       case "pending":
@@ -241,6 +269,7 @@ export default function YearEndClosing() {
         return <Badge variant="outline">{status}</Badge>;
     }
   };
+
 
   return (
     <div className="space-y-4">
@@ -403,6 +432,7 @@ export default function YearEndClosing() {
                     <TableHead>المصروفات</TableHead>
                     <TableHead>صافي الربح</TableHead>
                     <TableHead>الحالة</TableHead>
+                    <TableHead className="text-center">إجراءات</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -424,20 +454,84 @@ export default function YearEndClosing() {
                         {closing.net_income.toLocaleString()}
                       </TableCell>
                       <TableCell>{getStatusBadge(closing.status)}</TableCell>
+                      <TableCell className="text-center">
+                        {isAdmin && closing.status === "completed" && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="gap-1 border-amber-400 text-amber-700 hover:bg-amber-50"
+                            onClick={() => {
+                              setReopenTarget({
+                                periodId: closing.fiscal_period_id,
+                                periodName: closing.fiscal_period?.name || "",
+                              });
+                              setReopenReason("");
+                              setReopenDialogOpen(true);
+                            }}
+                          >
+                            <Unlock className="h-3.5 w-3.5" />
+                            إعادة فتح
+                          </Button>
+                        )}
+                        {closing.status === "reopened" && (
+                          <span className="text-xs text-amber-700">معاد فتحه — يجب إعادة الإقفال</span>
+                        )}
+                      </TableCell>
                     </TableRow>
                   ))}
                   {yearEndClosings?.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8">
+                      <TableCell colSpan={7} className="text-center py-8">
                         لا توجد إقفالات سنوية مسجلة
                       </TableCell>
                     </TableRow>
                   )}
+
                 </TableBody>
               </Table>
             )}
           </CardContent>
         </Card>
+
+        {/* Reopen Fiscal Period Dialog (Admin only) */}
+        <AlertDialog open={reopenDialogOpen} onOpenChange={setReopenDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <Unlock className="h-5 w-5 text-amber-500" />
+                إعادة فتح السنة المالية
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                ستقوم بإعادة فتح الفترة «{reopenTarget?.periodName}» للسماح بتعديل القيود.
+                هذا الإجراء يُسجَّل في سجل العمليات ويحتاج إلى تبرير واضح.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className="space-y-2 py-2">
+              <Label>سبب إعادة الفتح <span className="text-destructive">*</span></Label>
+              <Textarea
+                value={reopenReason}
+                onChange={(e) => setReopenReason(e.target.value)}
+                placeholder="مثال: اكتشاف قيد مفقود في شهر ديسمبر يخص ..."
+                rows={3}
+              />
+            </div>
+            <AlertDialogFooter>
+              <AlertDialogCancel>إلغاء</AlertDialogCancel>
+              <AlertDialogAction
+                disabled={reopenReason.trim().length < 5 || reopenMutation.isPending}
+                onClick={() =>
+                  reopenTarget && reopenMutation.mutate({
+                    periodId: reopenTarget.periodId,
+                    reason: reopenReason.trim(),
+                  })
+                }
+                className="bg-amber-600 hover:bg-amber-700"
+              >
+                {reopenMutation.isPending ? "جاري الفتح..." : "تأكيد إعادة الفتح"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
     </div>
   );
 }

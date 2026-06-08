@@ -13,6 +13,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
+import SessionSelector from "./pages/SessionSelector";
 
 // Finance Pages
 import Accounts from "./pages/finance/Accounts";
@@ -113,6 +114,7 @@ const App = () => (
             <BranchProvider>
               <Routes>
               <Route path="/auth" element={<Auth />} />
+              <Route path="/session" element={<ProtectedRoute><SessionSelector /></ProtectedRoute>} />
               <Route path="/setup" element={<ProtectedRoute><SetupWizard /></ProtectedRoute>} />
               <Route path="/" element={<ProtectedRoute><DashboardLayout><Index /></DashboardLayout></ProtectedRoute>} />
               <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout><Dashboard /></DashboardLayout></ProtectedRoute>} />

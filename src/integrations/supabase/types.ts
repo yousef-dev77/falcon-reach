@@ -1032,6 +1032,44 @@ export type Database = {
           },
         ]
       }
+      fiscal_period_reopen_logs: {
+        Row: {
+          action: string
+          created_at: string
+          fiscal_period_id: string
+          id: string
+          performed_at: string
+          performed_by: string | null
+          reason: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          fiscal_period_id: string
+          id?: string
+          performed_at?: string
+          performed_by?: string | null
+          reason?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          fiscal_period_id?: string
+          id?: string
+          performed_at?: string
+          performed_by?: string | null
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fiscal_period_reopen_logs_fiscal_period_id_fkey"
+            columns: ["fiscal_period_id"]
+            isOneToOne: false
+            referencedRelation: "fiscal_periods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fiscal_periods: {
         Row: {
           code: string
@@ -4782,6 +4820,9 @@ export type Database = {
           net_income: number | null
           next_period_id: string | null
           opening_journal_id: string | null
+          reopen_reason: string | null
+          reopened_at: string | null
+          reopened_by: string | null
           retained_earnings_account_id: string | null
           status: string | null
           total_expenses: number | null
@@ -4797,6 +4838,9 @@ export type Database = {
           net_income?: number | null
           next_period_id?: string | null
           opening_journal_id?: string | null
+          reopen_reason?: string | null
+          reopened_at?: string | null
+          reopened_by?: string | null
           retained_earnings_account_id?: string | null
           status?: string | null
           total_expenses?: number | null
@@ -4812,6 +4856,9 @@ export type Database = {
           net_income?: number | null
           next_period_id?: string | null
           opening_journal_id?: string | null
+          reopen_reason?: string | null
+          reopened_at?: string | null
+          reopened_by?: string | null
           retained_earnings_account_id?: string | null
           status?: string | null
           total_expenses?: number | null
@@ -4949,6 +4996,14 @@ export type Database = {
       post_goods_receipt: { Args: { _grn_id: string }; Returns: undefined }
       post_landed_cost: { Args: { _lc_id: string }; Returns: undefined }
       post_payroll_run: { Args: { _run_id: string }; Returns: string }
+      reclose_fiscal_period: {
+        Args: { _period_id: string }
+        Returns: undefined
+      }
+      reopen_fiscal_period: {
+        Args: { _period_id: string; _reason: string }
+        Returns: undefined
+      }
       set_user_pin: {
         Args: { _pin: string; _user_id: string }
         Returns: undefined
