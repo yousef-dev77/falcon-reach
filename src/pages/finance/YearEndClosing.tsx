@@ -83,6 +83,7 @@ interface Account {
 
 export default function YearEndClosing() {
   const { user } = useAuth();
+  const { isAdmin } = usePermissions();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState<string>("");
@@ -92,6 +93,9 @@ export default function YearEndClosing() {
     expenses: number;
     netIncome: number;
   } | null>(null);
+  const [reopenDialogOpen, setReopenDialogOpen] = useState(false);
+  const [reopenTarget, setReopenTarget] = useState<{ periodId: string; periodName: string } | null>(null);
+  const [reopenReason, setReopenReason] = useState("");
 
   const queryClient = useQueryClient();
 
