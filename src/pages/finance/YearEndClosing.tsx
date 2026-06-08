@@ -432,6 +432,7 @@ export default function YearEndClosing() {
                     <TableHead>المصروفات</TableHead>
                     <TableHead>صافي الربح</TableHead>
                     <TableHead>الحالة</TableHead>
+                    <TableHead className="text-center">إجراءات</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -453,15 +454,39 @@ export default function YearEndClosing() {
                         {closing.net_income.toLocaleString()}
                       </TableCell>
                       <TableCell>{getStatusBadge(closing.status)}</TableCell>
+                      <TableCell className="text-center">
+                        {isAdmin && closing.status === "completed" && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="gap-1 border-amber-400 text-amber-700 hover:bg-amber-50"
+                            onClick={() => {
+                              setReopenTarget({
+                                periodId: closing.fiscal_period_id,
+                                periodName: closing.fiscal_period?.name || "",
+                              });
+                              setReopenReason("");
+                              setReopenDialogOpen(true);
+                            }}
+                          >
+                            <Unlock className="h-3.5 w-3.5" />
+                            إعادة فتح
+                          </Button>
+                        )}
+                        {closing.status === "reopened" && (
+                          <span className="text-xs text-amber-700">معاد فتحه — يجب إعادة الإقفال</span>
+                        )}
+                      </TableCell>
                     </TableRow>
                   ))}
                   {yearEndClosings?.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8">
+                      <TableCell colSpan={7} className="text-center py-8">
                         لا توجد إقفالات سنوية مسجلة
                       </TableCell>
                     </TableRow>
                   )}
+
                 </TableBody>
               </Table>
             )}
