@@ -225,6 +225,25 @@ export default function YearEndClosing() {
     },
   });
 
+  const reopenMutation = useMutation({
+    mutationFn: async ({ periodId, reason }: { periodId: string; reason: string }) => {
+      const { error } = await supabase.rpc("reopen_fiscal_period", {
+        _period_id: periodId,
+        _reason: reason,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["year-end-closings"] });
+      queryClient.invalidateQueries({ queryKey: ["fiscal-periods-for-closing"] });
+      toast.success("تم إعادة فتح السنة المالية. يمكنك الآن تعديل القيود.");
+      setReopenDialogOpen(false);
+      setReopenTarget(null);
+      setReopenReason("");
+    },
+    onError: (e: any) => toast.error(e.message || "تعذر إعادة فتح السنة"),
+  });
+
   const resetForm = () => {
     setSelectedPeriod("");
     setRetainedEarningsAccount("");
@@ -240,6 +259,8 @@ export default function YearEndClosing() {
     switch (status) {
       case "completed":
         return <Badge className="bg-green-500"><CheckCircle className="h-3 w-3 ml-1" />مكتمل</Badge>;
+      case "reopened":
+        return <Badge className="bg-amber-500"><Unlock className="h-3 w-3 ml-1" />معاد فتحه</Badge>;
       case "in_progress":
         return <Badge variant="secondary"><Play className="h-3 w-3 ml-1" />قيد التنفيذ</Badge>;
       case "pending":
@@ -248,6 +269,7 @@ export default function YearEndClosing() {
         return <Badge variant="outline">{status}</Badge>;
     }
   };
+
 
   return (
     <div className="space-y-4">
