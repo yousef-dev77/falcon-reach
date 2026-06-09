@@ -29,35 +29,49 @@ interface FiscalPeriod {
   is_closed: boolean;
 }
 
+interface BranchOpt {
+  id: string;
+  name: string;
+  code: string;
+  is_primary: boolean;
+  assigned: boolean;
+}
+
 export default function SessionSelector() {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
-  const { userBranches, setActiveBranch, setActiveFiscalPeriod, isLoading: branchLoading } = useBranch();
+  const { setActiveBranch, setActiveFiscalPeriod, isGlobalAdmin } = useBranch();
   const { userRoles, isLoading: rolesLoading } = usePermissions();
 
   const [selectedBranchId, setSelectedBranchId] = useState<string>("");
   const [selectedPeriodId, setSelectedPeriodId] = useState<string>("");
 
-  // Auto-route cashiers straight to POS sessions
-  useEffect(() => {
-    if (rolesLoading || branchLoading) return;
-    const roles = userRoles.map(r => r.role);
-    if (roles.length > 0 && roles.every(r => r === "cashier")) {
-      const primary = userBranches.find(b => b.is_primary) || userBranches[0];
-      if (primary) {
-        setActiveBranch(primary);
-        navigate("/pos/sessions", { replace: true });
-      }
-    }
-  }, [userRoles, userBranches, rolesLoading, branchLoading, setActiveBranch, navigate]);
-
-  // Set default branch
-  useEffect(() => {
-    if (!selectedBranchId && userBranches.length > 0) {
-      const primary = userBranches.find(b => b.is_primary) || userBranches[0];
-      setSelectedBranchId(primary.id);
-    }
-  }, [userBranches, selectedBranchId]);
+  // Fetch ALL branches + user's assignments (so unassigned ones show locked)
+  const { data: branches = [], isLoading: branchesLoading } = useQuery({
+    queryKey: ["session-branches", user?.id, isGlobalAdmin],
+    queryFn: async () => {
+      const [{ data: allBranches }, { data: assigned }] = await Promise.all([
+        supabase.from("branches").select("id, name, code").eq("is_active", true).order("code"),
+        supabase.from("user_branch_assignments").select("branch_id, is_primary").eq("user_id", user!.id),
+      ]);
+      const assignedIds = new Set((assigned || []).map(a => a.branch_id));
+      const primaryId = (assigned || []).find(a => a.is_primary)?.branch_id;
+      const list: BranchOpt[] = (allBranches || []).map(b => ({
+        id: b.id,
+        name: b.name,
+        code: b.code,
+        is_primary: b.id === primaryId,
+        assigned: isGlobalAdmin || assignedIds.has(b.id),
+      }));
+      list.sort((a, b) => {
+        if (a.assigned !== b.assigned) return a.assigned ? -1 : 1;
+        if (a.is_primary !== b.is_primary) return a.is_primary ? -1 : 1;
+        return a.code.localeCompare(b.code);
+      });
+      return list;
+    },
+    enabled: !!user,
+  });
 
   const { data: periods = [], isLoading: periodsLoading } = useQuery({
     queryKey: ["fiscal-periods-session"],
@@ -72,7 +86,27 @@ export default function SessionSelector() {
     enabled: !!user,
   });
 
-  // Default to most recent open period
+  // Auto-route cashiers straight to POS sessions
+  useEffect(() => {
+    if (rolesLoading || branchesLoading) return;
+    const roles = userRoles.map(r => r.role);
+    if (roles.length > 0 && roles.every(r => r === "cashier")) {
+      const primary = branches.find(b => b.assigned && b.is_primary) || branches.find(b => b.assigned);
+      if (primary) {
+        setActiveBranch(primary);
+        navigate("/pos/sessions", { replace: true });
+      }
+    }
+  }, [userRoles, branches, rolesLoading, branchesLoading, setActiveBranch, navigate]);
+
+  // Defaults
+  useEffect(() => {
+    if (!selectedBranchId && branches.length > 0) {
+      const def = branches.find(b => b.assigned && b.is_primary) || branches.find(b => b.assigned);
+      if (def) setSelectedBranchId(def.id);
+    }
+  }, [branches, selectedBranchId]);
+
   useEffect(() => {
     if (!selectedPeriodId && periods.length > 0) {
       const openPeriod = periods.find(p => !p.is_closed) || periods[0];
@@ -80,18 +114,18 @@ export default function SessionSelector() {
     }
   }, [periods, selectedPeriodId]);
 
+  const selectedBranch = branches.find(b => b.id === selectedBranchId);
+  const selectedPeriod = periods.find(p => p.id === selectedPeriodId);
+
   const handleEnter = () => {
-    const branch = userBranches.find(b => b.id === selectedBranchId);
-    const period = periods.find(p => p.id === selectedPeriodId);
-    if (!branch || !period) return;
-    setActiveBranch(branch);
-    setActiveFiscalPeriod(period);
+    if (!selectedBranch || !selectedPeriod) return;
+    if (!selectedBranch.assigned) return;
+    setActiveBranch(selectedBranch);
+    setActiveFiscalPeriod(selectedPeriod);
     navigate("/", { replace: true });
   };
 
-  const selectedPeriod = periods.find(p => p.id === selectedPeriodId);
-
-  if (branchLoading || rolesLoading || periodsLoading) {
+  if (branchesLoading || rolesLoading || periodsLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary/5 to-secondary/5">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
@@ -115,12 +149,10 @@ export default function SessionSelector() {
         </CardHeader>
 
         <CardContent className="space-y-5">
-          {userBranches.length === 0 ? (
+          {branches.length === 0 ? (
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
-              <AlertDescription>
-                لا توجد فروع مُسندة إليك. يرجى التواصل مع المسؤول.
-              </AlertDescription>
+              <AlertDescription>لا توجد فروع نشطة في النظام.</AlertDescription>
             </Alert>
           ) : (
             <>
@@ -133,17 +165,24 @@ export default function SessionSelector() {
                     <SelectValue placeholder="اختر الفرع" />
                   </SelectTrigger>
                   <SelectContent>
-                    {userBranches.map(b => (
-                      <SelectItem key={b.id} value={b.id}>
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">{b.name}</span>
+                    {branches.map(b => (
+                      <SelectItem key={b.id} value={b.id} disabled={!b.assigned}>
+                        <div className="flex items-center gap-2 w-full">
+                          {!b.assigned && <Lock className="h-3.5 w-3.5 text-muted-foreground" />}
+                          <span className={`font-medium ${!b.assigned ? "text-muted-foreground" : ""}`}>{b.name}</span>
                           <span className="text-xs text-muted-foreground">({b.code})</span>
-                          {b.is_primary && <Badge variant="secondary" className="text-xs">رئيسي</Badge>}
+                          {b.is_primary && b.assigned && <Badge variant="secondary" className="text-[10px] ms-auto">رئيسي</Badge>}
+                          {!b.assigned && <span className="text-[10px] text-muted-foreground ms-auto">بدون صلاحية</span>}
                         </div>
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
+                {selectedBranch && !selectedBranch.assigned && (
+                  <p className="text-xs text-destructive flex items-center gap-1">
+                    <Lock className="h-3 w-3" /> ليس لديك صلاحية الدخول لهذا الفرع
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -189,16 +228,14 @@ export default function SessionSelector() {
 
               <div className="flex gap-2 pt-2">
                 <Button variant="outline" className="flex-1" onClick={signOut}>
-                  <LogOut className="me-2 h-4 w-4" />
-                  خروج
+                  <LogOut className="me-2 h-4 w-4" /> خروج
                 </Button>
                 <Button
                   className="flex-1"
                   onClick={handleEnter}
-                  disabled={!selectedBranchId || !selectedPeriodId}
+                  disabled={!selectedBranch?.assigned || !selectedPeriodId}
                 >
-                  <LogIn className="me-2 h-4 w-4" />
-                  دخول
+                  <LogIn className="me-2 h-4 w-4" /> دخول
                 </Button>
               </div>
             </>
