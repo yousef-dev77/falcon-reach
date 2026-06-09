@@ -179,7 +179,7 @@ export function BranchProvider({ children }: { children: ReactNode }) {
         isGlobalAdmin,
         activeFiscalPeriod,
         setActiveFiscalPeriod,
-        isReadOnly: !!activeFiscalPeriod?.is_closed,
+        isReadOnly,
         clearSession,
       }}
     >
