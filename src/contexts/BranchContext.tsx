@@ -159,6 +159,14 @@ export function BranchProvider({ children }: { children: ReactNode }) {
     await fetchUserBranches();
   }, [fetchUserBranches]);
 
+  const isReadOnly = !!activeFiscalPeriod?.is_closed;
+
+  // Sync global flag + <html data-readonly> for CSS-driven UI lockdown
+  useEffect(() => {
+    setReadOnlyMode(isReadOnly);
+    return () => setReadOnlyMode(false);
+  }, [isReadOnly]);
+
   return (
     <BranchContext.Provider
       value={{
