@@ -134,3 +134,23 @@ All colors MUST be HSL.
     --tw-space-x-reverse: 1;
   }
 }
+
+/* ============ Read-Only Mode (السنة المالية مقفلة) ============ */
+/* عند تفعيل وضع الاستعراض، نعطّل كل أزرار الحفظ/الإضافة/التعديل/الحذف
+   وكل عناصر الإدخال داخل المنطقة الرئيسية، مع السماح بأزرار التنقل
+   والاستعراض المخصصة عبر العلامة data-allow-readonly="true". */
+html[data-readonly="true"] main button[type="submit"],
+html[data-readonly="true"] main form button:not([data-allow-readonly="true"]):not([type="button"]),
+html[data-readonly="true"] main button[data-mutate="true"],
+html[data-readonly="true"] main [data-readonly-disabled="true"] {
+  opacity: 0.45 !important;
+  pointer-events: none !important;
+  cursor: not-allowed !important;
+  filter: grayscale(0.5);
+}
+
+html[data-readonly="true"] main input:not([type="search"]):not([data-allow-readonly="true"]),
+html[data-readonly="true"] main textarea:not([data-allow-readonly="true"]),
+html[data-readonly="true"] main select:not([data-allow-readonly="true"]) {
+  background-color: hsl(var(--muted) / 0.4) !important;
+}
