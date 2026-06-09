@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, ReactNode, useCallback 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { setReadOnlyMode } from "@/lib/readOnlyGuard";
 
 interface Branch {
   id: string;
@@ -158,6 +159,14 @@ export function BranchProvider({ children }: { children: ReactNode }) {
     await fetchUserBranches();
   }, [fetchUserBranches]);
 
+  const isReadOnly = !!activeFiscalPeriod?.is_closed;
+
+  // Sync global flag + <html data-readonly> for CSS-driven UI lockdown
+  useEffect(() => {
+    setReadOnlyMode(isReadOnly);
+    return () => setReadOnlyMode(false);
+  }, [isReadOnly]);
+
   return (
     <BranchContext.Provider
       value={{
@@ -170,7 +179,7 @@ export function BranchProvider({ children }: { children: ReactNode }) {
         isGlobalAdmin,
         activeFiscalPeriod,
         setActiveFiscalPeriod,
-        isReadOnly: !!activeFiscalPeriod?.is_closed,
+        isReadOnly,
         clearSession,
       }}
     >
