@@ -57,11 +57,11 @@ export default function MyPortal() {
   const submitLeave = async () => {
     if (!req.leave_type_id || !req.start_date || !req.end_date) return toast.error("الحقول مطلوبة");
     const days = Math.max(1, Math.ceil((new Date(req.end_date).getTime() - new Date(req.start_date).getTime()) / 86400000) + 1);
-    const r = await supabase.from("hr_leave_requests").insert({
+    const r = await supabase.from("hr_leave_requests").insert([{
       employee_id: emp.id, leave_type_id: req.leave_type_id,
       start_date: req.start_date, end_date: req.end_date,
       days_count: days, reason: req.reason, status: "submitted",
-    });
+    }]);
     if (r.error) toast.error(r.error.message);
     else { toast.success("تم إرسال الطلب"); setReqOpen(false); setReq({ leave_type_id: "", start_date: "", end_date: "", days_count: 1, reason: "" }); fetch(); }
   };
