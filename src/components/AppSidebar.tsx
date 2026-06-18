@@ -30,6 +30,7 @@ import {
   Target,
   Monitor,
   User,
+} from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
