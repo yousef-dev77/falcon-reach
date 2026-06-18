@@ -1423,6 +1423,83 @@ export type Database = {
           },
         ]
       }
+      hr_contracts: {
+        Row: {
+          annual_leave_days: number | null
+          basic_salary: number
+          contract_number: string
+          contract_type: string
+          created_at: string
+          created_by: string | null
+          employee_id: string
+          end_date: string | null
+          file_url: string | null
+          housing_allowance: number | null
+          id: string
+          other_allowances: number | null
+          probation_months: number | null
+          signed_date: string | null
+          start_date: string
+          status: string
+          terms: string | null
+          transportation_allowance: number | null
+          updated_at: string
+          working_hours_per_week: number | null
+        }
+        Insert: {
+          annual_leave_days?: number | null
+          basic_salary?: number
+          contract_number: string
+          contract_type?: string
+          created_at?: string
+          created_by?: string | null
+          employee_id: string
+          end_date?: string | null
+          file_url?: string | null
+          housing_allowance?: number | null
+          id?: string
+          other_allowances?: number | null
+          probation_months?: number | null
+          signed_date?: string | null
+          start_date: string
+          status?: string
+          terms?: string | null
+          transportation_allowance?: number | null
+          updated_at?: string
+          working_hours_per_week?: number | null
+        }
+        Update: {
+          annual_leave_days?: number | null
+          basic_salary?: number
+          contract_number?: string
+          contract_type?: string
+          created_at?: string
+          created_by?: string | null
+          employee_id?: string
+          end_date?: string | null
+          file_url?: string | null
+          housing_allowance?: number | null
+          id?: string
+          other_allowances?: number | null
+          probation_months?: number | null
+          signed_date?: string | null
+          start_date?: string
+          status?: string
+          terms?: string | null
+          transportation_allowance?: number | null
+          updated_at?: string
+          working_hours_per_week?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_contracts_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "hr_employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hr_departments: {
         Row: {
           branch_id: string | null
@@ -2259,6 +2336,196 @@ export type Database = {
           },
         ]
       }
+      hr_performance_criteria: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          max_score: number
+          name: string
+          updated_at: string
+          weight: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          max_score?: number
+          name: string
+          updated_at?: string
+          weight?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          max_score?: number
+          name?: string
+          updated_at?: string
+          weight?: number
+        }
+        Relationships: []
+      }
+      hr_performance_cycles: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          cycle_name: string
+          cycle_type: string
+          end_date: string
+          id: string
+          notes: string | null
+          start_date: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          cycle_name: string
+          cycle_type?: string
+          end_date: string
+          id?: string
+          notes?: string | null
+          start_date: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          cycle_name?: string
+          cycle_type?: string
+          end_date?: string
+          id?: string
+          notes?: string | null
+          start_date?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      hr_performance_reviews: {
+        Row: {
+          comments: string | null
+          created_at: string
+          created_by: string | null
+          cycle_id: string
+          development_plan: string | null
+          employee_id: string
+          id: string
+          overall_rating: string | null
+          overall_score: number | null
+          review_date: string
+          reviewer_id: string | null
+          status: string
+          strengths: string | null
+          updated_at: string
+          weaknesses: string | null
+        }
+        Insert: {
+          comments?: string | null
+          created_at?: string
+          created_by?: string | null
+          cycle_id: string
+          development_plan?: string | null
+          employee_id: string
+          id?: string
+          overall_rating?: string | null
+          overall_score?: number | null
+          review_date?: string
+          reviewer_id?: string | null
+          status?: string
+          strengths?: string | null
+          updated_at?: string
+          weaknesses?: string | null
+        }
+        Update: {
+          comments?: string | null
+          created_at?: string
+          created_by?: string | null
+          cycle_id?: string
+          development_plan?: string | null
+          employee_id?: string
+          id?: string
+          overall_rating?: string | null
+          overall_score?: number | null
+          review_date?: string
+          reviewer_id?: string | null
+          status?: string
+          strengths?: string | null
+          updated_at?: string
+          weaknesses?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_performance_reviews_cycle_id_fkey"
+            columns: ["cycle_id"]
+            isOneToOne: false
+            referencedRelation: "hr_performance_cycles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_performance_reviews_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "hr_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_performance_reviews_reviewer_id_fkey"
+            columns: ["reviewer_id"]
+            isOneToOne: false
+            referencedRelation: "hr_employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_review_ratings: {
+        Row: {
+          comment: string | null
+          created_at: string
+          criteria_id: string
+          id: string
+          review_id: string
+          score: number
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          criteria_id: string
+          id?: string
+          review_id: string
+          score: number
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          criteria_id?: string
+          id?: string
+          review_id?: string
+          score?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_review_ratings_criteria_id_fkey"
+            columns: ["criteria_id"]
+            isOneToOne: false
+            referencedRelation: "hr_performance_criteria"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_review_ratings_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "hr_performance_reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hr_salary_components: {
         Row: {
           account_id: string | null
@@ -2311,6 +2578,159 @@ export type Database = {
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_training_attendees: {
+        Row: {
+          attendance_status: string
+          certificate_issued: boolean
+          certificate_url: string | null
+          created_at: string
+          employee_id: string
+          id: string
+          notes: string | null
+          score: number | null
+          session_id: string
+        }
+        Insert: {
+          attendance_status?: string
+          certificate_issued?: boolean
+          certificate_url?: string | null
+          created_at?: string
+          employee_id: string
+          id?: string
+          notes?: string | null
+          score?: number | null
+          session_id: string
+        }
+        Update: {
+          attendance_status?: string
+          certificate_issued?: boolean
+          certificate_url?: string | null
+          created_at?: string
+          employee_id?: string
+          id?: string
+          notes?: string | null
+          score?: number | null
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_training_attendees_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "hr_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_training_attendees_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "hr_training_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_training_programs: {
+        Row: {
+          category: string | null
+          cost_per_attendee: number | null
+          created_at: string
+          description: string | null
+          duration_hours: number | null
+          id: string
+          is_active: boolean
+          max_attendees: number | null
+          program_name: string
+          trainer_name: string | null
+          trainer_type: string | null
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          cost_per_attendee?: number | null
+          created_at?: string
+          description?: string | null
+          duration_hours?: number | null
+          id?: string
+          is_active?: boolean
+          max_attendees?: number | null
+          program_name: string
+          trainer_name?: string | null
+          trainer_type?: string | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          cost_per_attendee?: number | null
+          created_at?: string
+          description?: string | null
+          duration_hours?: number | null
+          id?: string
+          is_active?: boolean
+          max_attendees?: number | null
+          program_name?: string
+          trainer_name?: string | null
+          trainer_type?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      hr_training_sessions: {
+        Row: {
+          branch_id: string | null
+          created_at: string
+          end_date: string
+          id: string
+          location: string | null
+          notes: string | null
+          program_id: string
+          session_code: string | null
+          start_date: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          branch_id?: string | null
+          created_at?: string
+          end_date: string
+          id?: string
+          location?: string | null
+          notes?: string | null
+          program_id: string
+          session_code?: string | null
+          start_date: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          branch_id?: string | null
+          created_at?: string
+          end_date?: string
+          id?: string
+          location?: string | null
+          notes?: string | null
+          program_id?: string
+          session_code?: string | null
+          start_date?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_training_sessions_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_training_sessions_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "hr_training_programs"
             referencedColumns: ["id"]
           },
         ]
@@ -4949,6 +5369,21 @@ export type Database = {
         Args: { _asset_id: string }
         Returns: number
       }
+      get_expiring_documents: {
+        Args: { _days_ahead?: number }
+        Returns: {
+          branch_id: string
+          days_remaining: number
+          doc_number: string
+          doc_type: string
+          document_id: string
+          employee_id: string
+          employee_name: string
+          employee_number: string
+          expiry_date: string
+          severity: string
+        }[]
+      }
       get_next_document_number: {
         Args: { _branch_id: string; _document_type: string }
         Returns: string
@@ -4981,8 +5416,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      hr_dashboard_kpis: { Args: { _branch_id?: string }; Returns: Json }
       is_date_in_open_period: { Args: { check_date: string }; Returns: boolean }
       is_postable_account: { Args: { account_id: string }; Returns: boolean }
+      next_contract_number: { Args: never; Returns: string }
       open_pos_session: {
         Args: { _config_id: string; _opening_balance?: number }
         Returns: string
@@ -5035,6 +5472,7 @@ export type Database = {
         | "user"
         | "cashier"
         | "hr_manager"
+        | "employee_self_service"
       attendance_status:
         | "present"
         | "absent"
@@ -5233,6 +5671,7 @@ export const Constants = {
         "user",
         "cashier",
         "hr_manager",
+        "employee_self_service",
       ],
       attendance_status: [
         "present",
