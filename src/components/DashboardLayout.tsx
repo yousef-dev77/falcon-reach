@@ -36,14 +36,15 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <SidebarProvider>
-      <ConnectionStatusBanner />
-      <ReadOnlyBanner />
       <div className="flex min-h-screen w-full">
         <AppSidebar />
-        <div className="flex flex-1 flex-col">
+        <div className="flex flex-1 flex-col min-w-0">
+          <ConnectionStatusBanner />
+          <ReadOnlyBanner />
           {/* Header */}
           <header className="sticky top-0 z-10 flex h-16 items-center gap-3 border-b bg-card px-6">
             <SidebarTrigger />
+
 
             {/* Branch Selector */}
             <BranchSelector />
