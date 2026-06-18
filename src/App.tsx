@@ -100,6 +100,14 @@ import HRPayrollRuns from "./pages/hr/PayrollRuns";
 import HRPayrollDetail from "./pages/hr/PayrollDetail";
 import HREndOfService from "./pages/hr/EndOfService";
 import HRReports from "./pages/hr/HRReports";
+import HRContracts from "./pages/hr/Contracts";
+import HRPerformanceCycles from "./pages/hr/PerformanceCycles";
+import HRPerformanceReviewDetail from "./pages/hr/PerformanceReviewDetail";
+import HRTrainingPrograms from "./pages/hr/TrainingPrograms";
+import HRTrainingSessions from "./pages/hr/TrainingSessions";
+import HRDocumentAlerts from "./pages/hr/DocumentAlerts";
+import HREmployeeDetail from "./pages/hr/EmployeeDetail";
+import HRMyPortal from "./pages/hr/MyPortal";
 
 const queryClient = new QueryClient();
 
@@ -203,6 +211,15 @@ const App = () => (
               <Route path="/hr/payroll/:id" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'hr_manager']}><DashboardLayout><HRPayrollDetail /></DashboardLayout></AdminRoute>} />
               <Route path="/hr/end-of-service" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'hr_manager']}><DashboardLayout><HREndOfService /></DashboardLayout></AdminRoute>} />
               <Route path="/hr/reports" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'hr_manager']}><DashboardLayout><HRReports /></DashboardLayout></AdminRoute>} />
+              <Route path="/hr/employees/:id" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'hr_manager']}><DashboardLayout><HREmployeeDetail /></DashboardLayout></AdminRoute>} />
+              <Route path="/hr/contracts" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'hr_manager']}><DashboardLayout><HRContracts /></DashboardLayout></AdminRoute>} />
+              <Route path="/hr/performance" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'hr_manager']}><DashboardLayout><HRPerformanceCycles /></DashboardLayout></AdminRoute>} />
+              <Route path="/hr/performance/:id" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'hr_manager']}><DashboardLayout><HRPerformanceReviewDetail /></DashboardLayout></AdminRoute>} />
+              <Route path="/hr/training-programs" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'hr_manager']}><DashboardLayout><HRTrainingPrograms /></DashboardLayout></AdminRoute>} />
+              <Route path="/hr/training-sessions" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'hr_manager']}><DashboardLayout><HRTrainingSessions /></DashboardLayout></AdminRoute>} />
+              <Route path="/hr/alerts" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'hr_manager']}><DashboardLayout><HRDocumentAlerts /></DashboardLayout></AdminRoute>} />
+              <Route path="/my/portal" element={<ProtectedRoute><DashboardLayout><HRMyPortal /></DashboardLayout></ProtectedRoute>} />
+              
               
               <Route path="*" element={<NotFound />} />
               </Routes>
