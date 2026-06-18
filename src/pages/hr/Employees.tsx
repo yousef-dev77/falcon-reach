@@ -8,14 +8,16 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Edit, Trash2, Loader2 } from "lucide-react";
+import { Edit, Trash2, Loader2, Eye } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ListPageHeader } from "@/components/ListPageHeader";
+import { useNavigate } from "react-router-dom";
 
 type Employee = any;
 
 export default function Employees() {
+  const navigate = useNavigate();
   const [data, setData] = useState<Employee[]>([]);
   const [depts, setDepts] = useState<any[]>([]);
   const [jobs, setJobs] = useState<any[]>([]);
@@ -85,7 +87,11 @@ export default function Employees() {
                   <TableCell>{jobs.find(j => j.id === r.job_title_id)?.name || "-"}</TableCell>
                   <TableCell>{Number(r.basic_salary).toLocaleString()} ر.س</TableCell>
                   <TableCell><Badge variant={r.is_active ? "default" : "secondary"}>{r.is_active ? "نشط" : "موقوف"}</Badge></TableCell>
-                  <TableCell><Button variant="ghost" size="icon" onClick={() => openEdit(r)}><Edit className="h-4 w-4" /></Button><Button variant="ghost" size="icon" onClick={() => del(r.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button></TableCell>
+                  <TableCell>
+                    <Button variant="ghost" size="icon" onClick={() => navigate(`/hr/employees/${r.id}`)} title="عرض الملف"><Eye className="h-4 w-4" /></Button>
+                    <Button variant="ghost" size="icon" onClick={() => openEdit(r)}><Edit className="h-4 w-4" /></Button>
+                    <Button variant="ghost" size="icon" onClick={() => del(r.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                  </TableCell>
                 </TableRow>
               ))}
               {filtered.length === 0 && <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">لا يوجد موظفين</TableCell></TableRow>}
