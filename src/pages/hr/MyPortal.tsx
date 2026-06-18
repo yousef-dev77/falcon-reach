@@ -57,7 +57,9 @@ export default function MyPortal() {
   const submitLeave = async () => {
     if (!req.leave_type_id || !req.start_date || !req.end_date) return toast.error("الحقول مطلوبة");
     const days = Math.max(1, Math.ceil((new Date(req.end_date).getTime() - new Date(req.start_date).getTime()) / 86400000) + 1);
+    const reqNum = `LR-${Date.now().toString().slice(-8)}`;
     const r = await supabase.from("hr_leave_requests").insert([{
+      request_number: reqNum,
       employee_id: emp.id, leave_type_id: req.leave_type_id,
       start_date: req.start_date, end_date: req.end_date,
       days_count: days, reason: req.reason, status: "submitted",
