@@ -29,7 +29,7 @@ import {
   Calendar,
   Target,
   Monitor,
-} from "lucide-react";
+  User,
 import {
   Sidebar,
   SidebarContent,
