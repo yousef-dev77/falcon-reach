@@ -63,6 +63,7 @@ const moduleRoles: Record<string, string[]> = {
   "نظام المشتريات": ["admin", "branch_manager", "accountant"],
   "نقاط البيع (POS)": ["admin", "branch_manager", "sales_manager", "accountant", "cashier"],
   "الموارد البشرية": ["admin", "branch_manager", "hr_manager"],
+  "بوابتي": ["admin", "branch_manager", "hr_manager", "accountant", "sales_manager", "inventory_manager", "cashier", "user", "employee_self_service"],
   "الإعدادات": ["admin", "branch_manager"],
 };
 
