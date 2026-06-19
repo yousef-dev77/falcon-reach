@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePermissions } from "@/hooks/usePermissions";
 
@@ -13,11 +13,22 @@ export function AdminRoute({ children, allowedRoles = ['admin'], requiredPermiss
   const { user, loading: authLoading } = useAuth();
   const { userRoles, hasPermission, hasCustomPermissions, isLoading: permissionsLoading } = usePermissions();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const isLoading = authLoading || permissionsLoading;
   
-  const hasAccess = requiredPermission
-    ? hasPermission(requiredPermission) || (!hasCustomPermissions && userRoles.some(r => allowedRoles.includes(r.role)))
+  const inferredPermission =
+    requiredPermission ||
+    (location.pathname.startsWith('/finance') ? 'finance' :
+    location.pathname.startsWith('/inventory') ? 'inventory' :
+    location.pathname.startsWith('/sales') ? 'sales' :
+    location.pathname.startsWith('/purchases') ? 'purchases' :
+    location.pathname.startsWith('/hr') ? 'hr' :
+    location.pathname.startsWith('/pos') ? 'pos' :
+    location.pathname.startsWith('/settings') ? 'settings' : undefined);
+
+  const hasAccess = inferredPermission
+    ? hasPermission(inferredPermission) || (!hasCustomPermissions && userRoles.some(r => allowedRoles.includes(r.role)))
     : userRoles.some(r => allowedRoles.includes(r.role));
 
   useEffect(() => {
