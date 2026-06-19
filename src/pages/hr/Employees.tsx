@@ -22,22 +22,24 @@ export default function Employees() {
   const [depts, setDepts] = useState<any[]>([]);
   const [jobs, setJobs] = useState<any[]>([]);
   const [branches, setBranches] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Employee | null>(null);
   const [search, setSearch] = useState("");
-  const empty = { employee_number: "", full_name: "", full_name_en: "", national_id: "", nationality: "SA", gender: "male", date_of_birth: "", phone: "", email: "", address: "", hire_date: new Date().toISOString().slice(0, 10), contract_type: "permanent", contract_end_date: "", branch_id: "", department_id: "", job_title_id: "", basic_salary: 0, bank_name: "", bank_iban: "", gosi_number: "", is_subject_to_gosi: true, is_active: true };
+  const empty = { employee_number: "", full_name: "", full_name_en: "", national_id: "", nationality: "SA", gender: "male", date_of_birth: "", phone: "", email: "", address: "", hire_date: new Date().toISOString().slice(0, 10), contract_type: "permanent", contract_end_date: "", branch_id: "", department_id: "", job_title_id: "", basic_salary: 0, bank_name: "", bank_iban: "", gosi_number: "", is_subject_to_gosi: true, is_active: true, user_id: "" };
   const [form, setForm] = useState<any>(empty);
 
   const fetchData = async () => {
     setLoading(true);
-    const [e, d, j, b] = await Promise.all([
+    const [e, d, j, b, u] = await Promise.all([
       supabase.from("hr_employees").select("*").order("employee_number"),
       supabase.from("hr_departments").select("id, name").eq("is_active", true),
       supabase.from("hr_job_titles").select("id, name").eq("is_active", true),
       supabase.from("branches").select("id, name").eq("is_active", true),
+      supabase.from("profiles").select("id, full_name, email"),
     ]);
-    if (e.data) setData(e.data); if (d.data) setDepts(d.data); if (j.data) setJobs(j.data); if (b.data) setBranches(b.data);
+    if (e.data) setData(e.data); if (d.data) setDepts(d.data); if (j.data) setJobs(j.data); if (b.data) setBranches(b.data); if (u.data) setUsers(u.data);
     setLoading(false);
   };
   useEffect(() => { fetchData(); }, []);
@@ -58,7 +60,7 @@ export default function Employees() {
   const save = async () => {
     if (!form.full_name || !form.hire_date) return toast.error("الاسم وتاريخ التعيين مطلوبان");
     const payload: any = { ...form };
-    ["branch_id", "department_id", "job_title_id"].forEach(k => { if (!payload[k]) payload[k] = null; });
+    ["branch_id", "department_id", "job_title_id", "user_id"].forEach(k => { if (!payload[k]) payload[k] = null; });
     ["date_of_birth", "contract_end_date"].forEach(k => { if (!payload[k]) payload[k] = null; });
     payload.basic_salary = Number(payload.basic_salary) || 0;
     delete payload.id; delete payload.created_at; delete payload.updated_at; delete payload.created_by;
@@ -161,6 +163,16 @@ export default function Employees() {
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent><SelectItem value="none">بدون</SelectItem>{jobs.map(j => <SelectItem key={j.id} value={j.id}>{j.name}</SelectItem>)}</SelectContent>
                   </Select>
+                </div>
+                <div className="col-span-2"><Label>ربط بحساب المستخدم (لتفعيل بوابتي)</Label>
+                  <Select value={form.user_id || "none"} onValueChange={v => setForm({ ...form, user_id: v === "none" ? "" : v })}>
+                    <SelectTrigger><SelectValue placeholder="بدون ربط" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">بدون ربط</SelectItem>
+                      {users.map(u => <SelectItem key={u.id} value={u.id}>{u.full_name} ({u.email})</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground mt-1">اربط الموظف بحساب مستخدم ليتمكن من الوصول إلى "بوابتي" وتقديم طلبات الإجازات.</p>
                 </div>
                 <div className="col-span-2 flex items-center gap-2"><Switch checked={form.is_active} onCheckedChange={v => setForm({ ...form, is_active: v })} /><Label>نشط</Label></div>
               </div>
