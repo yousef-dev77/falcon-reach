@@ -77,12 +77,54 @@ export function usePermissions() {
     enabled: !!user,
   });
 
+  const { data: rolePermissions = [], isLoading: rolePermissionsLoading } = useQuery({
+    queryKey: ['role-permissions'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('role_permissions').select('role, permission_id');
+      if (error) throw error;
+      return data as { role: string; permission_id: string }[];
+    },
+  });
+
+  const { data: userPermissions = [], isLoading: userPermissionsLoading } = useQuery({
+    queryKey: ['user-permissions', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data, error } = await supabase
+        .from('user_permissions')
+        .select('permission_id, is_granted')
+        .eq('user_id', user.id)
+        .is('branch_id', null);
+      if (error) throw error;
+      return data as { permission_id: string; is_granted: boolean | null }[];
+    },
+    enabled: !!user,
+  });
+
   const isAdmin = userRoles.some(r => r.role === 'admin');
   const isGlobalUser = userRoles.some(r => r.is_global);
   const primaryBranch = userBranches.find(b => b.is_primary);
 
   const hasRole = (role: string) => {
     return userRoles.some(r => r.role === role);
+  };
+
+  const customPermissionIds = userPermissions
+    .filter((p) => p.is_granted !== false)
+    .map((p) => p.permission_id);
+
+  const rolePermissionIds = rolePermissions
+    .filter((rp) => userRoles.some((ur) => ur.role === rp.role))
+    .map((rp) => rp.permission_id);
+
+  const effectivePermissionIds = customPermissionIds.length > 0 ? customPermissionIds : rolePermissionIds;
+  const effectivePermissions = permissions.filter((permission) => effectivePermissionIds.includes(permission.id));
+
+  const hasPermission = (codeOrModule: string) => {
+    if (isAdmin) return true;
+    return effectivePermissions.some((permission) =>
+      permission.code === codeOrModule || permission.module === codeOrModule || permission.code.startsWith(`${codeOrModule}.`)
+    );
   };
 
   const hasBranchAccess = (branchId: string) => {
@@ -103,12 +145,14 @@ export function usePermissions() {
     permissionsByModule,
     userRoles,
     userBranches,
+    effectivePermissions,
     isAdmin,
     isGlobalUser,
     primaryBranch,
     hasRole,
+    hasPermission,
     hasBranchAccess,
-    isLoading: permissionsLoading || rolesLoading || branchesLoading,
+    isLoading: permissionsLoading || rolesLoading || branchesLoading || rolePermissionsLoading || userPermissionsLoading,
   };
 }
 
