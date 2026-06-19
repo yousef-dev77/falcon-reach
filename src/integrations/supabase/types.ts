@@ -5473,6 +5473,7 @@ export type Database = {
         | "cashier"
         | "hr_manager"
         | "employee_self_service"
+        | "branch_manager"
       attendance_status:
         | "present"
         | "absent"
@@ -5672,6 +5673,7 @@ export const Constants = {
         "cashier",
         "hr_manager",
         "employee_self_service",
+        "branch_manager",
       ],
       attendance_status: [
         "present",
