@@ -121,6 +121,30 @@ export function UserFormDialog({ open, onOpenChange, user, isBranchManager = fal
     },
   });
 
+  const { data: rolePermissions = [] } = useQuery({
+    queryKey: ['role-permissions'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('role_permissions').select('role, permission_id');
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: userPermissions = [] } = useQuery({
+    queryKey: ['user-permissions', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      const { data, error } = await supabase
+        .from('user_permissions')
+        .select('permission_id, is_granted')
+        .eq('user_id', user.id)
+        .is('branch_id', null);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id,
+  });
+
   const createUserMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
       // Get current session token
@@ -148,6 +172,7 @@ export function UserFormDialog({ open, onOpenChange, user, isBranchManager = fal
             is_global: data.is_global,
             selectedBranches: data.selectedBranches,
             primaryBranchId: data.primaryBranchId,
+            selectedPermissions: data.useCustomPermissions ? data.selectedPermissions : undefined,
           }),
         }
       );
@@ -201,6 +226,8 @@ export function UserFormDialog({ open, onOpenChange, user, isBranchManager = fal
       is_global: false,
       selectedBranches: [],
       primaryBranchId: "",
+      useCustomPermissions: false,
+      selectedPermissions: [],
       pin: "",
       can_override_pos: false,
       is_pos_active: true,
