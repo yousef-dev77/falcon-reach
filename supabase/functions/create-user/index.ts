@@ -39,17 +39,18 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Check if caller has admin role
+    // Check if caller has admin or branch manager role
     const { data: callerRole } = await supabaseAdmin
       .from('user_roles')
-      .select('role')
+      .select('role, is_global')
       .eq('user_id', callerUser.id)
-      .eq('role', 'admin')
-      .single()
+      .in('role', ['admin', 'branch_manager'])
+      .limit(1)
+      .maybeSingle()
 
     if (!callerRole) {
       return new Response(
-        JSON.stringify({ error: 'Only admins can create users' }),
+        JSON.stringify({ error: 'Only admins or branch managers can create users' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
