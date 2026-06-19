@@ -11,13 +11,13 @@ interface AdminRouteProps {
 
 export function AdminRoute({ children, allowedRoles = ['admin'], requiredPermission }: AdminRouteProps) {
   const { user, loading: authLoading } = useAuth();
-  const { userRoles, hasPermission, isLoading: permissionsLoading } = usePermissions();
+  const { userRoles, hasPermission, hasCustomPermissions, isLoading: permissionsLoading } = usePermissions();
   const navigate = useNavigate();
 
   const isLoading = authLoading || permissionsLoading;
   
   const hasAccess = requiredPermission
-    ? hasPermission(requiredPermission) || userRoles.some(r => allowedRoles.includes(r.role))
+    ? hasPermission(requiredPermission) || (!hasCustomPermissions && userRoles.some(r => allowedRoles.includes(r.role)))
     : userRoles.some(r => allowedRoles.includes(r.role));
 
   useEffect(() => {
