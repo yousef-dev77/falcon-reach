@@ -209,7 +209,7 @@ const navigationItems = [
 export function AppSidebar() {
   const { open } = useSidebar();
   const [openItems, setOpenItems] = useState<string[]>(["النظام المالي"]);
-  const { userRoles, hasPermission, isLoading } = usePermissions();
+  const { userRoles, hasPermission, hasCustomPermissions, isLoading } = usePermissions();
 
   const toggleItem = (title: string) => {
     setOpenItems((prev) =>
@@ -223,7 +223,7 @@ export function AppSidebar() {
     const allowedRoles = moduleRoles[moduleTitle];
     if (!allowedRoles) return true; // No restriction
     const permissionModule = modulePermissions[moduleTitle];
-    return (permissionModule ? hasPermission(permissionModule) : false) || userRoles.some(r => allowedRoles.includes(r.role));
+    return (permissionModule ? hasPermission(permissionModule) : false) || (!hasCustomPermissions && userRoles.some(r => allowedRoles.includes(r.role)));
   };
 
   // Filter navigation items based on user role
