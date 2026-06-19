@@ -70,9 +70,22 @@ export default function Branches() {
       toast.success("تم حذف الفرع بنجاح");
       setDeletingId(null);
     },
-    onError: () => {
-      toast.error("حدث خطأ، حاول مرة أخرى");
+    onError: (e: any) => {
+      toast.error(e?.message || "تعذر الحذف");
+      setDeletingId(null);
     }
+  });
+
+  const deactivateMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("branches").update({ is_active: false }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["branches"] });
+      toast.success("تم تعطيل الفرع");
+    },
+    onError: (e: any) => toast.error(e?.message || "تعذر التعطيل"),
   });
 
   const resetForm = () => {

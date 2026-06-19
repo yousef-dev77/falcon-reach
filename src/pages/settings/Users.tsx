@@ -188,7 +188,8 @@ export default function UsersPage() {
           { label: "الإعدادات" },
           { label: "المستخدمين والصلاحيات" },
         ]}
-        showAdd={false}
+        onAdd={handleAddUser}
+        addLabel="إضافة مستخدم"
         showSearch={false}
       />
 
