@@ -366,6 +366,39 @@ export function UserFormDialog({ open, onOpenChange, user, isBranchManager = fal
     return acc;
   }, {});
 
+  const defaultRolePermissionIds = rolePermissions
+    .filter((rp: any) => rp.role === formData.role)
+    .map((rp: any) => rp.permission_id);
+
+  const activePermissionIds = formData.useCustomPermissions
+    ? formData.selectedPermissions
+    : defaultRolePermissionIds;
+
+  const togglePermission = (permissionId: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      selectedPermissions: prev.selectedPermissions.includes(permissionId)
+        ? prev.selectedPermissions.filter((id: string) => id !== permissionId)
+        : [...prev.selectedPermissions, permissionId],
+    }));
+  };
+
+  const useRoleDefaults = () => {
+    setFormData((prev) => ({
+      ...prev,
+      useCustomPermissions: false,
+      selectedPermissions: defaultRolePermissionIds,
+    }));
+  };
+
+  const enableCustomPermissions = () => {
+    setFormData((prev) => ({
+      ...prev,
+      useCustomPermissions: true,
+      selectedPermissions: activePermissionIds,
+    }));
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh]">
