@@ -38,6 +38,8 @@ interface UserFormDialogProps {
 const roleLabels: Record<string, string> = {
   admin: "مدير النظام",
   branch_manager: "مدير الفرع",
+  hr_manager: "مدير الموارد البشرية",
+  employee_self_service: "بوابة الموظف فقط",
   accountant: "محاسب",
   sales_manager: "مدير مبيعات",
   inventory_manager: "مدير مخزون",
@@ -50,6 +52,8 @@ const moduleLabels: Record<string, string> = {
   inventory: "المخزون",
   sales: "المبيعات",
   purchases: "المشتريات",
+  hr: "الموارد البشرية",
+  pos: "نقاط البيع",
   settings: "الإعدادات",
 };
 
@@ -62,6 +66,8 @@ const getInitialFormData = (user?: any) => ({
   is_global: user?.user_roles?.[0]?.is_global || false,
   selectedBranches: user?.user_branch_assignments?.map((b: any) => b.branch_id) || [],
   primaryBranchId: user?.user_branch_assignments?.find((b: any) => b.is_primary)?.branch_id || "",
+  useCustomPermissions: false,
+  selectedPermissions: [] as string[],
   pin: "",
   can_override_pos: user?.can_override_pos || false,
   is_pos_active: user?.is_pos_active ?? true,
@@ -115,6 +121,42 @@ export function UserFormDialog({ open, onOpenChange, user, isBranchManager = fal
     },
   });
 
+  const { data: rolePermissions = [] } = useQuery({
+    queryKey: ['role-permissions'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('role_permissions').select('role, permission_id');
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: userPermissions = [] } = useQuery({
+    queryKey: ['user-permissions', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      const { data, error } = await supabase
+        .from('user_permissions')
+        .select('permission_id, is_granted')
+        .eq('user_id', user.id)
+        .is('branch_id', null);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id,
+  });
+
+  useEffect(() => {
+    if (open && isEditing) {
+      setFormData((prev) => ({
+        ...prev,
+        useCustomPermissions: userPermissions.length > 0,
+        selectedPermissions: userPermissions
+          .filter((p: any) => p.is_granted !== false)
+          .map((p: any) => p.permission_id),
+      }));
+    }
+  }, [open, isEditing, userPermissions]);
+
   const createUserMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
       // Get current session token
@@ -142,6 +184,7 @@ export function UserFormDialog({ open, onOpenChange, user, isBranchManager = fal
             is_global: data.is_global,
             selectedBranches: data.selectedBranches,
             primaryBranchId: data.primaryBranchId,
+            selectedPermissions: data.useCustomPermissions ? data.selectedPermissions : undefined,
           }),
         }
       );
@@ -195,6 +238,8 @@ export function UserFormDialog({ open, onOpenChange, user, isBranchManager = fal
       is_global: false,
       selectedBranches: [],
       primaryBranchId: "",
+      useCustomPermissions: false,
+      selectedPermissions: [],
       pin: "",
       can_override_pos: false,
       is_pos_active: true,
@@ -257,6 +302,24 @@ export function UserFormDialog({ open, onOpenChange, user, isBranchManager = fal
 
         if (branchError) throw branchError;
       }
+
+      // Update custom permissions. If disabled, the user follows the role's default permissions.
+      await supabase.from('user_permissions').delete().eq('user_id', user.id).is('branch_id', null);
+
+      if (data.useCustomPermissions && data.selectedPermissions.length > 0) {
+        const customPermissions = data.selectedPermissions.map((permissionId: string) => ({
+          user_id: user.id,
+          permission_id: permissionId,
+          branch_id: null,
+          is_granted: true,
+        }));
+
+        const { error: permissionsError } = await supabase
+          .from('user_permissions')
+          .insert(customPermissions);
+
+        if (permissionsError) throw permissionsError;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['all-users'] });
@@ -302,6 +365,39 @@ export function UserFormDialog({ open, onOpenChange, user, isBranchManager = fal
     acc[perm.module].push(perm);
     return acc;
   }, {});
+
+  const defaultRolePermissionIds = rolePermissions
+    .filter((rp: any) => rp.role === formData.role)
+    .map((rp: any) => rp.permission_id);
+
+  const activePermissionIds = formData.useCustomPermissions
+    ? formData.selectedPermissions
+    : defaultRolePermissionIds;
+
+  const togglePermission = (permissionId: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      selectedPermissions: prev.selectedPermissions.includes(permissionId)
+        ? prev.selectedPermissions.filter((id: string) => id !== permissionId)
+        : [...prev.selectedPermissions, permissionId],
+    }));
+  };
+
+  const useRoleDefaults = () => {
+    setFormData((prev) => ({
+      ...prev,
+      useCustomPermissions: false,
+      selectedPermissions: defaultRolePermissionIds,
+    }));
+  };
+
+  const enableCustomPermissions = () => {
+    setFormData((prev) => ({
+      ...prev,
+      useCustomPermissions: true,
+      selectedPermissions: activePermissionIds,
+    }));
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -501,8 +597,24 @@ export function UserFormDialog({ open, onOpenChange, user, isBranchManager = fal
                 </Select>
               </div>
 
-              <div>
-                <Label className="mb-2 block">الصلاحيات المرتبطة بالدور:</Label>
+              <div className="space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <Label className="block">الصلاحيات</Label>
+                    <p className="text-xs text-muted-foreground">
+                      افتراضياً يأخذ المستخدم صلاحيات الدور، ويمكن تخصيصها يدوياً لهذا المستخدم فقط.
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button type="button" variant={!formData.useCustomPermissions ? "default" : "outline"} size="sm" onClick={useRoleDefaults}>
+                      صلاحيات الدور
+                    </Button>
+                    <Button type="button" variant={formData.useCustomPermissions ? "default" : "outline"} size="sm" onClick={enableCustomPermissions}>
+                      تخصيص يدوي
+                    </Button>
+                  </div>
+                </div>
+
                 <ScrollArea className="h-60 border rounded-md p-4">
                   {Object.entries(permissionsByModule).map(([module, perms]) => (
                     <div key={module} className="mb-4">
@@ -511,14 +623,22 @@ export function UserFormDialog({ open, onOpenChange, user, isBranchManager = fal
                       </h4>
                       <div className="grid grid-cols-2 gap-2">
                         {(perms as any[]).map((perm) => (
-                          <div key={perm.id} className="text-sm text-muted-foreground">
-                            • {perm.name}
-                          </div>
+                          <label key={perm.id} className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Checkbox
+                              checked={activePermissionIds.includes(perm.id)}
+                              disabled={!formData.useCustomPermissions}
+                              onCheckedChange={() => togglePermission(perm.id)}
+                            />
+                            <span>{perm.name}</span>
+                          </label>
                         ))}
                       </div>
                     </div>
                   ))}
                 </ScrollArea>
+                <p className="text-xs text-muted-foreground">
+                  ملاحظة: حماية الصفحات حالياً تعتمد على الدور، وهذه الاختيارات تحفظ صلاحيات مفصلة للاستخدام في القيود والأزرار المتقدمة.
+                </p>
               </div>
             </TabsContent>
 

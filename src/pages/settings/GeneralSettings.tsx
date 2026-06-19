@@ -131,8 +131,14 @@ export default function GeneralSettings() {
 
   const renderSettingInput = (setting: { setting_key: string; setting_type: string; description: string | null }) => {
     const value = localSettings[setting.setting_key] || "";
+    const normalizedType =
+      setting.setting_type === "account" ||
+      setting.setting_key.endsWith("_account_id") ||
+      setting.setting_key.includes("_account")
+        ? "account"
+        : setting.setting_type;
     
-    switch (setting.setting_type) {
+    switch (normalizedType) {
       case "account":
         return (
           <Select

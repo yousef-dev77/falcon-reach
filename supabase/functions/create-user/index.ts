@@ -39,23 +39,49 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Check if caller has admin role
+    // Check if caller has admin or branch manager role
     const { data: callerRole } = await supabaseAdmin
       .from('user_roles')
-      .select('role')
+      .select('role, is_global')
       .eq('user_id', callerUser.id)
-      .eq('role', 'admin')
-      .single()
+      .in('role', ['admin', 'branch_manager'])
+      .limit(1)
+      .maybeSingle()
 
     if (!callerRole) {
       return new Response(
-        JSON.stringify({ error: 'Only admins can create users' }),
+        JSON.stringify({ error: 'Only admins or branch managers can create users' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
     // Get request body
-    const { email, password, full_name, phone, role, is_global, selectedBranches, primaryBranchId } = await req.json()
+    const { email, password, full_name, phone, role, is_global, selectedBranches, primaryBranchId, selectedPermissions } = await req.json()
+
+    if (callerRole.role === 'branch_manager') {
+      if (is_global || ['admin', 'branch_manager'].includes(role)) {
+        return new Response(
+          JSON.stringify({ error: 'Branch managers cannot create global admins or branch managers' }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
+      const { data: callerBranches } = await supabaseAdmin
+        .from('user_branch_assignments')
+        .select('branch_id')
+        .eq('user_id', callerUser.id)
+
+      const allowedBranchIds = (callerBranches || []).map((branch: any) => branch.branch_id)
+      const requestedBranches = selectedBranches || []
+      const hasForbiddenBranch = requestedBranches.some((branchId: string) => !allowedBranchIds.includes(branchId))
+
+      if (hasForbiddenBranch) {
+        return new Response(
+          JSON.stringify({ error: 'Branch managers can only assign users to their own branches' }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+    }
 
     // Validate required fields
     if (!email || !password || !full_name) {
@@ -134,6 +160,23 @@ Deno.serve(async (req) => {
 
       if (branchError) {
         console.error('Error inserting branch assignments:', branchError)
+      }
+    }
+
+    if (Array.isArray(selectedPermissions) && selectedPermissions.length > 0) {
+      const customPermissions = selectedPermissions.map((permissionId: string) => ({
+        user_id: newUserId,
+        permission_id: permissionId,
+        branch_id: null,
+        is_granted: true,
+      }))
+
+      const { error: permissionsError } = await supabaseAdmin
+        .from('user_permissions')
+        .insert(customPermissions)
+
+      if (permissionsError) {
+        console.error('Error inserting user permissions:', permissionsError)
       }
     }
 

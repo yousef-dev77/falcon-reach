@@ -29,6 +29,8 @@ import {
 const roleLabels: Record<string, { label: string; color: string; icon: any }> = {
   admin: { label: "مدير النظام", color: "bg-primary text-primary-foreground", icon: Crown },
   branch_manager: { label: "مدير الفرع", color: "bg-purple-500 text-white", icon: Building2 },
+  hr_manager: { label: "مدير الموارد البشرية", color: "bg-blue-500 text-white", icon: UserCheck },
+  employee_self_service: { label: "بوابة الموظف فقط", color: "bg-muted text-muted-foreground", icon: UserCheck },
   accountant: { label: "محاسب", color: "bg-blue-500 text-white", icon: UserCheck },
   sales_manager: { label: "مدير مبيعات", color: "bg-green-500 text-white", icon: Users },
   inventory_manager: { label: "مدير مخزون", color: "bg-orange-500 text-white", icon: Package },

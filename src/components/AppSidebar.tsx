@@ -67,6 +67,15 @@ const moduleRoles: Record<string, string[]> = {
   "الإعدادات": ["admin", "branch_manager"],
 };
 
+const modulePermissions: Record<string, string> = {
+  "النظام المالي": "finance",
+  "النظام المخزني": "inventory",
+  "نظام المبيعات": "sales",
+  "نظام المشتريات": "purchases",
+  "الموارد البشرية": "hr",
+  "الإعدادات": "settings",
+};
+
 const navigationItems = [
   {
     title: "لوحة التحكم",
@@ -200,7 +209,7 @@ const navigationItems = [
 export function AppSidebar() {
   const { open } = useSidebar();
   const [openItems, setOpenItems] = useState<string[]>(["النظام المالي"]);
-  const { userRoles, isLoading } = usePermissions();
+  const { userRoles, hasPermission, hasCustomPermissions, isLoading } = usePermissions();
 
   const toggleItem = (title: string) => {
     setOpenItems((prev) =>
@@ -213,7 +222,8 @@ export function AppSidebar() {
     if (isLoading) return true; // Show all while loading
     const allowedRoles = moduleRoles[moduleTitle];
     if (!allowedRoles) return true; // No restriction
-    return userRoles.some(r => allowedRoles.includes(r.role));
+    const permissionModule = modulePermissions[moduleTitle];
+    return (permissionModule ? hasPermission(permissionModule) : false) || (!hasCustomPermissions && userRoles.some(r => allowedRoles.includes(r.role)));
   };
 
   // Filter navigation items based on user role

@@ -77,13 +77,14 @@ export default function Employees() {
       <ListPageHeader title="الموظفين" breadcrumbs={[{ label: "الرئيسية", href: "/" }, { label: "الموارد البشرية", href: "/hr" }, { label: "الموظفين" }]} onAdd={openAdd} onRefresh={fetchData} searchValue={search} onSearchChange={setSearch} addLabel="إضافة موظف" />
       <div className="bg-card border border-t-0 rounded-b-lg p-4">
         {loading ? <Loader2 className="animate-spin mx-auto" /> : (
-          <Table>
-            <TableHeader><TableRow><TableHead>الرقم</TableHead><TableHead>الاسم</TableHead><TableHead>الجنسية</TableHead><TableHead>القسم</TableHead><TableHead>الوظيفة</TableHead><TableHead>الراتب الأساسي</TableHead><TableHead>الحالة</TableHead><TableHead></TableHead></TableRow></TableHeader>
+            <Table>
+              <TableHeader><TableRow><TableHead>الرقم</TableHead><TableHead>الاسم</TableHead><TableHead>حساب الدخول</TableHead><TableHead>الجنسية</TableHead><TableHead>القسم</TableHead><TableHead>الوظيفة</TableHead><TableHead>الراتب الأساسي</TableHead><TableHead>الحالة</TableHead><TableHead></TableHead></TableRow></TableHeader>
             <TableBody>
               {filtered.map(r => (
                 <TableRow key={r.id}>
                   <TableCell className="font-mono">{r.employee_number}</TableCell>
                   <TableCell className="font-medium">{r.full_name}</TableCell>
+                    <TableCell>{users.find(u => u.id === r.user_id)?.email || <Badge variant="outline">غير مربوط</Badge>}</TableCell>
                   <TableCell>{r.nationality}</TableCell>
                   <TableCell>{depts.find(d => d.id === r.department_id)?.name || "-"}</TableCell>
                   <TableCell>{jobs.find(j => j.id === r.job_title_id)?.name || "-"}</TableCell>
@@ -96,7 +97,7 @@ export default function Employees() {
                   </TableCell>
                 </TableRow>
               ))}
-              {filtered.length === 0 && <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">لا يوجد موظفين</TableCell></TableRow>}
+                {filtered.length === 0 && <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">لا يوجد موظفين</TableCell></TableRow>}
             </TableBody>
           </Table>
         )}
@@ -106,9 +107,10 @@ export default function Employees() {
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>{editing ? "تعديل موظف" : "إضافة موظف"}</DialogTitle></DialogHeader>
           <Tabs defaultValue="personal">
-            <TabsList className="grid grid-cols-4">
+            <TabsList className="grid grid-cols-5">
               <TabsTrigger value="personal">شخصي</TabsTrigger>
               <TabsTrigger value="contract">العقد</TabsTrigger>
+              <TabsTrigger value="account">بوابتي</TabsTrigger>
               <TabsTrigger value="salary">الراتب</TabsTrigger>
               <TabsTrigger value="bank">البنك</TabsTrigger>
             </TabsList>
@@ -164,17 +166,20 @@ export default function Employees() {
                     <SelectContent><SelectItem value="none">بدون</SelectItem>{jobs.map(j => <SelectItem key={j.id} value={j.id}>{j.name}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
-                <div className="col-span-2"><Label>ربط بحساب المستخدم (لتفعيل بوابتي)</Label>
-                  <Select value={form.user_id || "none"} onValueChange={v => setForm({ ...form, user_id: v === "none" ? "" : v })}>
-                    <SelectTrigger><SelectValue placeholder="بدون ربط" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">بدون ربط</SelectItem>
-                      {users.map(u => <SelectItem key={u.id} value={u.id}>{u.full_name} ({u.email})</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-muted-foreground mt-1">اربط الموظف بحساب مستخدم ليتمكن من الوصول إلى "بوابتي" وتقديم طلبات الإجازات.</p>
-                </div>
                 <div className="col-span-2 flex items-center gap-2"><Switch checked={form.is_active} onCheckedChange={v => setForm({ ...form, is_active: v })} /><Label>نشط</Label></div>
+              </div>
+            </TabsContent>
+            <TabsContent value="account" className="space-y-3">
+              <div className="space-y-2">
+                <Label>ربط بحساب المستخدم (لتفعيل بوابتي)</Label>
+                <Select value={form.user_id || "none"} onValueChange={v => setForm({ ...form, user_id: v === "none" ? "" : v })}>
+                  <SelectTrigger><SelectValue placeholder="اختر حساب الدخول" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">بدون ربط</SelectItem>
+                    {users.map(u => <SelectItem key={u.id} value={u.id}>{u.full_name} ({u.email})</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">أنشئ المستخدم من الإعدادات أولاً، ثم اربطه هنا ليتمكن الموظف من الدخول إلى بوابتي وتقديم طلبات الإجازات.</p>
               </div>
             </TabsContent>
             <TabsContent value="salary" className="space-y-3">
