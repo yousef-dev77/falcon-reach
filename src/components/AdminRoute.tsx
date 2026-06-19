@@ -6,16 +6,19 @@ import { usePermissions } from "@/hooks/usePermissions";
 interface AdminRouteProps {
   children: React.ReactNode;
   allowedRoles?: string[];
+  requiredPermission?: string;
 }
 
-export function AdminRoute({ children, allowedRoles = ['admin'] }: AdminRouteProps) {
+export function AdminRoute({ children, allowedRoles = ['admin'], requiredPermission }: AdminRouteProps) {
   const { user, loading: authLoading } = useAuth();
-  const { userRoles, isLoading: permissionsLoading } = usePermissions();
+  const { userRoles, hasPermission, isLoading: permissionsLoading } = usePermissions();
   const navigate = useNavigate();
 
   const isLoading = authLoading || permissionsLoading;
   
-  const hasAccess = userRoles.some(r => allowedRoles.includes(r.role));
+  const hasAccess = requiredPermission
+    ? hasPermission(requiredPermission) || userRoles.some(r => allowedRoles.includes(r.role))
+    : userRoles.some(r => allowedRoles.includes(r.role));
 
   useEffect(() => {
     if (!isLoading && !user) {
