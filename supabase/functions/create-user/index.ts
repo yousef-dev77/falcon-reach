@@ -55,7 +55,7 @@ Deno.serve(async (req) => {
     }
 
     // Get request body
-    const { email, password, full_name, phone, role, is_global, selectedBranches, primaryBranchId } = await req.json()
+    const { email, password, full_name, phone, role, is_global, selectedBranches, primaryBranchId, selectedPermissions } = await req.json()
 
     // Validate required fields
     if (!email || !password || !full_name) {
@@ -134,6 +134,23 @@ Deno.serve(async (req) => {
 
       if (branchError) {
         console.error('Error inserting branch assignments:', branchError)
+      }
+    }
+
+    if (Array.isArray(selectedPermissions) && selectedPermissions.length > 0) {
+      const customPermissions = selectedPermissions.map((permissionId: string) => ({
+        user_id: newUserId,
+        permission_id: permissionId,
+        branch_id: null,
+        is_granted: true,
+      }))
+
+      const { error: permissionsError } = await supabaseAdmin
+        .from('user_permissions')
+        .insert(customPermissions)
+
+      if (permissionsError) {
+        console.error('Error inserting user permissions:', permissionsError)
       }
     }
 
