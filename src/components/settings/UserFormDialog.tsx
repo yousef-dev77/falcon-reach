@@ -145,6 +145,18 @@ export function UserFormDialog({ open, onOpenChange, user, isBranchManager = fal
     enabled: !!user?.id,
   });
 
+  useEffect(() => {
+    if (open && isEditing) {
+      setFormData((prev) => ({
+        ...prev,
+        useCustomPermissions: userPermissions.length > 0,
+        selectedPermissions: userPermissions
+          .filter((p: any) => p.is_granted !== false)
+          .map((p: any) => p.permission_id),
+      }));
+    }
+  }, [open, isEditing, userPermissions]);
+
   const createUserMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
       // Get current session token
@@ -289,6 +301,24 @@ export function UserFormDialog({ open, onOpenChange, user, isBranchManager = fal
           .insert(branchAssignments);
 
         if (branchError) throw branchError;
+      }
+
+      // Update custom permissions. If disabled, the user follows the role's default permissions.
+      await supabase.from('user_permissions').delete().eq('user_id', user.id).is('branch_id', null);
+
+      if (data.useCustomPermissions && data.selectedPermissions.length > 0) {
+        const customPermissions = data.selectedPermissions.map((permissionId: string) => ({
+          user_id: user.id,
+          permission_id: permissionId,
+          branch_id: null,
+          is_granted: true,
+        }));
+
+        const { error: permissionsError } = await supabase
+          .from('user_permissions')
+          .insert(customPermissions);
+
+        if (permissionsError) throw permissionsError;
       }
     },
     onSuccess: () => {
