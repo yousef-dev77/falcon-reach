@@ -38,6 +38,8 @@ interface UserFormDialogProps {
 const roleLabels: Record<string, string> = {
   admin: "مدير النظام",
   branch_manager: "مدير الفرع",
+  hr_manager: "مدير الموارد البشرية",
+  employee_self_service: "بوابة الموظف فقط",
   accountant: "محاسب",
   sales_manager: "مدير مبيعات",
   inventory_manager: "مدير مخزون",
@@ -50,6 +52,8 @@ const moduleLabels: Record<string, string> = {
   inventory: "المخزون",
   sales: "المبيعات",
   purchases: "المشتريات",
+  hr: "الموارد البشرية",
+  pos: "نقاط البيع",
   settings: "الإعدادات",
 };
 
@@ -62,6 +66,8 @@ const getInitialFormData = (user?: any) => ({
   is_global: user?.user_roles?.[0]?.is_global || false,
   selectedBranches: user?.user_branch_assignments?.map((b: any) => b.branch_id) || [],
   primaryBranchId: user?.user_branch_assignments?.find((b: any) => b.is_primary)?.branch_id || "",
+  useCustomPermissions: false,
+  selectedPermissions: [] as string[],
   pin: "",
   can_override_pos: user?.can_override_pos || false,
   is_pos_active: user?.is_pos_active ?? true,
