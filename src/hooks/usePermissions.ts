@@ -119,6 +119,7 @@ export function usePermissions() {
 
   const effectivePermissionIds = customPermissionIds.length > 0 ? customPermissionIds : rolePermissionIds;
   const effectivePermissions = permissions.filter((permission) => effectivePermissionIds.includes(permission.id));
+  const hasCustomPermissions = customPermissionIds.length > 0;
 
   const hasPermission = (codeOrModule: string) => {
     if (isAdmin) return true;
@@ -146,6 +147,7 @@ export function usePermissions() {
     userRoles,
     userBranches,
     effectivePermissions,
+    hasCustomPermissions,
     isAdmin,
     isGlobalUser,
     primaryBranch,
