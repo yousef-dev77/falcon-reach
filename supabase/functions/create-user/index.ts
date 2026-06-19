@@ -58,6 +58,31 @@ Deno.serve(async (req) => {
     // Get request body
     const { email, password, full_name, phone, role, is_global, selectedBranches, primaryBranchId, selectedPermissions } = await req.json()
 
+    if (callerRole.role === 'branch_manager') {
+      if (is_global || ['admin', 'branch_manager'].includes(role)) {
+        return new Response(
+          JSON.stringify({ error: 'Branch managers cannot create global admins or branch managers' }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
+      const { data: callerBranches } = await supabaseAdmin
+        .from('user_branch_assignments')
+        .select('branch_id')
+        .eq('user_id', callerUser.id)
+
+      const allowedBranchIds = (callerBranches || []).map((branch: any) => branch.branch_id)
+      const requestedBranches = selectedBranches || []
+      const hasForbiddenBranch = requestedBranches.some((branchId: string) => !allowedBranchIds.includes(branchId))
+
+      if (hasForbiddenBranch) {
+        return new Response(
+          JSON.stringify({ error: 'Branch managers can only assign users to their own branches' }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+    }
+
     // Validate required fields
     if (!email || !password || !full_name) {
       return new Response(
