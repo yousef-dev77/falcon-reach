@@ -597,8 +597,24 @@ export function UserFormDialog({ open, onOpenChange, user, isBranchManager = fal
                 </Select>
               </div>
 
-              <div>
-                <Label className="mb-2 block">الصلاحيات المرتبطة بالدور:</Label>
+              <div className="space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <Label className="block">الصلاحيات</Label>
+                    <p className="text-xs text-muted-foreground">
+                      افتراضياً يأخذ المستخدم صلاحيات الدور، ويمكن تخصيصها يدوياً لهذا المستخدم فقط.
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button type="button" variant={!formData.useCustomPermissions ? "default" : "outline"} size="sm" onClick={useRoleDefaults}>
+                      صلاحيات الدور
+                    </Button>
+                    <Button type="button" variant={formData.useCustomPermissions ? "default" : "outline"} size="sm" onClick={enableCustomPermissions}>
+                      تخصيص يدوي
+                    </Button>
+                  </div>
+                </div>
+
                 <ScrollArea className="h-60 border rounded-md p-4">
                   {Object.entries(permissionsByModule).map(([module, perms]) => (
                     <div key={module} className="mb-4">
@@ -607,14 +623,22 @@ export function UserFormDialog({ open, onOpenChange, user, isBranchManager = fal
                       </h4>
                       <div className="grid grid-cols-2 gap-2">
                         {(perms as any[]).map((perm) => (
-                          <div key={perm.id} className="text-sm text-muted-foreground">
-                            • {perm.name}
-                          </div>
+                          <label key={perm.id} className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Checkbox
+                              checked={activePermissionIds.includes(perm.id)}
+                              disabled={!formData.useCustomPermissions}
+                              onCheckedChange={() => togglePermission(perm.id)}
+                            />
+                            <span>{perm.name}</span>
+                          </label>
                         ))}
                       </div>
                     </div>
                   ))}
                 </ScrollArea>
+                <p className="text-xs text-muted-foreground">
+                  ملاحظة: حماية الصفحات حالياً تعتمد على الدور، وهذه الاختيارات تحفظ صلاحيات مفصلة للاستخدام في القيود والأزرار المتقدمة.
+                </p>
               </div>
             </TabsContent>
 
