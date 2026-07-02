@@ -1,321 +1,132 @@
-import { NavLink } from "react-router-dom";
-import {
-  Building2,
-  Wallet,
-  Package,
-  ShoppingCart,
-  ShoppingBag,
-  Settings,
-  BarChart3,
-  FileText,
-  Receipt,
-  TrendingUp,
-  Warehouse,
-  Box,
-  Users,
-  DollarSign,
-  CreditCard,
-  LandPlot,
-  Layers,
-  ArrowDownUp,
-  UserPlus,
-  PackagePlus,
-  FileBarChart,
-  UserCog,
-  MapPin,
-  Clock,
-  ChevronDown,
-  Home,
-  Calendar,
-  Target,
-  Monitor,
-  User,
-} from "lucide-react";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { Building2, ArrowRight, LayoutGrid } from "lucide-react";
+import { useEffect, useState } from "react";
 import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubItem,
-  SidebarMenuSubButton,
   useSidebar,
   SidebarHeader,
+  SidebarFooter,
 } from "@/components/ui/sidebar";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { MODULES, findModuleByPath, getModule, type ModuleDefinition } from "@/config/modules";
 import { usePermissions } from "@/hooks/usePermissions";
 
-// Define which roles can access each module
-// branch_manager has full access to all modules within their branch
-const moduleRoles: Record<string, string[]> = {
-  "النظام المالي": ["admin", "branch_manager", "accountant"],
-  "النظام المخزني": ["admin", "branch_manager", "inventory_manager"],
-  "نظام المبيعات": ["admin", "branch_manager", "sales_manager"],
-  "نظام المشتريات": ["admin", "branch_manager", "accountant"],
-  "نقاط البيع (POS)": ["admin", "branch_manager", "sales_manager", "accountant", "cashier"],
-  "الموارد البشرية": ["admin", "branch_manager", "hr_manager"],
-  "بوابتي": ["admin", "branch_manager", "hr_manager", "accountant", "sales_manager", "inventory_manager", "cashier", "user", "employee_self_service"],
-  "الإعدادات": ["admin", "branch_manager"],
-};
-
-const modulePermissions: Record<string, string> = {
-  "النظام المالي": "finance",
-  "النظام المخزني": "inventory",
-  "نظام المبيعات": "sales",
-  "نظام المشتريات": "purchases",
-  "الموارد البشرية": "hr",
-  "الإعدادات": "settings",
-};
-
-const navigationItems = [
-  {
-    title: "لوحة التحكم",
-    icon: Home,
-    url: "/",
-  },
-  {
-    title: "النظام المالي",
-    icon: Wallet,
-    items: [
-      { title: "شجرة الحسابات", url: "/finance/accounts", icon: Layers },
-      { title: "القيود اليومية", url: "/finance/journal-entries", icon: FileText },
-      { title: "أنواع القيود", url: "/finance/journal-types", icon: FileText },
-      { title: "الأستاذ العام", url: "/finance/general-ledger", icon: Receipt },
-      { title: "دفتر الأستاذ المساعد", url: "/finance/sub-ledger", icon: Receipt },
-      { title: "العملات", url: "/finance/currencies", icon: DollarSign },
-      { title: "أسعار الصرف", url: "/finance/exchange-rates", icon: TrendingUp },
-      { title: "تسوية فروقات العملة", url: "/finance/fx-adjustment", icon: ArrowDownUp },
-      { title: "كشوفات البنك", url: "/finance/bank-statements", icon: FileText },
-      { title: "التسوية البنكية", url: "/finance/bank-reconciliation", icon: Building2 },
-      { title: "الفترات المحاسبية", url: "/finance/fiscal-periods", icon: Calendar },
-      { title: "الإقفال السنوي", url: "/finance/year-end-closing", icon: Calendar },
-      { title: "مراكز التكلفة", url: "/finance/cost-centers", icon: Target },
-      { title: "التقارير المالية", url: "/finance/reports", icon: BarChart3 },
-      { title: "الصناديق والبنوك", url: "/finance/cash-bank", icon: Building2 },
-      { title: "تقرير حركة البنوك والصناديق", url: "/finance/bank-cash-report", icon: FileBarChart },
-      { title: "المصاريف والإيرادات", url: "/finance/expenses-revenue", icon: TrendingUp },
-      { title: "الأصول الثابتة", url: "/finance/fixed-assets", icon: LandPlot },
-      { title: "إهلاك الأصول", url: "/finance/asset-depreciation", icon: TrendingUp },
-      { title: "إدارة الضرائب", url: "/finance/taxes", icon: Receipt },
-      { title: "الإقرار الضريبي (VAT)", url: "/finance/vat-declaration", icon: FileBarChart },
-      { title: "تحليل أعمار الذمم", url: "/finance/aging-report", icon: Clock },
-    ],
-  },
-  {
-    title: "النظام المخزني",
-    icon: Package,
-    items: [
-      { title: "المستودعات", url: "/inventory/warehouses", icon: Warehouse },
-      { title: "الأصناف والمنتجات", url: "/inventory/products", icon: Box },
-      { title: "فئات المنتجات", url: "/inventory/categories", icon: Layers },
-      { title: "وحدات القياس", url: "/inventory/units", icon: Box },
-      { title: "إذن استلام (وارد)", url: "/inventory/vouchers/receipt", icon: PackagePlus },
-      { title: "إذن صرف (صادر)", url: "/inventory/vouchers/issue", icon: ArrowDownUp },
-      { title: "تحويل بين مستودعات", url: "/inventory/vouchers/transfer", icon: ArrowDownUp },
-      { title: "جرد المخزون", url: "/inventory/vouchers/count", icon: FileText },
-      { title: "أرصدة وكرت الصنف", url: "/inventory/stock-balance", icon: FileBarChart },
-      { title: "الحركات المخزنية", url: "/inventory/movements", icon: ArrowDownUp },
-      { title: "تقارير المخزون", url: "/inventory/reports", icon: FileBarChart },
-    ],
-  },
-  {
-    title: "نظام المبيعات",
-    icon: ShoppingCart,
-    items: [
-      { title: "العملاء", url: "/sales/customers", icon: Users },
-      { title: "عروض الأسعار", url: "/sales/quotations", icon: FileText },
-      { title: "أوامر البيع", url: "/sales/orders", icon: ShoppingCart },
-      { title: "إذونات التسليم", url: "/sales/delivery-notes", icon: PackagePlus },
-      { title: "فواتير المبيعات", url: "/sales/invoices", icon: Receipt },
-      { title: "مرتجعات المبيعات", url: "/sales/returns", icon: ArrowDownUp },
-      { title: "التحصيلات", url: "/sales/collections", icon: DollarSign },
-      { title: "تقارير المبيعات", url: "/sales/reports", icon: BarChart3 },
-    ],
-  },
-  {
-    title: "نظام المشتريات",
-    icon: ShoppingBag,
-    items: [
-      { title: "الموردين", url: "/purchases/suppliers", icon: UserPlus },
-      { title: "طلبات الشراء", url: "/purchases/requests", icon: FileText },
-      { title: "أوامر الشراء", url: "/purchases/orders", icon: ShoppingBag },
-      { title: "إذونات الاستلام", url: "/purchases/goods-receipts", icon: PackagePlus },
-      { title: "فواتير المشتريات", url: "/purchases/invoices", icon: Receipt },
-      { title: "التكاليف الإضافية", url: "/purchases/landed-costs", icon: TrendingUp },
-      { title: "مرتجعات المشتريات", url: "/purchases/returns", icon: ArrowDownUp },
-      { title: "المدفوعات", url: "/purchases/payments", icon: CreditCard },
-      { title: "تقارير المشتريات", url: "/purchases/reports", icon: FileBarChart },
-    ],
-  },
-  {
-    title: "نقاط البيع (POS)",
-    icon: Monitor,
-    items: [
-      { title: "جلسات الكاشير", url: "/pos/sessions", icon: Monitor },
-      { title: "فواتير POS", url: "/pos/orders", icon: Receipt },
-      { title: "تقارير POS", url: "/pos/reports", icon: BarChart3 },
-      { title: "إعدادات نقاط البيع", url: "/pos/configs", icon: Settings },
-    ],
-  },
-  {
-    title: "الموارد البشرية",
-    icon: Users,
-    items: [
-      { title: "لوحة الموارد البشرية", url: "/hr", icon: Home },
-      { title: "الموظفين", url: "/hr/employees", icon: Users },
-      { title: "الأقسام", url: "/hr/departments", icon: Layers },
-      { title: "المسميات الوظيفية", url: "/hr/job-titles", icon: UserCog },
-      { title: "العقود", url: "/hr/contracts", icon: FileText },
-      { title: "الحضور اليومي", url: "/hr/attendance", icon: Clock },
-      { title: "أنواع الإجازات", url: "/hr/leave-types", icon: Calendar },
-      { title: "طلبات الإجازات", url: "/hr/leave-requests", icon: FileText },
-      { title: "مكونات الراتب", url: "/hr/salary-components", icon: DollarSign },
-      { title: "سلف الموظفين", url: "/hr/loans", icon: CreditCard },
-      { title: "تشغيل الرواتب", url: "/hr/payroll", icon: Wallet },
-      { title: "تقييم الأداء", url: "/hr/performance", icon: Target },
-      { title: "برامج التدريب", url: "/hr/training-programs", icon: Layers },
-      { title: "جلسات التدريب", url: "/hr/training-sessions", icon: Calendar },
-      { title: "تنبيهات الوثائق", url: "/hr/alerts", icon: Clock },
-      { title: "نهاية الخدمة", url: "/hr/end-of-service", icon: TrendingUp },
-      { title: "تقارير الموارد البشرية", url: "/hr/reports", icon: BarChart3 },
-    ],
-  },
-  {
-    title: "بوابتي",
-    icon: User,
-    url: "/my/portal",
-  },
-  {
-    title: "الإعدادات",
-    icon: Settings,
-    items: [
-      { title: "المستخدمين والصلاحيات", url: "/settings/users", icon: UserCog },
-      { title: "الفروع", url: "/settings/branches", icon: MapPin },
-      { title: "الإعدادات العامة", url: "/settings/general", icon: Settings },
-      { title: "سجلات النظام", url: "/settings/logs", icon: Clock },
-    ],
-  },
-];
+function getActiveModuleKey(): string | null {
+  return sessionStorage.getItem("active_module");
+}
 
 export function AppSidebar() {
   const { open } = useSidebar();
-  const [openItems, setOpenItems] = useState<string[]>(["النظام المالي"]);
-  const { userRoles, hasPermission, hasCustomPermissions, isLoading } = usePermissions();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { userRoles, hasPermission, hasCustomPermissions } = usePermissions();
+  const [tick, setTick] = useState(0);
 
-  const toggleItem = (title: string) => {
-    setOpenItems((prev) =>
-      prev.includes(title) ? prev.filter((item) => item !== title) : [...prev, title]
-    );
-  };
+  useEffect(() => {
+    const handler = () => setTick((t) => t + 1);
+    window.addEventListener("active-module-changed", handler);
+    return () => window.removeEventListener("active-module-changed", handler);
+  }, []);
 
-  // Check if user has access to a module
-  const hasModuleAccess = (moduleTitle: string) => {
-    if (isLoading) return true; // Show all while loading
-    const allowedRoles = moduleRoles[moduleTitle];
-    if (!allowedRoles) return true; // No restriction
-    const permissionModule = modulePermissions[moduleTitle];
-    return (permissionModule ? hasPermission(permissionModule) : false) || (!hasCustomPermissions && userRoles.some(r => allowedRoles.includes(r.role)));
-  };
+  // Resolve current module: URL wins, else sessionStorage, else null
+  const byPath = findModuleByPath(location.pathname);
+  const stored = getActiveModuleKey();
+  const active: ModuleDefinition | undefined = byPath ?? (stored ? getModule(stored) ?? undefined : undefined);
 
-  // Filter navigation items based on user role
-  const filteredNavItems = navigationItems.filter(item => {
-    if (!item.items) return true; // Dashboard is always visible
-    return hasModuleAccess(item.title);
-  });
+  // Sync sessionStorage if URL-derived module differs
+  useEffect(() => {
+    if (byPath && byPath.key !== stored) {
+      sessionStorage.setItem("active_module", byPath.key);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [byPath?.key, tick]);
+
+  const goApps = () => navigate("/apps");
+
+  const items = active?.items ?? [];
 
   return (
-    <Sidebar side="right" className="border-l border-sidebar-border">
-      <SidebarHeader className="border-b border-sidebar-border p-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-sidebar-primary">
-            <Building2 className="h-6 w-6 text-sidebar-primary-foreground" />
-          </div>
-          {open && (
-            <div>
-              <h1 className="text-lg font-bold text-sidebar-foreground">Falcon ERP</h1>
-              <p className="text-xs text-sidebar-foreground/70">نظام إدارة متكامل</p>
+    <Sidebar side="right" collapsible="icon" className="border-l border-sidebar-border">
+      <SidebarHeader className="border-b border-sidebar-border p-3">
+        {active ? (
+          <button
+            onClick={goApps}
+            className="w-full flex items-center gap-3 rounded-md p-2 hover:bg-sidebar-accent transition"
+            title="العودة لكل الأنظمة"
+          >
+            <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${active.color} shrink-0`}>
+              <active.icon className="h-5 w-5 text-white" />
             </div>
-          )}
-        </div>
+            {open && (
+              <div className="flex-1 text-right min-w-0">
+                <div className="text-xs text-sidebar-foreground/60">النظام الحالي</div>
+                <div className="text-sm font-bold text-sidebar-foreground truncate">{active.name}</div>
+              </div>
+            )}
+            {open && <ArrowRight className="h-4 w-4 text-sidebar-foreground/50 shrink-0" />}
+          </button>
+        ) : (
+          <div className="flex items-center gap-3 p-2">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-sidebar-primary">
+              <Building2 className="h-5 w-5 text-sidebar-primary-foreground" />
+            </div>
+            {open && (
+              <div>
+                <h1 className="text-sm font-bold text-sidebar-foreground">Falcon ERP</h1>
+                <p className="text-[10px] text-sidebar-foreground/70">اختر نظاماً لتبدأ</p>
+              </div>
+            )}
+          </div>
+        )}
       </SidebarHeader>
 
       <SidebarContent>
         <SidebarGroup>
           <SidebarMenu>
-            {filteredNavItems.map((item) =>
-              item.items ? (
-                <Collapsible
-                  key={item.title}
-                  open={openItems.includes(item.title)}
-                  onOpenChange={() => toggleItem(item.title)}
-                >
-                  <SidebarMenuItem>
-                    <CollapsibleTrigger asChild>
-                      <SidebarMenuButton className="w-full hover:bg-sidebar-accent">
-                        <item.icon className="h-5 w-5" />
-                        {open && <span>{item.title}</span>}
-                        {open && (
-                          <ChevronDown
-                            className={`me-auto h-4 w-4 transition-transform ${
-                              openItems.includes(item.title) ? "rotate-180" : ""
-                            }`}
-                          />
-                        )}
-                      </SidebarMenuButton>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                      <SidebarMenuSub>
-                        {item.items.map((subItem) => (
-                          <SidebarMenuSubItem key={subItem.url}>
-                            <SidebarMenuSubButton asChild>
-                              <NavLink
-                                to={subItem.url}
-                                className={({ isActive }) =>
-                                  isActive
-                                    ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                                    : "hover:bg-sidebar-accent"
-                                }
-                              >
-                                <subItem.icon className="h-4 w-4" />
-                                {open && <span>{subItem.title}</span>}
-                              </NavLink>
-                            </SidebarMenuSubButton>
-                          </SidebarMenuSubItem>
-                        ))}
-                      </SidebarMenuSub>
-                    </CollapsibleContent>
-                  </SidebarMenuItem>
-                </Collapsible>
-              ) : (
-                <SidebarMenuItem key={item.url}>
-                  <SidebarMenuButton asChild>
-                    <NavLink
-                      to={item.url}
-                      className={({ isActive }) =>
-                        isActive
-                          ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                          : "hover:bg-sidebar-accent"
-                      }
-                    >
-                      <item.icon className="h-5 w-5" />
-                      {open && <span>{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )
+            {items.map((item) => (
+              <SidebarMenuItem key={item.url}>
+                <SidebarMenuButton asChild>
+                  <NavLink
+                    to={item.url}
+                    end={item.url === active?.home}
+                    className={({ isActive }) =>
+                      isActive
+                        ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                        : "hover:bg-sidebar-accent"
+                    }
+                  >
+                    <item.icon className="h-4 w-4" />
+                    {open && <span className="truncate">{item.title}</span>}
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ))}
+            {!active && open && (
+              <div className="px-3 py-4 text-center text-xs text-sidebar-foreground/60">
+                لم يتم اختيار نظام. انقر أدناه لعرض الأنظمة المتاحة.
+              </div>
             )}
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
+
+      <SidebarFooter className="p-2 border-t border-sidebar-border">
+        <Button
+          variant="ghost"
+          size={open ? "sm" : "icon"}
+          onClick={goApps}
+          className="w-full justify-start gap-2 text-sidebar-foreground hover:bg-sidebar-accent"
+          title="عرض كل الأنظمة"
+        >
+          <LayoutGrid className="h-4 w-4" />
+          {open && <span>كل الأنظمة</span>}
+        </Button>
+      </SidebarFooter>
     </Sidebar>
   );
 }

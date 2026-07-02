@@ -14,6 +14,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 import SessionSelector from "./pages/SessionSelector";
+import AppLauncher from "./pages/AppLauncher";
 
 // Finance Pages
 import Accounts from "./pages/finance/Accounts";
@@ -125,6 +126,7 @@ const App = () => (
               <Route path="/session" element={<ProtectedRoute><SessionSelector /></ProtectedRoute>} />
               <Route path="/setup" element={<ProtectedRoute><SetupWizard /></ProtectedRoute>} />
               <Route path="/" element={<ProtectedRoute><DashboardLayout><Index /></DashboardLayout></ProtectedRoute>} />
+              <Route path="/apps" element={<ProtectedRoute><DashboardLayout><AppLauncher /></DashboardLayout></ProtectedRoute>} />
               <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout><Dashboard /></DashboardLayout></ProtectedRoute>} />
               
               {/* Finance Routes - Admin + Branch Manager + Accountant */}
