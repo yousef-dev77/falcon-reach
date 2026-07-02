@@ -2735,6 +2735,24 @@ export type Database = {
           },
         ]
       }
+      installed_modules: {
+        Row: {
+          installed_at: string
+          installed_by: string | null
+          module_key: string
+        }
+        Insert: {
+          installed_at?: string
+          installed_by?: string | null
+          module_key: string
+        }
+        Update: {
+          installed_at?: string
+          installed_by?: string | null
+          module_key?: string
+        }
+        Relationships: []
+      }
       inventory_movements: {
         Row: {
           created_at: string
