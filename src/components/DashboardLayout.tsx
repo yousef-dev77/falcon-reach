@@ -4,7 +4,7 @@ import { ConnectionStatusBanner, ConnectionStatusIndicator } from "./ConnectionS
 import { BranchSelector } from "./BranchSelector";
 import { ReadOnlyBanner } from "./ReadOnlyBanner";
 import { SessionGuard } from "./SessionGuard";
-import { Bell, User, LogOut, Calendar, RefreshCw, Lock } from "lucide-react";
+import { Bell, User, LogOut, Calendar, RefreshCw, Lock, LayoutGrid } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -45,6 +45,19 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <header className="sticky top-0 z-10 flex h-16 items-center gap-3 border-b bg-card px-6">
             <SidebarTrigger />
 
+            {/* Apps launcher */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/apps")}
+              className="gap-2 h-9"
+              title="كل الأنظمة"
+            >
+              <LayoutGrid className="h-4 w-4" />
+              <span className="hidden md:inline">الأنظمة</span>
+            </Button>
+
+            <Separator orientation="vertical" className="h-6" />
 
             {/* Branch Selector */}
             <BranchSelector />
