@@ -109,21 +109,16 @@ export function ListPageHeader({
       {/* Toolbar */}
       <div className="bg-card border border-t-0 border-border px-4 py-2 flex items-center gap-1 flex-wrap">
         <TooltipProvider delayDuration={300}>
-          {/* Add Button */}
+          {/* Add Button - labeled for clarity */}
           {showAdd && onAdd && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={onAdd}
-                  className="h-9 w-9 text-green-600 hover:text-green-700 hover:bg-green-50"
-                >
-                  <Plus className="h-5 w-5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>{addLabel}</TooltipContent>
-            </Tooltip>
+            <Button
+              onClick={onAdd}
+              size="sm"
+              className="h-9 gap-1.5 bg-green-600 hover:bg-green-700 text-white"
+            >
+              <Plus className="h-4 w-4" />
+              <span>{addLabel}</span>
+            </Button>
           )}
 
           {/* Delete Button */}
