@@ -319,6 +319,7 @@ export default function EmployeeDetail() {
           </CardContent></Card>
         </TabsContent>
       </Tabs>
+      <LoanScheduleDialog loan={scheduleFor} onClose={() => setScheduleFor(null)} />
     </div>
   );
 }
