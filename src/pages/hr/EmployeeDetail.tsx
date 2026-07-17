@@ -10,6 +10,7 @@ import { Loader2, ArrowRight, User, Phone, Mail, MapPin, Briefcase, Calendar, Wa
 import { supabase } from "@/integrations/supabase/client";
 import { ListPageHeader } from "@/components/ListPageHeader";
 import { format } from "date-fns";
+import { LoanScheduleDialog } from "@/components/hr/LoanScheduleDialog";
 
 export default function EmployeeDetail() {
   const { id } = useParams();
@@ -28,6 +29,7 @@ export default function EmployeeDetail() {
   const [reviews, setReviews] = useState<any[]>([]);
   const [training, setTraining] = useState<any[]>([]);
   const [payslips, setPayslips] = useState<any[]>([]);
+  const [scheduleFor, setScheduleFor] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   const fetch = async () => {
@@ -199,19 +201,21 @@ export default function EmployeeDetail() {
         <TabsContent value="loans">
           <Card><CardContent className="p-4">
             <Table>
-              <TableHeader><TableRow><TableHead>الرقم</TableHead><TableHead>المبلغ</TableHead><TableHead>المسدد</TableHead><TableHead>المتبقي</TableHead><TableHead>القسط</TableHead><TableHead>الحالة</TableHead></TableRow></TableHeader>
+              <TableHeader><TableRow><TableHead>الرقم</TableHead><TableHead>النوع</TableHead><TableHead>المبلغ</TableHead><TableHead>المسدد</TableHead><TableHead>المتبقي</TableHead><TableHead>القسط</TableHead><TableHead>الحالة</TableHead><TableHead>جدول السداد</TableHead></TableRow></TableHeader>
               <TableBody>
                 {loans.map((l: any) => (
                   <TableRow key={l.id}>
                     <TableCell className="font-mono">{l.loan_number}</TableCell>
-                    <TableCell>{Number(l.loan_amount).toLocaleString()}</TableCell>
+                    <TableCell><Badge variant={l.loan_type === "loan" ? "default" : "secondary"}>{l.loan_type === "loan" ? "قرض" : "سلفة راتب"}</Badge></TableCell>
+                    <TableCell>{Number(l.total_amount).toLocaleString()}</TableCell>
                     <TableCell>{Number(l.paid_amount).toLocaleString()}</TableCell>
-                    <TableCell>{Number(l.remaining_amount).toLocaleString()}</TableCell>
+                    <TableCell className="font-bold">{Number(l.remaining_amount).toLocaleString()}</TableCell>
                     <TableCell>{Number(l.installment_amount).toLocaleString()}</TableCell>
                     <TableCell><Badge variant={l.status === "active" ? "default" : "secondary"}>{l.status}</Badge></TableCell>
+                    <TableCell><Button size="sm" variant="ghost" onClick={() => setScheduleFor(l)}>عرض</Button></TableCell>
                   </TableRow>
                 ))}
-                {loans.length === 0 && <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-4">لا توجد سلف</TableCell></TableRow>}
+                {loans.length === 0 && <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-4">لا توجد سلف أو قروض</TableCell></TableRow>}
               </TableBody>
             </Table>
           </CardContent></Card>
@@ -316,6 +320,7 @@ export default function EmployeeDetail() {
           </CardContent></Card>
         </TabsContent>
       </Tabs>
+      <LoanScheduleDialog loan={scheduleFor} onClose={() => setScheduleFor(null)} />
     </div>
   );
 }
