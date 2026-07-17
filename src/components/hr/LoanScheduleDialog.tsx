@@ -58,7 +58,7 @@ export function LoanScheduleDialog({ loan, onClose }: { loan: any | null; onClos
                   <TableCell>{statusBadge(r.status)}</TableCell>
                   <TableCell>{r.paid_at ? format(new Date(r.paid_at), "yyyy/MM/dd") : "—"}</TableCell>
                   <TableCell className="font-mono text-xs">
-                    {r.hr_payslips?.payslip_number || (r.hr_payslips?.hr_payroll_runs ? `${r.hr_payslips.hr_payroll_runs.year}/${r.hr_payslips.hr_payroll_runs.month}` : "—")}
+                    {r.hr_payslips?.hr_payroll_runs ? `${r.hr_payslips.hr_payroll_runs.run_number || ""} (${r.hr_payslips.hr_payroll_runs.year}/${r.hr_payslips.hr_payroll_runs.month})` : "—"}
                   </TableCell>
                 </TableRow>
               ))}
