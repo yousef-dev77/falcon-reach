@@ -14,7 +14,7 @@ export function LoanScheduleDialog({ loan, onClose }: { loan: any | null; onClos
     if (!loan?.id) return;
     setLoading(true);
     (supabase.from("hr_loan_installments") as any)
-      .select("*, hr_payslips(payslip_number, hr_payroll_runs(year, month))")
+      .select("*, hr_payslips(hr_payroll_runs(year, month, run_number))")
       .eq("loan_id", loan.id)
       .order("installment_no", { ascending: true })
       .then((r: any) => { setRows(r.data || []); setLoading(false); });
