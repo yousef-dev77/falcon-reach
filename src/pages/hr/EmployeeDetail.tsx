@@ -10,6 +10,7 @@ import { Loader2, ArrowRight, User, Phone, Mail, MapPin, Briefcase, Calendar, Wa
 import { supabase } from "@/integrations/supabase/client";
 import { ListPageHeader } from "@/components/ListPageHeader";
 import { format } from "date-fns";
+import { LoanScheduleDialog } from "@/components/hr/LoanScheduleDialog";
 
 export default function EmployeeDetail() {
   const { id } = useParams();
