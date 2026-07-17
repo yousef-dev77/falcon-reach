@@ -209,7 +209,8 @@ const App = () => (
               <Route path="/hr/leave-requests" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'hr_manager']}><DashboardLayout><HRLeaveRequests /></DashboardLayout></AdminRoute>} />
               <Route path="/hr/attendance" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'hr_manager']}><DashboardLayout><HRAttendance /></DashboardLayout></AdminRoute>} />
               <Route path="/hr/salary-components" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'hr_manager']}><DashboardLayout><HRSalaryComponents /></DashboardLayout></AdminRoute>} />
-              <Route path="/hr/loans" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'hr_manager']}><DashboardLayout><HRLoans /></DashboardLayout></AdminRoute>} />
+              <Route path="/hr/loans" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'hr_manager']}><DashboardLayout><HREmployeeLoans /></DashboardLayout></AdminRoute>} />
+              <Route path="/hr/advances" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'hr_manager']}><DashboardLayout><HRSalaryAdvances /></DashboardLayout></AdminRoute>} />
               <Route path="/hr/payroll" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'hr_manager']}><DashboardLayout><HRPayrollRuns /></DashboardLayout></AdminRoute>} />
               <Route path="/hr/payroll/:id" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'hr_manager']}><DashboardLayout><HRPayrollDetail /></DashboardLayout></AdminRoute>} />
               <Route path="/hr/end-of-service" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'hr_manager']}><DashboardLayout><HREndOfService /></DashboardLayout></AdminRoute>} />
