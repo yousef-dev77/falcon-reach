@@ -2067,6 +2067,66 @@ export type Database = {
         }
         Relationships: []
       }
+      hr_loan_installments: {
+        Row: {
+          amount: number
+          created_at: string
+          due_date: string
+          id: string
+          installment_no: number
+          loan_id: string
+          notes: string | null
+          paid_amount: number
+          paid_at: string | null
+          payslip_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          due_date: string
+          id?: string
+          installment_no: number
+          loan_id: string
+          notes?: string | null
+          paid_amount?: number
+          paid_at?: string | null
+          payslip_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          due_date?: string
+          id?: string
+          installment_no?: number
+          loan_id?: string
+          notes?: string | null
+          paid_amount?: number
+          paid_at?: string | null
+          payslip_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_loan_installments_loan_id_fkey"
+            columns: ["loan_id"]
+            isOneToOne: false
+            referencedRelation: "hr_loans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_loan_installments_payslip_id_fkey"
+            columns: ["payslip_id"]
+            isOneToOne: false
+            referencedRelation: "hr_payslips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hr_loans: {
         Row: {
           approved_at: string | null
@@ -2078,8 +2138,14 @@ export type Database = {
           id: string
           installment_amount: number
           loan_number: string
+          loan_type: Database["public"]["Enums"]["loan_kind"]
+          manager_approval_required: boolean
+          manager_approved_at: string | null
+          manager_approved_by: string | null
+          months_count: number | null
           paid_amount: number
           reason: string | null
+          rejection_reason: string | null
           remaining_amount: number
           start_date: string
           status: Database["public"]["Enums"]["loan_status"]
@@ -2096,8 +2162,14 @@ export type Database = {
           id?: string
           installment_amount: number
           loan_number: string
+          loan_type?: Database["public"]["Enums"]["loan_kind"]
+          manager_approval_required?: boolean
+          manager_approved_at?: string | null
+          manager_approved_by?: string | null
+          months_count?: number | null
           paid_amount?: number
           reason?: string | null
+          rejection_reason?: string | null
           remaining_amount?: number
           start_date: string
           status?: Database["public"]["Enums"]["loan_status"]
@@ -2114,8 +2186,14 @@ export type Database = {
           id?: string
           installment_amount?: number
           loan_number?: string
+          loan_type?: Database["public"]["Enums"]["loan_kind"]
+          manager_approval_required?: boolean
+          manager_approved_at?: string | null
+          manager_approved_by?: string | null
+          months_count?: number | null
           paid_amount?: number
           reason?: string | null
+          rejection_reason?: string | null
           remaining_amount?: number
           start_date?: string
           status?: Database["public"]["Enums"]["loan_status"]
@@ -5368,6 +5446,7 @@ export type Database = {
       }
     }
     Functions: {
+      approve_loan: { Args: { _loan_id: string }; Returns: undefined }
       calculate_eosb: {
         Args: { _employee_id: string; _end_date: string }
         Returns: number
@@ -5387,6 +5466,7 @@ export type Database = {
         Args: { _asset_id: string }
         Returns: number
       }
+      generate_loan_schedule: { Args: { _loan_id: string }; Returns: undefined }
       get_expiring_documents: {
         Args: { _days_ahead?: number }
         Returns: {
@@ -5455,10 +5535,15 @@ export type Database = {
         Args: { _period_id: string }
         Returns: undefined
       }
+      reject_loan: {
+        Args: { _loan_id: string; _reason: string }
+        Returns: undefined
+      }
       reopen_fiscal_period: {
         Args: { _period_id: string; _reason: string }
         Returns: undefined
       }
+      request_loan_approval: { Args: { _loan_id: string }; Returns: undefined }
       set_user_pin: {
         Args: { _pin: string; _user_id: string }
         Returns: undefined
@@ -5528,7 +5613,13 @@ export type Database = {
         | "approved"
         | "rejected"
         | "cancelled"
-      loan_status: "draft" | "active" | "completed" | "cancelled"
+      loan_kind: "advance" | "loan"
+      loan_status:
+        | "draft"
+        | "active"
+        | "completed"
+        | "cancelled"
+        | "pending_approval"
       payment_method: "cash" | "bank_transfer" | "check" | "credit_card"
       payroll_status: "draft" | "calculated" | "posted" | "cancelled"
       po_status:
@@ -5734,7 +5825,14 @@ export const Constants = {
         "rejected",
         "cancelled",
       ],
-      loan_status: ["draft", "active", "completed", "cancelled"],
+      loan_kind: ["advance", "loan"],
+      loan_status: [
+        "draft",
+        "active",
+        "completed",
+        "cancelled",
+        "pending_approval",
+      ],
       payment_method: ["cash", "bank_transfer", "check", "credit_card"],
       payroll_status: ["draft", "calculated", "posted", "cancelled"],
       po_status: [
