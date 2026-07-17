@@ -28,6 +28,7 @@ export default function EmployeeDetail() {
   const [reviews, setReviews] = useState<any[]>([]);
   const [training, setTraining] = useState<any[]>([]);
   const [payslips, setPayslips] = useState<any[]>([]);
+  const [scheduleFor, setScheduleFor] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   const fetch = async () => {
