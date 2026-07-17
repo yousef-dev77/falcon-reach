@@ -220,7 +220,7 @@ export default function MyPortal() {
                 {loans.map((l: any) => (
                   <TableRow key={l.id}>
                     <TableCell className="font-mono">{l.loan_number}</TableCell>
-                    <TableCell>{Number(l.loan_amount).toLocaleString()}</TableCell>
+                    <TableCell>{Number(l.total_amount).toLocaleString()}</TableCell>
                     <TableCell>{Number(l.paid_amount).toLocaleString()}</TableCell>
                     <TableCell>{Number(l.remaining_amount).toLocaleString()}</TableCell>
                     <TableCell><Badge>{l.status}</Badge></TableCell>
