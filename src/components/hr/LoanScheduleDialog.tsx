@@ -1,7 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
@@ -9,6 +12,8 @@ import { format } from "date-fns";
 export function LoanScheduleDialog({ loan, onClose }: { loan: any | null; onClose: () => void }) {
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [fromDate, setFromDate] = useState<string>("");
+  const [toDate, setToDate] = useState<string>("");
 
   useEffect(() => {
     if (!loan?.id) return;
@@ -20,15 +25,47 @@ export function LoanScheduleDialog({ loan, onClose }: { loan: any | null; onClos
       .then((r: any) => { setRows(r.data || []); setLoading(false); });
   }, [loan?.id]);
 
+  const filtered = useMemo(() => {
+    return rows.filter((r) => {
+      if (fromDate && r.due_date < fromDate) return false;
+      if (toDate && r.due_date > toDate) return false;
+      return true;
+    });
+  }, [rows, fromDate, toDate]);
+
+  // Compute running remaining based on ORIGINAL order (not filtered) so filtered rows still show correct running balance
+  const runningMap = useMemo(() => {
+    const total = Number(loan?.total_amount || 0);
+    let paidCum = 0;
+    const map = new Map<string, { paidCum: number; remaining: number }>();
+    for (const r of rows) {
+      // "planned remaining after this installment" — if paid, use paid; else assume amount will be paid
+      const consider = r.status === "paid" || r.status === "partial" ? Number(r.paid_amount || 0) : Number(r.amount || 0);
+      paidCum += consider;
+      map.set(r.id, { paidCum, remaining: Math.max(0, total - paidCum) });
+    }
+    return map;
+  }, [rows, loan?.total_amount]);
+
   const statusBadge = (s: string) => {
     const m: any = { pending: ["منتظر", "secondary"], paid: ["مسدد", "default"], partial: ["جزئي", "outline"], skipped: ["متجاوز", "destructive"] };
     const [l, v] = m[s] || [s, "secondary"];
     return <Badge variant={v as any}>{l}</Badge>;
   };
 
+  const totals = useMemo(() => {
+    const paid = filtered.filter(r => r.status === "paid" || r.status === "partial")
+      .reduce((s, r) => s + Number(r.paid_amount || 0), 0);
+    const pending = filtered.filter(r => r.status === "pending")
+      .reduce((s, r) => s + Number(r.amount || 0), 0);
+    return { paid, pending, count: filtered.length };
+  }, [filtered]);
+
+  const clearFilter = () => { setFromDate(""); setToDate(""); };
+
   return (
     <Dialog open={!!loan} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="max-w-4xl">
         <DialogHeader>
           <DialogTitle>جدول السداد — {loan?.loan_number}</DialogTitle>
         </DialogHeader>
@@ -40,29 +77,60 @@ export function LoanScheduleDialog({ loan, onClose }: { loan: any | null; onClos
             <div><span className="text-muted-foreground">القسط: </span><strong>{Number(loan.installment_amount).toLocaleString()}</strong></div>
           </div>
         )}
+
+        {/* Period filter */}
+        <div className="flex items-end gap-2 mb-3 flex-wrap bg-muted/40 rounded-md p-3">
+          <div>
+            <Label className="text-xs">من تاريخ الاستحقاق</Label>
+            <Input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="h-8" />
+          </div>
+          <div>
+            <Label className="text-xs">إلى تاريخ الاستحقاق</Label>
+            <Input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className="h-8" />
+          </div>
+          <Button variant="ghost" size="sm" onClick={clearFilter} disabled={!fromDate && !toDate}>مسح التصفية</Button>
+          <div className="ms-auto text-xs text-muted-foreground">
+            <span className="me-3">أقساط: <strong>{totals.count}</strong></span>
+            <span className="me-3">مخصوم فعلياً: <strong>{totals.paid.toLocaleString()}</strong></span>
+            <span>متبقٍ في النطاق: <strong>{totals.pending.toLocaleString()}</strong></span>
+          </div>
+        </div>
+
         {loading ? <Loader2 className="animate-spin mx-auto" /> : (
           <Table>
             <TableHeader><TableRow>
-              <TableHead>القسط</TableHead><TableHead>تاريخ الاستحقاق</TableHead>
-              <TableHead>المبلغ</TableHead><TableHead>المسدد</TableHead>
-              <TableHead>الحالة</TableHead><TableHead>تاريخ الخصم</TableHead>
+              <TableHead>القسط</TableHead>
+              <TableHead>تاريخ الاستحقاق</TableHead>
+              <TableHead>المبلغ</TableHead>
+              <TableHead>المسدد</TableHead>
+              <TableHead>المتبقي بعد القسط</TableHead>
+              <TableHead>الحالة</TableHead>
+              <TableHead>تاريخ الخصم</TableHead>
               <TableHead>قسيمة الراتب</TableHead>
             </TableRow></TableHeader>
             <TableBody>
-              {rows.map((r) => (
-                <TableRow key={r.id}>
-                  <TableCell className="font-mono">#{r.installment_no}</TableCell>
-                  <TableCell>{format(new Date(r.due_date), "yyyy/MM/dd")}</TableCell>
-                  <TableCell>{Number(r.amount).toLocaleString()}</TableCell>
-                  <TableCell>{Number(r.paid_amount).toLocaleString()}</TableCell>
-                  <TableCell>{statusBadge(r.status)}</TableCell>
-                  <TableCell>{r.paid_at ? format(new Date(r.paid_at), "yyyy/MM/dd") : "—"}</TableCell>
-                  <TableCell className="font-mono text-xs">
-                    {r.hr_payslips?.hr_payroll_runs ? `${r.hr_payslips.hr_payroll_runs.run_number || ""} (${r.hr_payslips.hr_payroll_runs.year}/${r.hr_payslips.hr_payroll_runs.month})` : "—"}
-                  </TableCell>
-                </TableRow>
-              ))}
-              {rows.length === 0 && <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-4">لا يوجد جدول سداد بعد — سيتم إنشاؤه عند الاعتماد.</TableCell></TableRow>}
+              {filtered.map((r) => {
+                const run = runningMap.get(r.id);
+                return (
+                  <TableRow key={r.id}>
+                    <TableCell className="font-mono">#{r.installment_no}</TableCell>
+                    <TableCell>{format(new Date(r.due_date), "yyyy/MM/dd")}</TableCell>
+                    <TableCell>{Number(r.amount).toLocaleString()}</TableCell>
+                    <TableCell>{Number(r.paid_amount).toLocaleString()}</TableCell>
+                    <TableCell className="font-semibold text-primary">
+                      {run ? run.remaining.toLocaleString() : "—"}
+                    </TableCell>
+                    <TableCell>{statusBadge(r.status)}</TableCell>
+                    <TableCell>{r.paid_at ? format(new Date(r.paid_at), "yyyy/MM/dd") : "—"}</TableCell>
+                    <TableCell className="font-mono text-xs">
+                      {r.hr_payslips?.hr_payroll_runs ? `${r.hr_payslips.hr_payroll_runs.run_number || ""} (${r.hr_payslips.hr_payroll_runs.year}/${r.hr_payslips.hr_payroll_runs.month})` : "—"}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+              {filtered.length === 0 && <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-4">
+                {rows.length === 0 ? "لا يوجد جدول سداد بعد — سيتم إنشاؤه عند الاعتماد." : "لا توجد أقساط ضمن الفترة المحددة."}
+              </TableCell></TableRow>}
             </TableBody>
           </Table>
         )}
