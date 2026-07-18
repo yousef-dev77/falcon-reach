@@ -55,12 +55,23 @@ export default function PayrollRuns() {
   };
 
   const post = async (id: string) => {
+    // Guard: warn if there are loans awaiting approval — they cannot be deducted
+    const { data: pending } = await (supabase.from("hr_loans") as any)
+      .select("loan_number, employee:hr_employees(full_name)")
+      .in("status", ["draft", "pending_approval"]);
+    if (pending && pending.length > 0) {
+      const list = pending.slice(0, 5).map((l: any) => `• ${l.loan_number} — ${l.employee?.full_name || ""}`).join("\n");
+      const extra = pending.length > 5 ? `\n… و ${pending.length - 5} أخرى` : "";
+      const proceed = confirm(`تنبيه: يوجد ${pending.length} قرض/سلفة غير معتمدة ولن تُخصم من هذه الرواتب:\n\n${list}${extra}\n\nهل تريد المتابعة بالترحيل بدون خصمها؟`);
+      if (!proceed) return;
+    }
     if (!confirm("ترحيل الرواتب يولّد قيد محاسبي ولا يمكن التراجع. متابعة؟")) return;
     setProcessing(id);
     const r = await supabase.rpc("post_payroll_run", { _run_id: id });
     if (r.error) toast.error(r.error.message); else toast.success("تم الترحيل وإنشاء القيد المحاسبي");
     setProcessing(null); fetchData();
   };
+
 
   const statusBadge = (s: string) => {
     const m: any = { draft: ["مسودة", "secondary"], calculated: ["محسوب", "default"], posted: ["مرحّل", "default"], cancelled: ["ملغي", "destructive"] };
