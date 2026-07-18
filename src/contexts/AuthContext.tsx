@@ -22,42 +22,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let mounted = true;
     let resolved = false;
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+
+    const applySession = (session: Session | null) => {
+      if (!mounted) return;
+      resolved = true;
+      if (timeoutId) clearTimeout(timeoutId);
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+    };
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
-        if (!mounted) return;
-        resolved = true;
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
+        applySession(session);
       }
     );
 
-    const timeoutId = setTimeout(() => {
+    timeoutId = setTimeout(() => {
       if (mounted && !resolved) {
-        console.log("Auth session check timeout - clearing stale session");
-        localStorage.removeItem('sb-yetnmvmgodbvsilukbka-auth-token');
-        setSession(null);
-        setUser(null);
         setLoading(false);
       }
     }, 5000);
 
     supabase.auth.getSession()
       .then(({ data: { session } }) => {
-        if (!mounted) return;
-        resolved = true;
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
+        applySession(session);
       })
       .catch((error) => {
         console.error("Error getting session:", error);
-        if (error?.message?.includes("Failed to fetch") || error?.name === "AuthRetryableFetchError") {
-          localStorage.removeItem('sb-yetnmvmgodbvsilukbka-auth-token');
-        }
         if (mounted) {
           resolved = true;
+          if (timeoutId) clearTimeout(timeoutId);
           setSession(null);
           setUser(null);
           setLoading(false);

@@ -80,31 +80,26 @@ export default function Auth() {
   const checkConnection = async () => {
     setConnectionStatus('checking');
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000);
+    const timeoutId = setTimeout(() => controller.abort(), 12000);
     try {
-      await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/profiles?select=id&limit=1`,
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/auth/v1/health`,
         {
           method: 'GET',
           headers: {
             'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           },
           signal: controller.signal,
         }
       );
       clearTimeout(timeoutId);
+      if (!response.ok) throw new Error(`Health check failed: ${response.status}`);
       setConnectionStatus('connected');
       setSystemError(null);
     } catch (error: any) {
       clearTimeout(timeoutId);
-      if (error.name === 'AbortError') {
-        setConnectionStatus('connected');
-        setSystemError(null);
-      } else {
-        setConnectionStatus('disconnected');
-        setSystemError('تعذر الاتصال بالخادم. تحقق من اتصال الإنترنت.');
-      }
+      setConnectionStatus('disconnected');
+      setSystemError('تعذر الاتصال بالخادم. تحقق من اتصال الإنترنت.');
     }
   };
 
@@ -240,19 +235,17 @@ export default function Auth() {
     if (!email || !password) { toast.error("الرجاء ملء جميع الحقول"); return; }
 
     setLoading(true);
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error("Connection timeout")), 10000);
-    });
 
     try {
       const normalizedEmail = normalizeEmail(email);
-      const signInPromise = supabase.auth.signInWithPassword({ email: normalizedEmail, password });
-      const { data, error } = await Promise.race([signInPromise, timeoutPromise]) as any;
+      const { data, error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
       if (error) throw error;
+      const session = data.session || (await supabase.auth.getSession()).data.session;
+      if (!session?.user?.id) throw new Error("NO_AUTH_SESSION");
 
       toast.success("تم تسجيل الدخول بنجاح!");
       setSignedInEmail(normalizedEmail);
-      await loadSessionOptions(data.session.user.id);
+      await loadSessionOptions(session.user.id);
     } catch (error: any) {
       const msg = String(error?.message || "").toLowerCase();
       if (msg.includes("invalid login credentials") || msg.includes("invalid_credentials")) {
@@ -261,10 +254,12 @@ export default function Auth() {
         setNeedsEmailConfirm(true);
         setConfirmEmail(normalizeEmail(email));
         toast.error("البريد الإلكتروني غير مُفعّل. فعّل حسابك ثم أعد المحاولة.");
-      } else if (msg.includes("paused") || msg.includes("failed to fetch") || msg.includes("connection timeout")) {
+      } else if (msg.includes("no_auth_session")) {
+        setSystemError("تم قبول بيانات الدخول لكن لم تكتمل جلسة المستخدم. أعد المحاولة بعد لحظات.");
+        toast.error("لم تكتمل جلسة تسجيل الدخول");
+      } else if (msg.includes("paused") || msg.includes("failed to fetch") || msg.includes("networkerror") || msg.includes("authretryablefetcherror")) {
         setSystemError("تعذر الاتصال بالخدمة الخلفية. تأكد من اتصال الإنترنت وأعد المحاولة.");
         toast.error("تعذر الاتصال بالخدمة الخلفية");
-        localStorage.removeItem('sb-yetnmvmgodbvsilukbka-auth-token');
       } else {
         toast.error(error?.message || "حدث خطأ أثناء تسجيل الدخول");
       }
