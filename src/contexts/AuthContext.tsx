@@ -21,23 +21,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
-    
-    // Set up auth state listener FIRST
+    let resolved = false;
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (mounted) {
-          setSession(session);
-          setUser(session?.user ?? null);
-          setLoading(false);
-        }
+      (_event, session) => {
+        if (!mounted) return;
+        resolved = true;
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
       }
     );
 
-    // THEN check for existing session with timeout
     const timeoutId = setTimeout(() => {
-      if (mounted && loading) {
+      if (mounted && !resolved) {
         console.log("Auth session check timeout - clearing stale session");
-        // Clear any stale session data that might be causing issues
         localStorage.removeItem('sb-yetnmvmgodbvsilukbka-auth-token');
         setSession(null);
         setUser(null);
@@ -47,20 +45,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     supabase.auth.getSession()
       .then(({ data: { session } }) => {
-        if (mounted) {
-          setSession(session);
-          setUser(session?.user ?? null);
-          setLoading(false);
-        }
+        if (!mounted) return;
+        resolved = true;
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
       })
       .catch((error) => {
         console.error("Error getting session:", error);
-        // Clear corrupted session data on error
         if (error?.message?.includes("Failed to fetch") || error?.name === "AuthRetryableFetchError") {
-          console.log("Network error - clearing stale session");
           localStorage.removeItem('sb-yetnmvmgodbvsilukbka-auth-token');
         }
         if (mounted) {
+          resolved = true;
           setSession(null);
           setUser(null);
           setLoading(false);
