@@ -54,6 +54,7 @@ export default function SalaryAdvances() {
       loan_type: "advance",
       loan_number: `ADV-${String((count || 0) + 1).padStart(5, "0")}`,
       status: "draft",
+      disbursement_account_id: form.disbursement_account_id || null,
     };
     const r = await (supabase.from("hr_loans") as any).insert(payload);
     if (r.error) toast.error(r.error.message); else { toast.success("تم"); setOpen(false); fetchData(); setForm(empty); }
