@@ -73,8 +73,9 @@ export default function EmployeeDetail() {
         showAdd={false}
         showSearch={false}
       />
-      <div className="px-4">
+      <div className="px-4 flex gap-2">
         <Button variant="outline" onClick={() => navigate("/hr/employees")}><ArrowRight className="me-2 h-4 w-4" />رجوع</Button>
+        <Button variant="default" onClick={() => navigate(`/hr/employees/${emp.id}/statement`)}>كشف حساب الموظف</Button>
       </div>
 
       {/* Employee Card Header */}
