@@ -19,19 +19,25 @@ export default function EmployeeLoans() {
   const canApprove = hasRole("admin") || hasRole("branch_manager");
   const [data, setData] = useState<any[]>([]);
   const [employees, setEmployees] = useState<any[]>([]);
+  const [accounts, setAccounts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [scheduleFor, setScheduleFor] = useState<any>(null);
-  const empty = { employee_id: "", total_amount: 0, months_count: 12, installment_amount: 0, start_date: new Date().toISOString().slice(0, 10), reason: "" };
+  const empty = { employee_id: "", total_amount: 0, months_count: 12, installment_amount: 0, start_date: new Date().toISOString().slice(0, 10), reason: "", disbursement_account_id: "" };
   const [form, setForm] = useState<any>(empty);
+  const selectedEmp = employees.find(e => e.id === form.employee_id);
+  const maxInstallment = selectedEmp ? (Number(selectedEmp.basic_salary || 0) * 0.3333) : 0;
 
   const fetchData = async () => {
     setLoading(true);
-    const [l, e] = await Promise.all([
+    const [l, e, banks, cash] = await Promise.all([
       (supabase.from("hr_loans") as any).select("*, employee:hr_employees(full_name)").eq("loan_type", "loan").order("created_at", { ascending: false }),
-      supabase.from("hr_employees").select("id, full_name").eq("is_active", true),
+      supabase.from("hr_employees").select("id, full_name, basic_salary").eq("is_active", true),
+      supabase.from("bank_accounts").select("id, name").eq("is_active", true),
+      supabase.from("cash_boxes").select("id, name").eq("is_active", true),
     ]);
     if (l.data) setData(l.data); if (e.data) setEmployees(e.data);
+    setAccounts([...(banks.data || []).map((b:any)=>({...b, kind:"بنك"})), ...(cash.data || []).map((c:any)=>({...c, kind:"صندوق"}))]);
     setLoading(false);
   };
   useEffect(() => { fetchData(); }, []);
@@ -54,6 +60,7 @@ export default function EmployeeLoans() {
       manager_approval_required: true,
       loan_number: `LOAN-${String((count || 0) + 1).padStart(5, "0")}`,
       status: "draft",
+      disbursement_account_id: form.disbursement_account_id || null,
     };
     const r = await (supabase.from("hr_loans") as any).insert(payload);
     if (r.error) toast.error(r.error.message); else { toast.success("تم حفظ القرض كمسودة"); setOpen(false); fetchData(); setForm(empty); }
@@ -128,7 +135,23 @@ export default function EmployeeLoans() {
               <div><Label>عدد أشهر السداد *</Label><Input type="number" min={1} value={form.months_count} onChange={e => setForm({ ...form, months_count: e.target.value })} /></div>
               <div><Label>القسط الشهري (اختياري)</Label><Input type="number" value={form.installment_amount} onChange={e => setForm({ ...form, installment_amount: e.target.value })} /></div>
             </div>
+            {selectedEmp && (
+              <div className="text-xs bg-muted rounded p-2">
+                راتب الموظف الأساسي: <strong>{Number(selectedEmp.basic_salary || 0).toLocaleString()} ر.س</strong> —
+                الحد الأقصى للقسط (⅓ الراتب): <strong className="text-primary">{maxInstallment.toLocaleString()} ر.س</strong>
+                {form.installment_amount > 0 && Number(form.installment_amount) > maxInstallment && (
+                  <div className="text-destructive font-semibold mt-1">⚠ القسط يتجاوز الحد المسموح (نظام العمل السعودي).</div>
+                )}
+              </div>
+            )}
             <div><Label>تاريخ البدء</Label><Input type="date" value={form.start_date} onChange={e => setForm({ ...form, start_date: e.target.value })} /></div>
+            <div><Label>حساب الصرف (بنك/صندوق) *</Label>
+              <Select value={form.disbursement_account_id} onValueChange={v => setForm({ ...form, disbursement_account_id: v })}>
+                <SelectTrigger><SelectValue placeholder="من أين يُصرف القرض؟" /></SelectTrigger>
+                <SelectContent>{accounts.map((a:any) => <SelectItem key={a.id} value={a.id}>{a.kind}: {a.name}</SelectItem>)}</SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">عند الاعتماد يُنشأ قيد: مدين ذمم القروض / دائن هذا الحساب.</p>
+            </div>
             <div><Label>سبب/غرض القرض *</Label><Textarea value={form.reason} onChange={e => setForm({ ...form, reason: e.target.value })} /></div>
             <div className="rounded-md bg-muted p-3 text-xs text-muted-foreground">سيتم حفظ القرض كـ <strong>مسودة</strong>، ثم أرسله للاعتماد. لا يمكن خصمه من الراتب حتى يعتمده المدير/الأدمن.</div>
             <div className="flex gap-2 justify-end"><Button variant="outline" onClick={() => setOpen(false)}>إلغاء</Button><Button onClick={save}>حفظ</Button></div>

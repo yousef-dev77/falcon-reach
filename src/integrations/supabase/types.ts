@@ -2127,12 +2127,68 @@ export type Database = {
           },
         ]
       }
+      hr_loan_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          id: string
+          journal_entry_id: string | null
+          loan_id: string
+          notes: string | null
+          payment_account_id: string
+          payment_date: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          journal_entry_id?: string | null
+          loan_id: string
+          notes?: string | null
+          payment_account_id: string
+          payment_date?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          journal_entry_id?: string | null
+          loan_id?: string
+          notes?: string | null
+          payment_account_id?: string
+          payment_date?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_loan_payments_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_loan_payments_loan_id_fkey"
+            columns: ["loan_id"]
+            isOneToOne: false
+            referencedRelation: "hr_loans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hr_loans: {
         Row: {
           approved_at: string | null
           approved_by: string | null
           created_at: string
           created_by: string | null
+          disbursement_account_id: string | null
+          disbursement_journal_entry_id: string | null
           employee_id: string
           end_date: string | null
           id: string
@@ -2142,6 +2198,7 @@ export type Database = {
           manager_approval_required: boolean
           manager_approved_at: string | null
           manager_approved_by: string | null
+          max_installment_pct: number
           months_count: number | null
           paid_amount: number
           reason: string | null
@@ -2157,6 +2214,8 @@ export type Database = {
           approved_by?: string | null
           created_at?: string
           created_by?: string | null
+          disbursement_account_id?: string | null
+          disbursement_journal_entry_id?: string | null
           employee_id: string
           end_date?: string | null
           id?: string
@@ -2166,6 +2225,7 @@ export type Database = {
           manager_approval_required?: boolean
           manager_approved_at?: string | null
           manager_approved_by?: string | null
+          max_installment_pct?: number
           months_count?: number | null
           paid_amount?: number
           reason?: string | null
@@ -2181,6 +2241,8 @@ export type Database = {
           approved_by?: string | null
           created_at?: string
           created_by?: string | null
+          disbursement_account_id?: string | null
+          disbursement_journal_entry_id?: string | null
           employee_id?: string
           end_date?: string | null
           id?: string
@@ -2190,6 +2252,7 @@ export type Database = {
           manager_approval_required?: boolean
           manager_approved_at?: string | null
           manager_approved_by?: string | null
+          max_installment_pct?: number
           months_count?: number | null
           paid_amount?: number
           reason?: string | null
@@ -2201,6 +2264,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "hr_loans_disbursement_journal_entry_id_fkey"
+            columns: ["disbursement_journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "hr_loans_employee_id_fkey"
             columns: ["employee_id"]
@@ -5462,6 +5532,10 @@ export type Database = {
       }
       confirm_purchase_return: { Args: { _return_id: string }; Returns: string }
       confirm_sales_return: { Args: { _return_id: string }; Returns: string }
+      employee_statement: {
+        Args: { _employee_id: string; _from: string; _to: string }
+        Returns: Json
+      }
       generate_asset_depreciation_schedule: {
         Args: { _asset_id: string }
         Returns: number
@@ -5534,6 +5608,16 @@ export type Database = {
       reclose_fiscal_period: {
         Args: { _period_id: string }
         Returns: undefined
+      }
+      record_loan_payment: {
+        Args: {
+          _amount: number
+          _loan_id: string
+          _notes?: string
+          _payment_account_id: string
+          _payment_date?: string
+        }
+        Returns: string
       }
       reject_loan: {
         Args: { _loan_id: string; _reason: string }

@@ -35,13 +35,14 @@ export default function PayrollRuns() {
 
   const create = async () => {
     const { year, month, branch_id } = form;
+    if (!branch_id) return toast.error("يجب اختيار فرع — تشغيل الرواتب يُنشأ لفرع واحد");
     const start = new Date(year, month - 1, 1).toISOString().slice(0, 10);
     const end = new Date(year, month, 0).toISOString().slice(0, 10);
     const { count } = await supabase.from("hr_payroll_runs").select("id", { count: "exact", head: true });
     const payload = {
       run_number: `PAY-${year}${String(month).padStart(2, "0")}-${String((count || 0) + 1).padStart(3, "0")}`,
       year, month, period_start: start, period_end: end,
-      branch_id: branch_id || null, status: "draft" as const,
+      branch_id, status: "draft" as const,
     };
     const r = await supabase.from("hr_payroll_runs").insert(payload);
     if (r.error) toast.error(r.error.message); else { toast.success("تم إنشاء تشغيل الرواتب"); setOpen(false); fetchData(); }
@@ -129,11 +130,12 @@ export default function PayrollRuns() {
                 </Select>
               </div>
             </div>
-            <div><Label>الفرع</Label>
-              <Select value={form.branch_id || "all"} onValueChange={v => setForm({ ...form, branch_id: v === "all" ? "" : v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent><SelectItem value="all">كل الفروع</SelectItem>{branches.map(b => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
+            <div><Label>الفرع *</Label>
+              <Select value={form.branch_id} onValueChange={v => setForm({ ...form, branch_id: v })}>
+                <SelectTrigger><SelectValue placeholder="اختر فرعاً" /></SelectTrigger>
+                <SelectContent>{branches.map(b => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
               </Select>
+              <p className="text-xs text-muted-foreground mt-1">يُنشأ تشغيل مستقل لكل فرع لضمان صحة الترحيل والقيد المحاسبي.</p>
             </div>
             <div className="flex gap-2 justify-end"><Button variant="outline" onClick={() => setOpen(false)}>إلغاء</Button><Button onClick={create}>إنشاء</Button></div>
           </div>
