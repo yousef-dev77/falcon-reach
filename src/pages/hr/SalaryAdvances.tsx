@@ -123,6 +123,13 @@ export default function SalaryAdvances() {
             <div><Label>مبلغ السلفة *</Label><Input type="number" value={form.total_amount} onChange={e => setForm({ ...form, total_amount: e.target.value })} /></div>
             <div><Label>عدد أشهر الخصم *</Label><Input type="number" min={1} max={6} value={form.months_count} onChange={e => setForm({ ...form, months_count: e.target.value })} /><p className="text-xs text-muted-foreground mt-1">السلفة عادةً 1–6 أشهر. القسط = المبلغ ÷ الأشهر.</p></div>
             <div><Label>تاريخ البدء</Label><Input type="date" value={form.start_date} onChange={e => setForm({ ...form, start_date: e.target.value })} /></div>
+            <div><Label>حساب الصرف (بنك/صندوق) *</Label>
+              <Select value={form.disbursement_account_id} onValueChange={v => setForm({ ...form, disbursement_account_id: v })}>
+                <SelectTrigger><SelectValue placeholder="من أين تُصرف السلفة؟" /></SelectTrigger>
+                <SelectContent>{accounts.map((a:any) => <SelectItem key={a.id} value={a.id}>{a.kind}: {a.name}</SelectItem>)}</SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">عند الاعتماد يُنشأ قيد: مدين ذمم السلف / دائن هذا الحساب.</p>
+            </div>
             <div><Label>السبب</Label><Textarea value={form.reason} onChange={e => setForm({ ...form, reason: e.target.value })} /></div>
             <div className="flex gap-2 justify-end"><Button variant="outline" onClick={() => setOpen(false)}>إلغاء</Button><Button onClick={save}>حفظ (مسودة)</Button></div>
           </div>
