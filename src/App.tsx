@@ -109,6 +109,7 @@ import HRTrainingPrograms from "./pages/hr/TrainingPrograms";
 import HRTrainingSessions from "./pages/hr/TrainingSessions";
 import HRDocumentAlerts from "./pages/hr/DocumentAlerts";
 import HREmployeeDetail from "./pages/hr/EmployeeDetail";
+import HREmployeeStatement from "./pages/hr/EmployeeStatement";
 import HRMyPortal from "./pages/hr/MyPortal";
 
 const queryClient = new QueryClient();
