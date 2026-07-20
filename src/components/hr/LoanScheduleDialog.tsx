@@ -13,19 +13,41 @@ import { format } from "date-fns";
 
 export function LoanScheduleDialog({ loan, onClose }: { loan: any | null; onClose: () => void }) {
   const [rows, setRows] = useState<any[]>([]);
+  const [payments, setPayments] = useState<any[]>([]);
+  const [accounts, setAccounts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [fromDate, setFromDate] = useState<string>("");
   const [toDate, setToDate] = useState<string>("");
+  const [payOpen, setPayOpen] = useState(false);
+  const [payForm, setPayForm] = useState<any>({ amount: 0, account_id: "", date: new Date().toISOString().slice(0,10), notes: "" });
 
-  useEffect(() => {
+  const load = async () => {
     if (!loan?.id) return;
     setLoading(true);
-    (supabase.from("hr_loan_installments") as any)
-      .select("*, hr_payslips(hr_payroll_runs(year, month, run_number))")
-      .eq("loan_id", loan.id)
-      .order("installment_no", { ascending: true })
-      .then((r: any) => { setRows(r.data || []); setLoading(false); });
-  }, [loan?.id]);
+    const [inst, pays, banks, cash] = await Promise.all([
+      (supabase.from("hr_loan_installments") as any).select("*, hr_payslips(hr_payroll_runs(year, month, run_number))").eq("loan_id", loan.id).order("installment_no", { ascending: true }),
+      (supabase.from("hr_loan_payments") as any).select("*").eq("loan_id", loan.id).order("payment_date", { ascending: false }),
+      supabase.from("bank_accounts").select("id, name").eq("is_active", true),
+      supabase.from("cash_boxes").select("id, name").eq("is_active", true),
+    ]);
+    setRows(inst.data || []);
+    setPayments(pays.data || []);
+    setAccounts([...(banks.data || []).map((b:any)=>({...b, kind:"بنك"})), ...(cash.data || []).map((c:any)=>({...c, kind:"صندوق"}))]);
+    setLoading(false);
+  };
+  useEffect(() => { load(); }, [loan?.id]);
+
+  const recordPayment = async () => {
+    if (!payForm.amount || !payForm.account_id) return toast.error("املأ المبلغ وحساب الاستلام");
+    const r = await (supabase as any).rpc("record_loan_payment", {
+      _loan_id: loan.id, _amount: Number(payForm.amount),
+      _payment_account_id: payForm.account_id, _payment_date: payForm.date, _notes: payForm.notes || null,
+    });
+    if (r.error) return toast.error(r.error.message);
+    toast.success("تم تسجيل السداد وإنشاء القيد المحاسبي");
+    setPayOpen(false); setPayForm({ amount: 0, account_id: "", date: new Date().toISOString().slice(0,10), notes: "" });
+    load();
+  };
 
   const filtered = useMemo(() => {
     return rows.filter((r) => {
