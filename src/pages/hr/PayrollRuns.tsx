@@ -130,11 +130,12 @@ export default function PayrollRuns() {
                 </Select>
               </div>
             </div>
-            <div><Label>الفرع</Label>
-              <Select value={form.branch_id || "all"} onValueChange={v => setForm({ ...form, branch_id: v === "all" ? "" : v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent><SelectItem value="all">كل الفروع</SelectItem>{branches.map(b => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
+            <div><Label>الفرع *</Label>
+              <Select value={form.branch_id} onValueChange={v => setForm({ ...form, branch_id: v })}>
+                <SelectTrigger><SelectValue placeholder="اختر فرعاً" /></SelectTrigger>
+                <SelectContent>{branches.map(b => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
               </Select>
+              <p className="text-xs text-muted-foreground mt-1">يُنشأ تشغيل مستقل لكل فرع لضمان صحة الترحيل والقيد المحاسبي.</p>
             </div>
             <div className="flex gap-2 justify-end"><Button variant="outline" onClick={() => setOpen(false)}>إلغاء</Button><Button onClick={create}>إنشاء</Button></div>
           </div>
