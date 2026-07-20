@@ -217,6 +217,7 @@ const App = () => (
               <Route path="/hr/end-of-service" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'hr_manager']}><DashboardLayout><HREndOfService /></DashboardLayout></AdminRoute>} />
               <Route path="/hr/reports" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'hr_manager']}><DashboardLayout><HRReports /></DashboardLayout></AdminRoute>} />
               <Route path="/hr/employees/:id" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'hr_manager']}><DashboardLayout><HREmployeeDetail /></DashboardLayout></AdminRoute>} />
+              <Route path="/hr/employees/:id/statement" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'hr_manager']}><DashboardLayout><HREmployeeStatement /></DashboardLayout></AdminRoute>} />
               <Route path="/hr/contracts" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'hr_manager']}><DashboardLayout><HRContracts /></DashboardLayout></AdminRoute>} />
               <Route path="/hr/performance" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'hr_manager']}><DashboardLayout><HRPerformanceCycles /></DashboardLayout></AdminRoute>} />
               <Route path="/hr/performance/:id" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'hr_manager']}><DashboardLayout><HRPerformanceReviewDetail /></DashboardLayout></AdminRoute>} />
