@@ -60,6 +60,7 @@ export default function EmployeeLoans() {
       manager_approval_required: true,
       loan_number: `LOAN-${String((count || 0) + 1).padStart(5, "0")}`,
       status: "draft",
+      disbursement_account_id: form.disbursement_account_id || null,
     };
     const r = await (supabase.from("hr_loans") as any).insert(payload);
     if (r.error) toast.error(r.error.message); else { toast.success("تم حفظ القرض كمسودة"); setOpen(false); fetchData(); setForm(empty); }
