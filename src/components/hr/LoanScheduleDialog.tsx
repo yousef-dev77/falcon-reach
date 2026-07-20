@@ -163,7 +163,57 @@ export function LoanScheduleDialog({ loan, onClose }: { loan: any | null; onClos
             </TableBody>
           </Table>
         )}
+
+        {/* Manual payments history */}
+        {payments.length > 0 && (
+          <div className="mt-4">
+            <h4 className="font-semibold mb-2 text-sm">سجل السداد اليدوي</h4>
+            <Table>
+              <TableHeader><TableRow>
+                <TableHead>التاريخ</TableHead><TableHead>المبلغ</TableHead><TableHead>ملاحظات</TableHead><TableHead>القيد</TableHead>
+              </TableRow></TableHeader>
+              <TableBody>
+                {payments.map((p:any) => (
+                  <TableRow key={p.id}>
+                    <TableCell>{format(new Date(p.payment_date), "yyyy/MM/dd")}</TableCell>
+                    <TableCell className="font-semibold">{Number(p.amount).toLocaleString()} ر.س</TableCell>
+                    <TableCell className="text-xs">{p.notes || "—"}</TableCell>
+                    <TableCell className="font-mono text-xs">{p.journal_entry_id ? "✓" : "—"}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
       </DialogContent>
+
+      {/* Manual payment dialog */}
+      <Dialog open={payOpen} onOpenChange={setPayOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>تسجيل سداد يدوي — {loan?.loan_number}</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div className="text-xs bg-muted rounded p-2">
+              المتبقي على القرض: <strong>{Number(loan?.remaining_amount || 0).toLocaleString()} ر.س</strong>
+            </div>
+            <div><Label>المبلغ *</Label>
+              <Input type="number" value={payForm.amount} onChange={e => setPayForm({...payForm, amount: e.target.value})} />
+              <p className="text-xs text-muted-foreground mt-1">يمكن أن يكون جزئياً أو كامل المتبقي (سداد مبكر).</p>
+            </div>
+            <div><Label>حساب الاستلام (بنك/صندوق) *</Label>
+              <Select value={payForm.account_id} onValueChange={v => setPayForm({...payForm, account_id: v})}>
+                <SelectTrigger><SelectValue placeholder="اختر" /></SelectTrigger>
+                <SelectContent>{accounts.map((a:any) => <SelectItem key={a.id} value={a.id}>{a.kind}: {a.name}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div><Label>تاريخ السداد</Label><Input type="date" value={payForm.date} onChange={e => setPayForm({...payForm, date: e.target.value})} /></div>
+            <div><Label>ملاحظات</Label><Input value={payForm.notes} onChange={e => setPayForm({...payForm, notes: e.target.value})} /></div>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => setPayOpen(false)}>إلغاء</Button>
+              <Button onClick={recordPayment}>حفظ وترحيل القيد</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }
