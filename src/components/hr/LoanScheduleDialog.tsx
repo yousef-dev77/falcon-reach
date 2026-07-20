@@ -91,7 +91,12 @@ export function LoanScheduleDialog({ loan, onClose }: { loan: any | null; onClos
     <Dialog open={!!loan} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-4xl">
         <DialogHeader>
-          <DialogTitle>جدول السداد — {loan?.loan_number}</DialogTitle>
+          <DialogTitle className="flex items-center justify-between">
+            <span>جدول السداد — {loan?.loan_number}</span>
+            {loan?.status === "active" && Number(loan?.remaining_amount) > 0 && (
+              <Button size="sm" onClick={() => setPayOpen(true)}><DollarSign className="h-4 w-4 me-1" />تسجيل سداد يدوي</Button>
+            )}
+          </DialogTitle>
         </DialogHeader>
         {loan && (
           <div className="grid grid-cols-4 gap-3 text-sm mb-3">
