@@ -19,6 +19,7 @@ import AppLauncher from "./pages/AppLauncher";
 // Finance Pages
 import Accounts from "./pages/finance/Accounts";
 import JournalEntries from "./pages/finance/JournalEntries";
+import HRVouchers from "./pages/finance/HRVouchers";
 import GeneralLedger from "./pages/finance/GeneralLedger";
 import FinancialReports from "./pages/finance/FinancialReports";
 import CashBank from "./pages/finance/CashBank";
