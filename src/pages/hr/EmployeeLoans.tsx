@@ -139,23 +139,14 @@ export default function EmployeeLoans() {
             </div>
             {selectedEmp && (
               <div className="text-xs bg-muted rounded p-2">
-                راتب الموظف الأساسي: <strong>{Number(selectedEmp.basic_salary || 0).toLocaleString()} ر.س</strong> —
-                الحد الأقصى للقسط (⅓ الراتب): <strong className="text-primary">{maxInstallment.toLocaleString()} ر.س</strong>
-                {form.installment_amount > 0 && Number(form.installment_amount) > maxInstallment && (
-                  <div className="text-destructive font-semibold mt-1">⚠ القسط يتجاوز الحد المسموح (نظام العمل السعودي).</div>
-                )}
+                راتب الموظف الأساسي: <strong>{Number(selectedEmp.basic_salary || 0).toLocaleString()}</strong>
               </div>
             )}
             <div><Label>تاريخ البدء</Label><Input type="date" value={form.start_date} onChange={e => setForm({ ...form, start_date: e.target.value })} /></div>
-            <div><Label>حساب الصرف (بنك/صندوق) *</Label>
-              <Select value={form.disbursement_account_id} onValueChange={v => setForm({ ...form, disbursement_account_id: v })}>
-                <SelectTrigger><SelectValue placeholder="من أين يُصرف القرض؟" /></SelectTrigger>
-                <SelectContent>{accounts.map((a:any) => <SelectItem key={a.id} value={a.id}>{a.kind}: {a.name}</SelectItem>)}</SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground mt-1">عند الاعتماد يُنشأ قيد: مدين ذمم القروض / دائن هذا الحساب.</p>
-            </div>
             <div><Label>سبب/غرض القرض *</Label><Textarea value={form.reason} onChange={e => setForm({ ...form, reason: e.target.value })} /></div>
-            <div className="rounded-md bg-muted p-3 text-xs text-muted-foreground">سيتم حفظ القرض كـ <strong>مسودة</strong>، ثم أرسله للاعتماد. لا يمكن خصمه من الراتب حتى يعتمده المدير/الأدمن.</div>
+            <div className="rounded-md bg-muted p-3 text-xs text-muted-foreground">
+              يُحفظ القرض كـ <strong>مسودة</strong>، يُرسل للاعتماد، وبعد موافقة المدير يُنشأ <strong>سند صرف تلقائياً</strong> يظهر للمالية باسم الموظف. لا يُصرف المبلغ إلا بعد ترحيل المالية للسند. لا يتم خصم أقساط من الراتب إلا بعد ترحيل الصرف.
+            </div>
             <div className="flex gap-2 justify-end"><Button variant="outline" onClick={() => setOpen(false)}>إلغاء</Button><Button onClick={save}>حفظ</Button></div>
           </div>
         </DialogContent>
