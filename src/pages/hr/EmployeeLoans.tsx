@@ -19,25 +19,20 @@ export default function EmployeeLoans() {
   const canApprove = hasRole("admin") || hasRole("branch_manager");
   const [data, setData] = useState<any[]>([]);
   const [employees, setEmployees] = useState<any[]>([]);
-  const [accounts, setAccounts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [scheduleFor, setScheduleFor] = useState<any>(null);
-  const empty = { employee_id: "", total_amount: 0, months_count: 12, installment_amount: 0, start_date: new Date().toISOString().slice(0, 10), reason: "", disbursement_account_id: "" };
+  const empty = { employee_id: "", total_amount: 0, months_count: 12, installment_amount: 0, start_date: new Date().toISOString().slice(0, 10), reason: "" };
   const [form, setForm] = useState<any>(empty);
   const selectedEmp = employees.find(e => e.id === form.employee_id);
-  const maxInstallment = selectedEmp ? (Number(selectedEmp.basic_salary || 0) * 0.3333) : 0;
 
   const fetchData = async () => {
     setLoading(true);
-    const [l, e, banks, cash] = await Promise.all([
+    const [l, e] = await Promise.all([
       (supabase.from("hr_loans") as any).select("*, employee:hr_employees(full_name)").eq("loan_type", "loan").order("created_at", { ascending: false }),
       supabase.from("hr_employees").select("id, full_name, basic_salary").eq("is_active", true),
-      supabase.from("bank_accounts").select("id, name").eq("is_active", true),
-      supabase.from("cash_boxes").select("id, name").eq("is_active", true),
     ]);
     if (l.data) setData(l.data); if (e.data) setEmployees(e.data);
-    setAccounts([...(banks.data || []).map((b:any)=>({...b, kind:"بنك"})), ...(cash.data || []).map((c:any)=>({...c, kind:"صندوق"}))]);
     setLoading(false);
   };
   useEffect(() => { fetchData(); }, []);
@@ -60,7 +55,6 @@ export default function EmployeeLoans() {
       manager_approval_required: true,
       loan_number: `LOAN-${String((count || 0) + 1).padStart(5, "0")}`,
       status: "draft",
-      disbursement_account_id: form.disbursement_account_id || null,
     };
     const r = await (supabase.from("hr_loans") as any).insert(payload);
     if (r.error) toast.error(r.error.message); else { toast.success("تم حفظ القرض كمسودة"); setOpen(false); fetchData(); setForm(empty); }
@@ -72,7 +66,7 @@ export default function EmployeeLoans() {
   };
   const approve = async (id: string) => {
     const r = await (supabase as any).rpc("approve_loan", { _loan_id: id });
-    if (r.error) toast.error(r.error.message); else { toast.success("تم اعتماد القرض وإنشاء جدول السداد"); fetchData(); }
+    if (r.error) toast.error(r.error.message); else { toast.success("تم الاعتماد. أُرسل سند صرف للمالية"); fetchData(); }
   };
   const reject = async (id: string) => {
     const reason = prompt("سبب الرفض؟") || "";
@@ -81,10 +75,18 @@ export default function EmployeeLoans() {
   };
 
   const statusBadge = (s: string) => {
-    const m: any = { draft: ["مسودة", "secondary"], pending_approval: ["بانتظار الاعتماد", "outline"], active: ["نشط", "default"], completed: ["مكتمل", "outline"], cancelled: ["مرفوض/ملغى", "destructive"] };
+    const m: any = {
+      draft: ["مسودة", "secondary"],
+      pending_approval: ["بانتظار الاعتماد", "outline"],
+      pending_disbursement: ["بانتظار صرف المالية", "outline"],
+      active: ["نشط (تم الصرف)", "default"],
+      completed: ["مكتمل", "outline"],
+      cancelled: ["مرفوض/ملغى", "destructive"],
+    };
     const [l, v] = m[s] || [s, "secondary"];
     return <Badge variant={v as any}>{l}</Badge>;
   };
+
 
   return (
     <div>
