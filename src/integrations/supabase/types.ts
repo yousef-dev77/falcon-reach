@@ -2280,6 +2280,107 @@ export type Database = {
           },
         ]
       }
+      hr_payment_vouchers: {
+        Row: {
+          amount: number
+          branch_id: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          disbursement_account_id: string | null
+          disbursement_kind: string | null
+          employee_id: string
+          id: string
+          journal_entry_id: string | null
+          loan_id: string | null
+          posted_at: string | null
+          posted_by: string | null
+          rejected_at: string | null
+          rejected_by: string | null
+          rejection_reason: string | null
+          status: string
+          updated_at: string
+          voucher_date: string
+          voucher_number: string
+          voucher_type: string
+        }
+        Insert: {
+          amount: number
+          branch_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          disbursement_account_id?: string | null
+          disbursement_kind?: string | null
+          employee_id: string
+          id?: string
+          journal_entry_id?: string | null
+          loan_id?: string | null
+          posted_at?: string | null
+          posted_by?: string | null
+          rejected_at?: string | null
+          rejected_by?: string | null
+          rejection_reason?: string | null
+          status?: string
+          updated_at?: string
+          voucher_date?: string
+          voucher_number: string
+          voucher_type?: string
+        }
+        Update: {
+          amount?: number
+          branch_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          disbursement_account_id?: string | null
+          disbursement_kind?: string | null
+          employee_id?: string
+          id?: string
+          journal_entry_id?: string | null
+          loan_id?: string | null
+          posted_at?: string | null
+          posted_by?: string | null
+          rejected_at?: string | null
+          rejected_by?: string | null
+          rejection_reason?: string | null
+          status?: string
+          updated_at?: string
+          voucher_date?: string
+          voucher_number?: string
+          voucher_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_payment_vouchers_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_payment_vouchers_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "hr_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_payment_vouchers_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_payment_vouchers_loan_id_fkey"
+            columns: ["loan_id"]
+            isOneToOne: false
+            referencedRelation: "hr_loans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hr_payroll_runs: {
         Row: {
           branch_id: string | null
@@ -5603,6 +5704,14 @@ export type Database = {
       }
       post_delivery_note: { Args: { _dn_id: string }; Returns: undefined }
       post_goods_receipt: { Args: { _grn_id: string }; Returns: undefined }
+      post_hr_voucher: {
+        Args: {
+          _bank_account_id?: string
+          _cash_box_id?: string
+          _voucher_id: string
+        }
+        Returns: string
+      }
       post_landed_cost: { Args: { _lc_id: string }; Returns: undefined }
       post_payroll_run: { Args: { _run_id: string }; Returns: string }
       reclose_fiscal_period: {
@@ -5618,6 +5727,10 @@ export type Database = {
           _payment_date?: string
         }
         Returns: string
+      }
+      reject_hr_voucher: {
+        Args: { _reason: string; _voucher_id: string }
+        Returns: undefined
       }
       reject_loan: {
         Args: { _loan_id: string; _reason: string }
@@ -5704,6 +5817,7 @@ export type Database = {
         | "completed"
         | "cancelled"
         | "pending_approval"
+        | "pending_disbursement"
       payment_method: "cash" | "bank_transfer" | "check" | "credit_card"
       payroll_status: "draft" | "calculated" | "posted" | "cancelled"
       po_status:
@@ -5916,6 +6030,7 @@ export const Constants = {
         "completed",
         "cancelled",
         "pending_approval",
+        "pending_disbursement",
       ],
       payment_method: ["cash", "bank_transfer", "check", "credit_card"],
       payroll_status: ["draft", "calculated", "posted", "cancelled"],

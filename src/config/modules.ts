@@ -42,6 +42,7 @@ export const MODULES: ModuleDefinition[] = [
     items: [
       { title: "شجرة الحسابات", url: "/finance/accounts", icon: Layers },
       { title: "القيود اليومية", url: "/finance/journal-entries", icon: FileText },
+      { title: "سندات صرف HR", url: "/finance/hr-vouchers", icon: FileText },
       { title: "أنواع القيود", url: "/finance/journal-types", icon: FileText },
       { title: "الأستاذ العام", url: "/finance/general-ledger", icon: Receipt },
       { title: "دفتر الأستاذ المساعد", url: "/finance/sub-ledger", icon: Receipt },
