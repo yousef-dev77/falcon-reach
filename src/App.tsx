@@ -135,6 +135,7 @@ const App = () => (
               {/* Finance Routes - Admin + Branch Manager + Accountant */}
               <Route path="/finance/accounts" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'accountant']}><DashboardLayout><Accounts /></DashboardLayout></AdminRoute>} />
               <Route path="/finance/journal-entries" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'accountant']}><DashboardLayout><JournalEntries /></DashboardLayout></AdminRoute>} />
+              <Route path="/finance/hr-vouchers" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'accountant']}><DashboardLayout><HRVouchers /></DashboardLayout></AdminRoute>} />
               <Route path="/finance/general-ledger" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'accountant']}><DashboardLayout><GeneralLedger /></DashboardLayout></AdminRoute>} />
               <Route path="/finance/reports" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'accountant']}><DashboardLayout><FinancialReports /></DashboardLayout></AdminRoute>} />
               <Route path="/finance/cash-bank" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'accountant']}><DashboardLayout><CashBank /></DashboardLayout></AdminRoute>} />
