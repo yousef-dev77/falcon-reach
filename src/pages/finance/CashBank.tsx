@@ -260,7 +260,7 @@ export default function CashBank() {
             <h3 className="text-lg font-semibold">قائمة الصناديق</h3>
             <Dialog open={openCashDialog} onOpenChange={setOpenCashDialog}>
               <DialogTrigger asChild>
-                <Button onClick={() => setEditingCash(null)}>
+                <Button onClick={() => { setEditingCash(null); setCashAccountId(""); }}>
                   <Plus className="ml-2 h-4 w-4" />
                   إضافة صندوق
                 </Button>
@@ -280,6 +280,24 @@ export default function CashBank() {
                   <div>
                     <Label htmlFor="name">اسم الصندوق</Label>
                     <Input id="name" name="name" defaultValue={editingCash?.name} required />
+                  </div>
+                  <div>
+                    <Label>الحساب في الدليل المحاسبي *</Label>
+                    <Select value={cashAccountId} onValueChange={setCashAccountId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="اختر حساب الصندوق..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {postableAccounts.map((acc: any) => (
+                          <SelectItem key={acc.id} value={acc.id}>
+                            {acc.code} - {acc.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      هذا الحساب هو الذي يتم الترحيل إليه في القيود (سندات الصرف، القبض، الرواتب...)
+                    </p>
                   </div>
                   <div>
                     <Label htmlFor="opening_balance">الرصيد الافتتاحي</Label>
