@@ -52,6 +52,14 @@ export default function CashBank() {
   const [editingBank, setEditingBank] = useState<any>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleteType, setDeleteType] = useState<'cash' | 'bank' | null>(null);
+  const [cashAccountId, setCashAccountId] = useState<string>("");
+  const [bankGlAccountId, setBankGlAccountId] = useState<string>("");
+  const { data: postableAccounts = [] } = usePostableAccounts();
+
+  const accountLabel = (id?: string | null) => {
+    const acc = postableAccounts.find((a: any) => a.id === id);
+    return acc ? `${acc.code} - ${acc.name}` : null;
+  };
 
   // Fetch cash boxes
   const { data: cashBoxes = [], isLoading: loadingCash } = useQuery({
