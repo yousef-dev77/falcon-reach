@@ -166,10 +166,15 @@ export default function CashBank() {
 
   const handleCashSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!cashAccountId) {
+      toast.error('يجب ربط الصندوق بحساب من الدليل المحاسبي');
+      return;
+    }
     const formData = new FormData(e.currentTarget);
     const values = {
       code: formData.get('code') as string,
       name: formData.get('name') as string,
+      account_id: cashAccountId,
       opening_balance: parseFloat(formData.get('opening_balance') as string) || 0,
       current_balance: parseFloat(formData.get('current_balance') as string) || 0,
     };
@@ -178,11 +183,16 @@ export default function CashBank() {
 
   const handleBankSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!bankGlAccountId) {
+      toast.error('يجب ربط الحساب البنكي بحساب من الدليل المحاسبي');
+      return;
+    }
     const formData = new FormData(e.currentTarget);
     const values = {
       code: formData.get('code') as string,
       bank_name: formData.get('bank_name') as string,
       account_number: formData.get('account_number') as string,
+      account_id: bankGlAccountId,
       opening_balance: parseFloat(formData.get('opening_balance') as string) || 0,
       current_balance: parseFloat(formData.get('current_balance') as string) || 0,
     };
