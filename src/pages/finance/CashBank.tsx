@@ -336,6 +336,7 @@ export default function CashBank() {
                   <TableRow>
                     <TableHead>الرمز</TableHead>
                     <TableHead>اسم الصندوق</TableHead>
+                    <TableHead>الحساب المحاسبي</TableHead>
                     <TableHead>الرصيد الحالي</TableHead>
                     <TableHead>الحالة</TableHead>
                     <TableHead>الإجراءات</TableHead>
@@ -344,13 +345,13 @@ export default function CashBank() {
                 <TableBody>
                   {loadingCash ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center py-8">
+                      <TableCell colSpan={6} className="text-center py-8">
                         جاري التحميل...
                       </TableCell>
                     </TableRow>
                   ) : cashBoxes.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                         لا توجد صناديق نقدية. قم بإضافة صندوق جديد.
                       </TableCell>
                     </TableRow>
@@ -359,6 +360,11 @@ export default function CashBank() {
                       <TableRow key={box.id}>
                         <TableCell>{box.code}</TableCell>
                         <TableCell>{box.name}</TableCell>
+                        <TableCell>
+                          {accountLabel((box as any).account_id) ?? (
+                            <span className="text-destructive text-xs">غير مربوط</span>
+                          )}
+                        </TableCell>
                         <TableCell>{box.current_balance?.toLocaleString()} ر.س</TableCell>
                         <TableCell>
                           <span className={box.is_active ? "text-green-600" : "text-red-600"}>
@@ -372,6 +378,7 @@ export default function CashBank() {
                               size="icon"
                               onClick={() => {
                                 setEditingCash(box);
+                                setCashAccountId(((box as any).account_id as string) || "");
                                 setOpenCashDialog(true);
                               }}
                             >
