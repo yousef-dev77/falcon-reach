@@ -491,6 +491,7 @@ export default function CashBank() {
                     <TableHead>الرمز</TableHead>
                     <TableHead>اسم البنك</TableHead>
                     <TableHead>رقم الحساب</TableHead>
+                    <TableHead>الحساب المحاسبي</TableHead>
                     <TableHead>الرصيد الحالي</TableHead>
                     <TableHead>الحالة</TableHead>
                     <TableHead>الإجراءات</TableHead>
@@ -499,13 +500,13 @@ export default function CashBank() {
                 <TableBody>
                   {loadingBank ? (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8">
+                      <TableCell colSpan={7} className="text-center py-8">
                         جاري التحميل...
                       </TableCell>
                     </TableRow>
                   ) : bankAccounts.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                         لا توجد حسابات بنكية. قم بإضافة حساب جديد.
                       </TableCell>
                     </TableRow>
@@ -515,6 +516,11 @@ export default function CashBank() {
                         <TableCell>{account.code}</TableCell>
                         <TableCell>{account.bank_name}</TableCell>
                         <TableCell>{account.account_number}</TableCell>
+                        <TableCell>
+                          {accountLabel((account as any).account_id) ?? (
+                            <span className="text-destructive text-xs">غير مربوط</span>
+                          )}
+                        </TableCell>
                         <TableCell>{account.current_balance?.toLocaleString()} ر.س</TableCell>
                         <TableCell>
                           <span className={account.is_active ? "text-green-600" : "text-red-600"}>
@@ -528,6 +534,7 @@ export default function CashBank() {
                               size="icon"
                               onClick={() => {
                                 setEditingBank(account);
+                                setBankGlAccountId(((account as any).account_id as string) || "");
                                 setOpenBankDialog(true);
                               }}
                             >
