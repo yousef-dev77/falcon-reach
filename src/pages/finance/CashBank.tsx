@@ -18,6 +18,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { usePostableAccounts } from "@/hooks/useSystemSettings";
+import {
   Table,
   TableBody,
   TableCell,
@@ -44,6 +52,14 @@ export default function CashBank() {
   const [editingBank, setEditingBank] = useState<any>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleteType, setDeleteType] = useState<'cash' | 'bank' | null>(null);
+  const [cashAccountId, setCashAccountId] = useState<string>("");
+  const [bankGlAccountId, setBankGlAccountId] = useState<string>("");
+  const { data: postableAccounts = [] } = usePostableAccounts();
+
+  const accountLabel = (id?: string | null) => {
+    const acc = postableAccounts.find((a: any) => a.id === id);
+    return acc ? `${acc.code} - ${acc.name}` : null;
+  };
 
   // Fetch cash boxes
   const { data: cashBoxes = [], isLoading: loadingCash } = useQuery({
@@ -150,10 +166,15 @@ export default function CashBank() {
 
   const handleCashSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!cashAccountId) {
+      toast.error('يجب ربط الصندوق بحساب من الدليل المحاسبي');
+      return;
+    }
     const formData = new FormData(e.currentTarget);
     const values = {
       code: formData.get('code') as string,
       name: formData.get('name') as string,
+      account_id: cashAccountId,
       opening_balance: parseFloat(formData.get('opening_balance') as string) || 0,
       current_balance: parseFloat(formData.get('current_balance') as string) || 0,
     };
@@ -162,11 +183,16 @@ export default function CashBank() {
 
   const handleBankSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!bankGlAccountId) {
+      toast.error('يجب ربط الحساب البنكي بحساب من الدليل المحاسبي');
+      return;
+    }
     const formData = new FormData(e.currentTarget);
     const values = {
       code: formData.get('code') as string,
       bank_name: formData.get('bank_name') as string,
       account_number: formData.get('account_number') as string,
+      account_id: bankGlAccountId,
       opening_balance: parseFloat(formData.get('opening_balance') as string) || 0,
       current_balance: parseFloat(formData.get('current_balance') as string) || 0,
     };
@@ -234,7 +260,7 @@ export default function CashBank() {
             <h3 className="text-lg font-semibold">قائمة الصناديق</h3>
             <Dialog open={openCashDialog} onOpenChange={setOpenCashDialog}>
               <DialogTrigger asChild>
-                <Button onClick={() => setEditingCash(null)}>
+                <Button onClick={() => { setEditingCash(null); setCashAccountId(""); }}>
                   <Plus className="ml-2 h-4 w-4" />
                   إضافة صندوق
                 </Button>
@@ -254,6 +280,24 @@ export default function CashBank() {
                   <div>
                     <Label htmlFor="name">اسم الصندوق</Label>
                     <Input id="name" name="name" defaultValue={editingCash?.name} required />
+                  </div>
+                  <div>
+                    <Label>الحساب في الدليل المحاسبي *</Label>
+                    <Select value={cashAccountId} onValueChange={setCashAccountId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="اختر حساب الصندوق..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {postableAccounts.map((acc: any) => (
+                          <SelectItem key={acc.id} value={acc.id}>
+                            {acc.code} - {acc.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      هذا الحساب هو الذي يتم الترحيل إليه في القيود (سندات الصرف، القبض، الرواتب...)
+                    </p>
                   </div>
                   <div>
                     <Label htmlFor="opening_balance">الرصيد الافتتاحي</Label>
@@ -292,6 +336,7 @@ export default function CashBank() {
                   <TableRow>
                     <TableHead>الرمز</TableHead>
                     <TableHead>اسم الصندوق</TableHead>
+                    <TableHead>الحساب المحاسبي</TableHead>
                     <TableHead>الرصيد الحالي</TableHead>
                     <TableHead>الحالة</TableHead>
                     <TableHead>الإجراءات</TableHead>
@@ -300,13 +345,13 @@ export default function CashBank() {
                 <TableBody>
                   {loadingCash ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center py-8">
+                      <TableCell colSpan={6} className="text-center py-8">
                         جاري التحميل...
                       </TableCell>
                     </TableRow>
                   ) : cashBoxes.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                         لا توجد صناديق نقدية. قم بإضافة صندوق جديد.
                       </TableCell>
                     </TableRow>
@@ -315,6 +360,11 @@ export default function CashBank() {
                       <TableRow key={box.id}>
                         <TableCell>{box.code}</TableCell>
                         <TableCell>{box.name}</TableCell>
+                        <TableCell>
+                          {accountLabel((box as any).account_id) ?? (
+                            <span className="text-destructive text-xs">غير مربوط</span>
+                          )}
+                        </TableCell>
                         <TableCell>{box.current_balance?.toLocaleString()} ر.س</TableCell>
                         <TableCell>
                           <span className={box.is_active ? "text-green-600" : "text-red-600"}>
@@ -328,6 +378,7 @@ export default function CashBank() {
                               size="icon"
                               onClick={() => {
                                 setEditingCash(box);
+                                setCashAccountId(((box as any).account_id as string) || "");
                                 setOpenCashDialog(true);
                               }}
                             >
@@ -359,7 +410,7 @@ export default function CashBank() {
             <h3 className="text-lg font-semibold">قائمة الحسابات البنكية</h3>
             <Dialog open={openBankDialog} onOpenChange={setOpenBankDialog}>
               <DialogTrigger asChild>
-                <Button onClick={() => setEditingBank(null)}>
+                <Button onClick={() => { setEditingBank(null); setBankGlAccountId(""); }}>
                   <Plus className="ml-2 h-4 w-4" />
                   إضافة حساب بنكي
                 </Button>
@@ -383,6 +434,24 @@ export default function CashBank() {
                   <div>
                     <Label htmlFor="account_number">رقم الحساب</Label>
                     <Input id="account_number" name="account_number" defaultValue={editingBank?.account_number} required />
+                  </div>
+                  <div>
+                    <Label>الحساب في الدليل المحاسبي *</Label>
+                    <Select value={bankGlAccountId} onValueChange={setBankGlAccountId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="اختر حساب البنك..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {postableAccounts.map((acc: any) => (
+                          <SelectItem key={acc.id} value={acc.id}>
+                            {acc.code} - {acc.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      هذا الحساب هو الذي يتم الترحيل إليه في القيود (سندات الصرف، القبض، الرواتب...)
+                    </p>
                   </div>
                   <div>
                     <Label htmlFor="bank_opening_balance">الرصيد الافتتاحي</Label>
@@ -422,6 +491,7 @@ export default function CashBank() {
                     <TableHead>الرمز</TableHead>
                     <TableHead>اسم البنك</TableHead>
                     <TableHead>رقم الحساب</TableHead>
+                    <TableHead>الحساب المحاسبي</TableHead>
                     <TableHead>الرصيد الحالي</TableHead>
                     <TableHead>الحالة</TableHead>
                     <TableHead>الإجراءات</TableHead>
@@ -430,13 +500,13 @@ export default function CashBank() {
                 <TableBody>
                   {loadingBank ? (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8">
+                      <TableCell colSpan={7} className="text-center py-8">
                         جاري التحميل...
                       </TableCell>
                     </TableRow>
                   ) : bankAccounts.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                         لا توجد حسابات بنكية. قم بإضافة حساب جديد.
                       </TableCell>
                     </TableRow>
@@ -446,6 +516,11 @@ export default function CashBank() {
                         <TableCell>{account.code}</TableCell>
                         <TableCell>{account.bank_name}</TableCell>
                         <TableCell>{account.account_number}</TableCell>
+                        <TableCell>
+                          {accountLabel((account as any).account_id) ?? (
+                            <span className="text-destructive text-xs">غير مربوط</span>
+                          )}
+                        </TableCell>
                         <TableCell>{account.current_balance?.toLocaleString()} ر.س</TableCell>
                         <TableCell>
                           <span className={account.is_active ? "text-green-600" : "text-red-600"}>
@@ -459,6 +534,7 @@ export default function CashBank() {
                               size="icon"
                               onClick={() => {
                                 setEditingBank(account);
+                                setBankGlAccountId(((account as any).account_id as string) || "");
                                 setOpenBankDialog(true);
                               }}
                             >
