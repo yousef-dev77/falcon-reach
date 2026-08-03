@@ -410,7 +410,7 @@ export default function CashBank() {
             <h3 className="text-lg font-semibold">قائمة الحسابات البنكية</h3>
             <Dialog open={openBankDialog} onOpenChange={setOpenBankDialog}>
               <DialogTrigger asChild>
-                <Button onClick={() => setEditingBank(null)}>
+                <Button onClick={() => { setEditingBank(null); setBankGlAccountId(""); }}>
                   <Plus className="ml-2 h-4 w-4" />
                   إضافة حساب بنكي
                 </Button>
@@ -434,6 +434,24 @@ export default function CashBank() {
                   <div>
                     <Label htmlFor="account_number">رقم الحساب</Label>
                     <Input id="account_number" name="account_number" defaultValue={editingBank?.account_number} required />
+                  </div>
+                  <div>
+                    <Label>الحساب في الدليل المحاسبي *</Label>
+                    <Select value={bankGlAccountId} onValueChange={setBankGlAccountId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="اختر حساب البنك..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {postableAccounts.map((acc: any) => (
+                          <SelectItem key={acc.id} value={acc.id}>
+                            {acc.code} - {acc.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      هذا الحساب هو الذي يتم الترحيل إليه في القيود (سندات الصرف، القبض، الرواتب...)
+                    </p>
                   </div>
                   <div>
                     <Label htmlFor="bank_opening_balance">الرصيد الافتتاحي</Label>
