@@ -79,6 +79,9 @@ import Users from "./pages/settings/Users";
 import Branches from "./pages/settings/Branches";
 import GeneralSettings from "./pages/settings/GeneralSettings";
 import SystemLogs from "./pages/settings/SystemLogs";
+import UserTypes from "./pages/settings/UserTypes";
+import UserGroups from "./pages/settings/UserGroups";
+import AccessPolicies from "./pages/settings/AccessPolicies";
 import SetupWizard from "./pages/SetupWizard";
 
 // POS
@@ -193,6 +196,9 @@ const App = () => (
               {/* Settings Routes - Admin + Branch Manager (for Users) */}
               <Route path="/settings/general" element={<AdminRoute allowedRoles={['admin']}><DashboardLayout><GeneralSettings /></DashboardLayout></AdminRoute>} />
               <Route path="/settings/users" element={<AdminRoute allowedRoles={['admin', 'branch_manager']}><DashboardLayout><Users /></DashboardLayout></AdminRoute>} />
+              <Route path="/settings/user-types" element={<AdminRoute allowedRoles={['admin']}><DashboardLayout><UserTypes /></DashboardLayout></AdminRoute>} />
+              <Route path="/settings/user-groups" element={<AdminRoute allowedRoles={['admin']}><DashboardLayout><UserGroups /></DashboardLayout></AdminRoute>} />
+              <Route path="/settings/access-policies" element={<AdminRoute allowedRoles={['admin']}><DashboardLayout><AccessPolicies /></DashboardLayout></AdminRoute>} />
               <Route path="/settings/branches" element={<AdminRoute allowedRoles={['admin']}><DashboardLayout><Branches /></DashboardLayout></AdminRoute>} />
               <Route path="/settings/logs" element={<AdminRoute allowedRoles={['admin']}><DashboardLayout><SystemLogs /></DashboardLayout></AdminRoute>} />
 

@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,6 +13,9 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { PermissionMatrix } from "@/components/settings/PermissionMatrix";
+import { toast } from "@/hooks/use-toast";
 import { Plus, Edit, Shield, Building2, UserCheck, Users, Crown, Package, Filter, Calculator } from "lucide-react";
 import { UserFormDialog } from "@/components/settings/UserFormDialog";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -43,6 +46,8 @@ export default function UsersPage() {
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [branchFilter, setBranchFilter] = useState<string>("all");
+  const [permUser, setPermUser] = useState<any>(null);
+  const queryClient = useQueryClient();
 
   const { userRoles, userBranches, isAdmin, isLoading: permissionsLoading } = usePermissions();
   
@@ -62,6 +67,33 @@ export default function UsersPage() {
       return data;
     },
   });
+
+  const { data: userTypes = [] } = useQuery({
+    queryKey: ['user-types'],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from('user_types')
+        .select('id, name, code')
+        .eq('is_active', true)
+        .order('name');
+      if (error) throw error;
+      return data as { id: string; name: string; code: string }[];
+    },
+  });
+
+  const changeUserType = async (userId: string, userTypeId: string) => {
+    const { error } = await (supabase as any)
+      .from('profiles')
+      .update({ user_type_id: userTypeId })
+      .eq('id', userId);
+    if (error) {
+      toast({ title: "خطأ", description: error.message, variant: "destructive" });
+      return;
+    }
+    await queryClient.invalidateQueries({ queryKey: ['all-users'] });
+    await queryClient.invalidateQueries({ queryKey: ['effective-screen-permissions'] });
+    toast({ title: "تم تحديث نوع المستخدم" });
+  };
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ['all-users'],
@@ -279,6 +311,7 @@ export default function UsersPage() {
                   <TableHead>المستخدم</TableHead>
                   <TableHead>البريد الإلكتروني</TableHead>
                   <TableHead>الدور</TableHead>
+                  <TableHead>نوع المستخدم</TableHead>
                   <TableHead>الفروع</TableHead>
                   <TableHead>النطاق</TableHead>
                   <TableHead className="text-left">إجراءات</TableHead>
@@ -314,6 +347,21 @@ export default function UsersPage() {
                         <Badge className={roleInfo.color}>
                           {roleInfo.label}
                         </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Select
+                          value={user.user_type_id || ""}
+                          onValueChange={(v) => changeUserType(user.id, v)}
+                        >
+                          <SelectTrigger className="h-8 w-40">
+                            <SelectValue placeholder="غير محدد" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {userTypes.map((t) => (
+                              <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </TableCell>
                       <TableCell>
                         {isGlobal ? (
@@ -353,13 +401,23 @@ export default function UsersPage() {
                         )}
                       </TableCell>
                       <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEditUser(user)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
+                        <div className="flex gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="gap-1"
+                            onClick={() => setPermUser(user)}
+                          >
+                            <Shield className="h-4 w-4" /> صلاحيات خاصة
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditUser(user)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   );
@@ -369,6 +427,18 @@ export default function UsersPage() {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={!!permUser} onOpenChange={(o) => !o && setPermUser(null)}>
+        <DialogContent className="max-w-5xl">
+          <DialogHeader>
+            <DialogTitle>صلاحيات خاصة للمستخدم: {permUser?.full_name}</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            هذه الصلاحيات تُضاف فوق صلاحيات نوع المستخدم والمجموعات (تتجمع ولا تُلغيها). لمنع صلاحية استخدم سياسات الوصول.
+          </p>
+          {permUser && <PermissionMatrix subjectType="user" subjectId={permUser.id} />}
+        </DialogContent>
+      </Dialog>
 
       <UserFormDialog 
         open={isDialogOpen} 

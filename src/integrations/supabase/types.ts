@@ -14,6 +14,62 @@ export type Database = {
   }
   public: {
     Tables: {
+      access_policies: {
+        Row: {
+          action: string
+          created_at: string
+          description: string | null
+          effect: Database["public"]["Enums"]["policy_effect"]
+          id: string
+          is_active: boolean
+          name: string
+          priority: number
+          relation: string | null
+          screen_id: string | null
+          subject_id: string
+          subject_type: Database["public"]["Enums"]["perm_subject_type"]
+          updated_at: string
+        }
+        Insert: {
+          action?: string
+          created_at?: string
+          description?: string | null
+          effect?: Database["public"]["Enums"]["policy_effect"]
+          id?: string
+          is_active?: boolean
+          name: string
+          priority?: number
+          relation?: string | null
+          screen_id?: string | null
+          subject_id: string
+          subject_type: Database["public"]["Enums"]["perm_subject_type"]
+          updated_at?: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          description?: string | null
+          effect?: Database["public"]["Enums"]["policy_effect"]
+          id?: string
+          is_active?: boolean
+          name?: string
+          priority?: number
+          relation?: string | null
+          screen_id?: string | null
+          subject_id?: string
+          subject_type?: Database["public"]["Enums"]["perm_subject_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "access_policies_screen_id_fkey"
+            columns: ["screen_id"]
+            isOneToOne: false
+            referencedRelation: "app_screens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       accounts: {
         Row: {
           account_group: string | null
@@ -88,6 +144,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      app_screens: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          is_active: boolean
+          module: string
+          name: string
+          route: string
+          sort_order: number
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          module: string
+          name: string
+          route: string
+          sort_order?: number
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          module?: string
+          name?: string
+          route?: string
+          sort_order?: number
+        }
+        Relationships: []
       }
       asset_depreciation_schedule: {
         Row: {
@@ -4132,6 +4221,7 @@ export type Database = {
           phone: string | null
           pin_hash: string | null
           updated_at: string
+          user_type_id: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -4144,6 +4234,7 @@ export type Database = {
           phone?: string | null
           pin_hash?: string | null
           updated_at?: string
+          user_type_id?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -4156,8 +4247,17 @@ export type Database = {
           phone?: string | null
           pin_hash?: string | null
           updated_at?: string
+          user_type_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_user_type_id_fkey"
+            columns: ["user_type_id"]
+            isOneToOne: false
+            referencedRelation: "user_types"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       purchase_invoice_lines: {
         Row: {
@@ -4745,6 +4845,33 @@ export type Database = {
         }
         Relationships: []
       }
+      resource_relations: {
+        Row: {
+          created_at: string
+          id: string
+          relation: string
+          resource_id: string
+          resource_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          relation: string
+          resource_id: string
+          resource_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          relation?: string
+          resource_id?: string
+          resource_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       role_permissions: {
         Row: {
           created_at: string
@@ -5158,6 +5285,65 @@ export type Database = {
         }
         Relationships: []
       }
+      screen_permissions: {
+        Row: {
+          can_approve: boolean
+          can_create: boolean
+          can_delete: boolean
+          can_edit: boolean
+          can_export: boolean
+          can_post: boolean
+          can_view: boolean
+          created_at: string
+          id: string
+          scope: Database["public"]["Enums"]["access_scope"]
+          screen_id: string
+          subject_id: string
+          subject_type: Database["public"]["Enums"]["perm_subject_type"]
+          updated_at: string
+        }
+        Insert: {
+          can_approve?: boolean
+          can_create?: boolean
+          can_delete?: boolean
+          can_edit?: boolean
+          can_export?: boolean
+          can_post?: boolean
+          can_view?: boolean
+          created_at?: string
+          id?: string
+          scope?: Database["public"]["Enums"]["access_scope"]
+          screen_id: string
+          subject_id: string
+          subject_type: Database["public"]["Enums"]["perm_subject_type"]
+          updated_at?: string
+        }
+        Update: {
+          can_approve?: boolean
+          can_create?: boolean
+          can_delete?: boolean
+          can_edit?: boolean
+          can_export?: boolean
+          can_post?: boolean
+          can_view?: boolean
+          created_at?: string
+          id?: string
+          scope?: Database["public"]["Enums"]["access_scope"]
+          screen_id?: string
+          subject_id?: string
+          subject_type?: Database["public"]["Enums"]["perm_subject_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "screen_permissions_screen_id_fkey"
+            columns: ["screen_id"]
+            isOneToOne: false
+            referencedRelation: "app_screens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       suppliers: {
         Row: {
           account_id: string | null
@@ -5352,6 +5538,76 @@ export type Database = {
           },
         ]
       }
+      user_group_members: {
+        Row: {
+          created_at: string
+          group_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          group_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          group_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_group_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "user_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_groups: {
+        Row: {
+          branch_id: string | null
+          code: string
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          branch_id?: string | null
+          code: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          branch_id?: string | null
+          code?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_groups_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_permissions: {
         Row: {
           branch_id: string | null
@@ -5435,6 +5691,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_types: {
+        Row: {
+          code: string
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          is_system: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          is_system?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          is_system?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       warehouses: {
         Row: {
@@ -5642,6 +5931,23 @@ export type Database = {
         Returns: number
       }
       generate_loan_schedule: { Args: { _loan_id: string }; Returns: undefined }
+      get_effective_screen_permissions: {
+        Args: { _user_id: string }
+        Returns: {
+          can_approve: boolean
+          can_create: boolean
+          can_delete: boolean
+          can_edit: boolean
+          can_export: boolean
+          can_post: boolean
+          can_view: boolean
+          module: string
+          route: string
+          scope: Database["public"]["Enums"]["access_scope"]
+          screen_code: string
+          screen_name: string
+        }[]
+      }
       get_expiring_documents: {
         Args: { _days_ahead?: number }
         Returns: {
@@ -5682,11 +5988,24 @@ export type Database = {
         }
         Returns: boolean
       }
+      has_relation: {
+        Args: {
+          _relation: string
+          _resource_id: string
+          _resource_type: string
+          _user_id: string
+        }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      has_screen_access: {
+        Args: { _action?: string; _screen_code: string; _user_id: string }
         Returns: boolean
       }
       hr_dashboard_kpis: { Args: { _branch_id?: string }; Returns: Json }
@@ -5763,6 +6082,7 @@ export type Database = {
       }
     }
     Enums: {
+      access_scope: "all" | "branch" | "department" | "own"
       account_type: "asset" | "liability" | "equity" | "revenue" | "expense"
       app_role:
         | "admin"
@@ -5820,6 +6140,7 @@ export type Database = {
         | "pending_disbursement"
       payment_method: "cash" | "bank_transfer" | "check" | "credit_card"
       payroll_status: "draft" | "calculated" | "posted" | "cancelled"
+      perm_subject_type: "user_type" | "group" | "user"
       po_status:
         | "draft"
         | "confirmed"
@@ -5827,6 +6148,7 @@ export type Database = {
         | "received"
         | "cancelled"
         | "closed"
+      policy_effect: "allow" | "deny"
       pos_order_status: "draft" | "paid" | "invoiced" | "cancelled"
       pos_payment_method: "cash" | "card" | "transfer" | "credit"
       pos_session_status: "opened" | "closing" | "closed"
@@ -5970,6 +6292,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      access_scope: ["all", "branch", "department", "own"],
       account_type: ["asset", "liability", "equity", "revenue", "expense"],
       app_role: [
         "admin",
@@ -6034,6 +6357,7 @@ export const Constants = {
       ],
       payment_method: ["cash", "bank_transfer", "check", "credit_card"],
       payroll_status: ["draft", "calculated", "posted", "cancelled"],
+      perm_subject_type: ["user_type", "group", "user"],
       po_status: [
         "draft",
         "confirmed",
@@ -6042,6 +6366,7 @@ export const Constants = {
         "cancelled",
         "closed",
       ],
+      policy_effect: ["allow", "deny"],
       pos_order_status: ["draft", "paid", "invoiced", "cancelled"],
       pos_payment_method: ["cash", "card", "transfer", "credit"],
       pos_session_status: ["opened", "closing", "closed"],

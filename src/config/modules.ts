@@ -210,6 +210,9 @@ export const MODULES: ModuleDefinition[] = [
     installable: false,
     items: [
       { title: "المستخدمين والصلاحيات", url: "/settings/users", icon: UserCog },
+      { title: "أنواع المستخدمين", url: "/settings/user-types", icon: UserCog },
+      { title: "مجموعات المستخدمين", url: "/settings/user-groups", icon: Users },
+      { title: "سياسات الوصول", url: "/settings/access-policies", icon: Target },
       { title: "الفروع", url: "/settings/branches", icon: MapPin },
       { title: "الإعدادات العامة", url: "/settings/general", icon: Settings },
       { title: "سجلات النظام", url: "/settings/logs", icon: Clock },
