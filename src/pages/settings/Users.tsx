@@ -428,17 +428,8 @@ export default function UsersPage() {
         </CardContent>
       </Card>
 
-      <Dialog open={!!permUser} onOpenChange={(o) => !o && setPermUser(null)}>
-        <DialogContent className="max-w-5xl">
-          <DialogHeader>
-            <DialogTitle>صلاحيات خاصة للمستخدم: {permUser?.full_name}</DialogTitle>
-          </DialogHeader>
-          <p className="text-sm text-muted-foreground">
-            هذه الصلاحيات تُضاف فوق صلاحيات نوع المستخدم والمجموعات (تتجمع ولا تُلغيها). لمنع صلاحية استخدم سياسات الوصول.
-          </p>
-          {permUser && <PermissionMatrix subjectType="user" subjectId={permUser.id} />}
-        </DialogContent>
-      </Dialog>
+
+
 
       <UserFormDialog 
         open={isDialogOpen} 
