@@ -46,8 +46,9 @@ export default function UsersPage() {
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [branchFilter, setBranchFilter] = useState<string>("all");
-  const [permUser, setPermUser] = useState<any>(null);
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
+
 
   const { userRoles, userBranches, isAdmin, isLoading: permissionsLoading } = usePermissions();
   
