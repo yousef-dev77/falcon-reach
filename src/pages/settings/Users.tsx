@@ -406,9 +406,9 @@ export default function UsersPage() {
                             variant="ghost"
                             size="sm"
                             className="gap-1"
-                            onClick={() => setPermUser(user)}
+                            onClick={() => navigate(`/settings/user-overrides?user=${user.id}`)}
                           >
-                            <Shield className="h-4 w-4" /> صلاحيات خاصة
+                            <Shield className="h-4 w-4" /> استثناءات
                           </Button>
                           <Button
                             variant="ghost"
@@ -419,6 +419,7 @@ export default function UsersPage() {
                           </Button>
                         </div>
                       </TableCell>
+
                     </TableRow>
                   );
                 })}
