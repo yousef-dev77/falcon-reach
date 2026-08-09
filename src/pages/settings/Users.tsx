@@ -13,14 +13,14 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { PermissionMatrix } from "@/components/settings/PermissionMatrix";
+import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import { Plus, Edit, Shield, Building2, UserCheck, Users, Crown, Package, Filter, Calculator } from "lucide-react";
 import { UserFormDialog } from "@/components/settings/UserFormDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePermissions } from "@/hooks/usePermissions";
 import { ListPageHeader } from "@/components/ListPageHeader";
+
 import {
   Select,
   SelectContent,
