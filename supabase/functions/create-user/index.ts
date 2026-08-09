@@ -163,22 +163,8 @@ Deno.serve(async (req) => {
       }
     }
 
-    if (Array.isArray(selectedPermissions) && selectedPermissions.length > 0) {
-      const customPermissions = selectedPermissions.map((permissionId: string) => ({
-        user_id: newUserId,
-        permission_id: permissionId,
-        branch_id: null,
-        is_granted: true,
-      }))
+    // Screen-level permissions are granted via user types / groups, not per user here.
 
-      const { error: permissionsError } = await supabaseAdmin
-        .from('user_permissions')
-        .insert(customPermissions)
-
-      if (permissionsError) {
-        console.error('Error inserting user permissions:', permissionsError)
-      }
-    }
 
     return new Response(
       JSON.stringify({ 

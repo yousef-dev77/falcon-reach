@@ -13,14 +13,14 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { PermissionMatrix } from "@/components/settings/PermissionMatrix";
+import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import { Plus, Edit, Shield, Building2, UserCheck, Users, Crown, Package, Filter, Calculator } from "lucide-react";
 import { UserFormDialog } from "@/components/settings/UserFormDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePermissions } from "@/hooks/usePermissions";
 import { ListPageHeader } from "@/components/ListPageHeader";
+
 import {
   Select,
   SelectContent,
@@ -46,8 +46,9 @@ export default function UsersPage() {
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [branchFilter, setBranchFilter] = useState<string>("all");
-  const [permUser, setPermUser] = useState<any>(null);
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
+
 
   const { userRoles, userBranches, isAdmin, isLoading: permissionsLoading } = usePermissions();
   
@@ -406,9 +407,9 @@ export default function UsersPage() {
                             variant="ghost"
                             size="sm"
                             className="gap-1"
-                            onClick={() => setPermUser(user)}
+                            onClick={() => navigate(`/settings/user-overrides?user=${user.id}`)}
                           >
-                            <Shield className="h-4 w-4" /> صلاحيات خاصة
+                            <Shield className="h-4 w-4" /> استثناءات
                           </Button>
                           <Button
                             variant="ghost"
@@ -419,6 +420,7 @@ export default function UsersPage() {
                           </Button>
                         </div>
                       </TableCell>
+
                     </TableRow>
                   );
                 })}
@@ -428,17 +430,8 @@ export default function UsersPage() {
         </CardContent>
       </Card>
 
-      <Dialog open={!!permUser} onOpenChange={(o) => !o && setPermUser(null)}>
-        <DialogContent className="max-w-5xl">
-          <DialogHeader>
-            <DialogTitle>صلاحيات خاصة للمستخدم: {permUser?.full_name}</DialogTitle>
-          </DialogHeader>
-          <p className="text-sm text-muted-foreground">
-            هذه الصلاحيات تُضاف فوق صلاحيات نوع المستخدم والمجموعات (تتجمع ولا تُلغيها). لمنع صلاحية استخدم سياسات الوصول.
-          </p>
-          {permUser && <PermissionMatrix subjectType="user" subjectId={permUser.id} />}
-        </DialogContent>
-      </Dialog>
+
+
 
       <UserFormDialog 
         open={isDialogOpen} 
