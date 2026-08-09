@@ -209,13 +209,18 @@ export const MODULES: ModuleDefinition[] = [
     home: "/settings/general",
     installable: false,
     items: [
-      { title: "المستخدمين والصلاحيات", url: "/settings/users", icon: UserCog },
+      { title: "المستخدمون", url: "/settings/users", icon: UserCog },
       { title: "أنواع المستخدمين", url: "/settings/user-types", icon: UserCog },
       { title: "مجموعات المستخدمين", url: "/settings/user-groups", icon: Users },
+      { title: "استثناءات المستخدمين", url: "/settings/user-overrides", icon: UserCog },
       { title: "سياسات الوصول", url: "/settings/access-policies", icon: Target },
+      { title: "شاشات النظام", url: "/settings/screens", icon: Target },
+      { title: "محاكي الصلاحيات", url: "/settings/permission-simulator", icon: Target },
+      { title: "سجل تغييرات الصلاحيات", url: "/settings/permission-audit", icon: Clock },
       { title: "الفروع", url: "/settings/branches", icon: MapPin },
       { title: "الإعدادات العامة", url: "/settings/general", icon: Settings },
       { title: "سجلات النظام", url: "/settings/logs", icon: Clock },
+
     ],
   },
 ];
