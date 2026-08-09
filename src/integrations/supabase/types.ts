@@ -3671,30 +3671,81 @@ export type Database = {
           },
         ]
       }
-      permissions: {
+      permission_change_logs: {
         Row: {
-          code: string
+          action_type: string
+          after_state: Json | null
+          before_state: Json | null
+          changed_by: string | null
           created_at: string
-          description: string | null
           id: string
-          module: string
-          name: string
+          screen_code: string | null
+          screen_id: string | null
+          screen_name: string | null
+          subject_id: string
+          subject_label: string | null
+          subject_type: Database["public"]["Enums"]["perm_subject_type"]
         }
         Insert: {
-          code: string
+          action_type: string
+          after_state?: Json | null
+          before_state?: Json | null
+          changed_by?: string | null
           created_at?: string
-          description?: string | null
           id?: string
-          module: string
-          name: string
+          screen_code?: string | null
+          screen_id?: string | null
+          screen_name?: string | null
+          subject_id: string
+          subject_label?: string | null
+          subject_type: Database["public"]["Enums"]["perm_subject_type"]
         }
         Update: {
-          code?: string
+          action_type?: string
+          after_state?: Json | null
+          before_state?: Json | null
+          changed_by?: string | null
           created_at?: string
-          description?: string | null
           id?: string
-          module?: string
-          name?: string
+          screen_code?: string | null
+          screen_id?: string | null
+          screen_name?: string | null
+          subject_id?: string
+          subject_label?: string | null
+          subject_type?: Database["public"]["Enums"]["perm_subject_type"]
+        }
+        Relationships: []
+      }
+      policy_change_logs: {
+        Row: {
+          action_type: string
+          after_state: Json | null
+          before_state: Json | null
+          changed_by: string | null
+          created_at: string
+          id: string
+          policy_id: string | null
+          policy_name: string | null
+        }
+        Insert: {
+          action_type: string
+          after_state?: Json | null
+          before_state?: Json | null
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          policy_id?: string | null
+          policy_name?: string | null
+        }
+        Update: {
+          action_type?: string
+          after_state?: Json | null
+          before_state?: Json | null
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          policy_id?: string | null
+          policy_name?: string | null
         }
         Relationships: []
       }
@@ -4872,35 +4923,6 @@ export type Database = {
         }
         Relationships: []
       }
-      role_permissions: {
-        Row: {
-          created_at: string
-          id: string
-          permission_id: string
-          role: Database["public"]["Enums"]["app_role"]
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          permission_id: string
-          role: Database["public"]["Enums"]["app_role"]
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          permission_id?: string
-          role?: Database["public"]["Enums"]["app_role"]
-        }
-        Relationships: [
-          {
-            foreignKeyName: "role_permissions_permission_id_fkey"
-            columns: ["permission_id"]
-            isOneToOne: false
-            referencedRelation: "permissions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       sales_invoice_lines: {
         Row: {
           created_at: string
@@ -5608,48 +5630,6 @@ export type Database = {
           },
         ]
       }
-      user_permissions: {
-        Row: {
-          branch_id: string | null
-          created_at: string
-          id: string
-          is_granted: boolean | null
-          permission_id: string
-          user_id: string
-        }
-        Insert: {
-          branch_id?: string | null
-          created_at?: string
-          id?: string
-          is_granted?: boolean | null
-          permission_id: string
-          user_id: string
-        }
-        Update: {
-          branch_id?: string | null
-          created_at?: string
-          id?: string
-          is_granted?: boolean | null
-          permission_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_permissions_branch_id_fkey"
-            columns: ["branch_id"]
-            isOneToOne: false
-            referencedRelation: "branches"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_permissions_permission_id_fkey"
-            columns: ["permission_id"]
-            isOneToOne: false
-            referencedRelation: "permissions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       user_roles: {
         Row: {
           branch_id: string | null
@@ -5926,11 +5906,32 @@ export type Database = {
         Args: { _employee_id: string; _from: string; _to: string }
         Returns: Json
       }
+      explain_screen_access: {
+        Args: { _action?: string; _screen_code: string; _user_id: string }
+        Returns: {
+          is_decisive: boolean
+          layer: string
+          layer_label: string
+          note: string
+          result: string
+          source_name: string
+          step_order: number
+        }[]
+      }
       generate_asset_depreciation_schedule: {
         Args: { _asset_id: string }
         Returns: number
       }
       generate_loan_schedule: { Args: { _loan_id: string }; Returns: undefined }
+      get_access_subject_stats: {
+        Args: never
+        Returns: {
+          members_count: number
+          screens_count: number
+          subject_id: string
+          subject_type: string
+        }[]
+      }
       get_effective_screen_permissions: {
         Args: { _user_id: string }
         Returns: {
