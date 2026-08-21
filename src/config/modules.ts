@@ -10,6 +10,7 @@ export interface ModuleNavItem {
   title: string;
   url: string;
   icon: LucideIcon;
+  section?: string;
 }
 
 export interface ModuleDefinition {
@@ -209,15 +210,13 @@ export const MODULES: ModuleDefinition[] = [
     home: "/settings/general",
     installable: false,
     items: [
-      { title: "المستخدمون", url: "/settings/users", icon: UserCog },
+      { title: "المستخدمون", url: "/settings/users", icon: UserCog, section: "إدارة المستخدمين" },
       { title: "أنواع المستخدمين", url: "/settings/user-types", icon: UserCog },
-      { title: "مجموعات المستخدمين", url: "/settings/user-groups", icon: Users },
+      { title: "مجموعات الصلاحيات", url: "/settings/user-groups", icon: Users },
       { title: "استثناءات المستخدمين", url: "/settings/user-overrides", icon: UserCog },
-      { title: "سياسات الوصول", url: "/settings/access-policies", icon: Target },
-      { title: "شاشات النظام", url: "/settings/screens", icon: Target },
-      { title: "محاكي الصلاحيات", url: "/settings/permission-simulator", icon: Target },
+      { title: "مراجعة وصول المستخدم", url: "/settings/permission-simulator", icon: Target, section: "الرقابة" },
       { title: "سجل تغييرات الصلاحيات", url: "/settings/permission-audit", icon: Clock },
-      { title: "الفروع", url: "/settings/branches", icon: MapPin },
+      { title: "الفروع", url: "/settings/branches", icon: MapPin, section: "إعدادات المنشأة" },
       { title: "الإعدادات العامة", url: "/settings/general", icon: Settings },
       { title: "سجلات النظام", url: "/settings/logs", icon: Clock },
 

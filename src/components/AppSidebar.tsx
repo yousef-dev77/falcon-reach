@@ -89,7 +89,13 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarMenu>
             {items.map((item) => (
-              <SidebarMenuItem key={item.url}>
+              <div key={item.url}>
+              {open && item.section && (
+                <div className="px-3 pb-1 pt-4 text-xs font-semibold text-sidebar-foreground/60 first:pt-1">
+                  {item.section}
+                </div>
+              )}
+              <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <NavLink
                     to={item.url}
@@ -105,6 +111,7 @@ export function AppSidebar() {
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+              </div>
             ))}
             {!active && open && (
               <div className="px-3 py-4 text-center text-xs text-sidebar-foreground/60">

@@ -81,9 +81,7 @@ import GeneralSettings from "./pages/settings/GeneralSettings";
 import SystemLogs from "./pages/settings/SystemLogs";
 import UserTypes from "./pages/settings/UserTypes";
 import UserGroups from "./pages/settings/UserGroups";
-import AccessPolicies from "./pages/settings/AccessPolicies";
 import UserOverrides from "./pages/settings/UserOverrides";
-import ScreensRegistry from "./pages/settings/ScreensRegistry";
 import PermissionSimulator from "./pages/settings/PermissionSimulator";
 import PermissionAudit from "./pages/settings/PermissionAudit";
 
@@ -204,8 +202,6 @@ const App = () => (
               <Route path="/settings/user-types" element={<AdminRoute allowedRoles={['admin']}><DashboardLayout><UserTypes /></DashboardLayout></AdminRoute>} />
               <Route path="/settings/user-groups" element={<AdminRoute allowedRoles={['admin']}><DashboardLayout><UserGroups /></DashboardLayout></AdminRoute>} />
               <Route path="/settings/user-overrides" element={<AdminRoute allowedRoles={['admin']}><DashboardLayout><UserOverrides /></DashboardLayout></AdminRoute>} />
-              <Route path="/settings/access-policies" element={<AdminRoute allowedRoles={['admin']}><DashboardLayout><AccessPolicies /></DashboardLayout></AdminRoute>} />
-              <Route path="/settings/screens" element={<AdminRoute allowedRoles={['admin']}><DashboardLayout><ScreensRegistry /></DashboardLayout></AdminRoute>} />
               <Route path="/settings/permission-simulator" element={<AdminRoute allowedRoles={['admin']}><DashboardLayout><PermissionSimulator /></DashboardLayout></AdminRoute>} />
               <Route path="/settings/permission-audit" element={<AdminRoute allowedRoles={['admin']}><DashboardLayout><PermissionAudit /></DashboardLayout></AdminRoute>} />
 

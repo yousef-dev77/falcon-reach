@@ -99,11 +99,11 @@ export default function PermissionSimulator() {
   return (
     <div className="space-y-4">
       <ListPageHeader
-        title="محاكي الصلاحيات"
+        title="مراجعة وصول المستخدم"
         breadcrumbs={[
           { label: "الرئيسية", href: "/" },
           { label: "التحكم بالوصول" },
-          { label: "محاكي الصلاحيات" },
+          { label: "مراجعة وصول المستخدم" },
         ]}
         showSearch={false}
       />
@@ -111,15 +111,14 @@ export default function PermissionSimulator() {
       <Alert>
         <Info className="h-4 w-4" />
         <AlertDescription>
-          اختر مستخدماً وشاشة وإجراءً، وسيوضح النظام النتيجة النهائية ومن أي طبقة جاء القرار
-          بالترتيب: منع صريح ← استثناء المستخدم ← المجموعات ← نوع المستخدم ← العلاقة ← الرفض
-          الافتراضي.
+          اختر مستخدماً وشاشة وإجراءً لمعرفة هل الوصول مسموح، ولماذا. ترتيب القرار:
+          مسؤول النظام ← استثناء المستخدم (منح أو منع) ← المجموعات ← نوع المستخدم ← الرفض الافتراضي.
         </AlertDescription>
       </Alert>
 
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">معطيات الاختبار</CardTitle>
+          <CardTitle className="text-base">اختبار وصول محدد</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-4 md:items-end">
           <div className="space-y-2">
@@ -172,7 +171,7 @@ export default function PermissionSimulator() {
 
           <Button onClick={run} disabled={!userId || !screenCode || running} className="gap-2">
             <PlayCircle className="h-4 w-4" />
-            {running ? "جاري الفحص..." : "فحص الصلاحية"}
+            {running ? "جاري الفحص..." : "مراجعة الوصول"}
           </Button>
         </CardContent>
       </Card>

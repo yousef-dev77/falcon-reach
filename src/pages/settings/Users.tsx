@@ -217,11 +217,11 @@ export default function UsersPage() {
   return (
     <div className="space-y-4">
       <ListPageHeader
-        title="المستخدمين والصلاحيات"
+        title="المستخدمون"
         breadcrumbs={[
           { label: "الرئيسية", href: "/" },
           { label: "الإعدادات" },
-          { label: "المستخدمين والصلاحيات" },
+          { label: "المستخدمون" },
         ]}
         onAdd={handleAddUser}
         addLabel="إضافة مستخدم"
@@ -303,7 +303,7 @@ export default function UsersPage() {
             <div className="text-center py-12 text-muted-foreground">
               <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p className="mb-2">لا يوجد مستخدمين مسجلين</p>
-              <p className="text-sm">يمكنك إنشاء مستخدمين وتحديد صلاحيات الوصول لكل شاشة والأدوار الوظيفية</p>
+              <p className="text-sm">أنشئ المستخدم ثم اختر نوعه ومجموعاته والفروع المسموحة له</p>
             </div>
           ) : (
             <Table>
