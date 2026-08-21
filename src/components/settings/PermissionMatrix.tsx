@@ -53,6 +53,13 @@ interface Row {
   can_post: boolean;
   can_export: boolean;
   scope: string;
+  deny_view: boolean;
+  deny_create: boolean;
+  deny_edit: boolean;
+  deny_delete: boolean;
+  deny_approve: boolean;
+  deny_post: boolean;
+  deny_export: boolean;
 }
 
 const EMPTY: Row = {
@@ -64,6 +71,13 @@ const EMPTY: Row = {
   can_post: false,
   can_export: false,
   scope: "branch",
+  deny_view: false,
+  deny_create: false,
+  deny_edit: false,
+  deny_delete: false,
+  deny_approve: false,
+  deny_post: false,
+  deny_export: false,
 };
 
 const moduleName = (key: string) =>
@@ -122,6 +136,13 @@ export function PermissionMatrix({
         can_post: row.can_post,
         can_export: row.can_export,
         scope: row.scope,
+        deny_view: row.deny_view,
+        deny_create: row.deny_create,
+        deny_edit: row.deny_edit,
+        deny_delete: row.deny_delete,
+        deny_approve: row.deny_approve,
+        deny_post: row.deny_post,
+        deny_export: row.deny_export,
       };
     }
     setState(next);
@@ -174,12 +195,23 @@ export function PermissionMatrix({
   const setScope = (screenId: string, scope: string) =>
     setState((prev) => ({ ...prev, [screenId]: { ...(prev[screenId] || EMPTY), scope } }));
 
+  const setException = (screenId: string, action: string, value: string) =>
+    setState((prev) => {
+      const row = { ...(prev[screenId] || EMPTY) };
+      const allowKey = `can_${action}` as keyof Row;
+      const denyKey = `deny_${action}` as keyof Row;
+      (row as any)[allowKey] = value === "allow";
+      (row as any)[denyKey] = value === "deny";
+      if (action !== "view" && value === "allow") row.can_view = true;
+      return { ...prev, [screenId]: row };
+    });
+
   const handleSave = async () => {
     setSaving(true);
     try {
       const rows = screens
         .map((s) => ({ screen_id: s.id, ...(state[s.id] || EMPTY) }))
-        .filter((r) => ACTIONS.some((a) => (r as any)[a.key]));
+        .filter((r) => ACTIONS.some((a) => (r as any)[a.key] || (r as any)[a.key.replace("can_", "deny_")]));
 
       const { error: delError } = await (supabase as any)
         .from("screen_permissions")
@@ -226,6 +258,11 @@ export function PermissionMatrix({
         </Button>
       </div>
 
+      {subjectType === "user" && (
+        <p className="text-sm text-muted-foreground">
+          لكل إجراء اختر: موروث (لا تغيير)، سماح إضافي، أو منع استثنائي. المنع الاستثنائي يتجاوز النوع والمجموعات.
+        </p>
+      )}
       <div className="space-y-6 max-h-[60vh] overflow-y-auto pe-1">
         {Object.entries(grouped).map(([module, list]) => (
           <div key={module} className="rounded-[10px] border">
@@ -259,10 +296,24 @@ export function PermissionMatrix({
                         <td className="p-2">{s.name}</td>
                         {ACTIONS.map((a) => (
                           <td key={a.key} className="p-2 text-center">
-                            <Checkbox
-                              checked={Boolean((row as any)[a.key])}
-                              onCheckedChange={() => toggle(s.id, a.key as keyof Row)}
-                            />
+                            {subjectType === "user" ? (
+                              <Select
+                                value={(row as any)[a.key.replace("can_", "deny_")] ? "deny" : (row as any)[a.key] ? "allow" : "inherit"}
+                                onValueChange={(value) => setException(s.id, a.key.replace("can_", ""), value)}
+                              >
+                                <SelectTrigger className="h-8 w-24"><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="inherit">موروث</SelectItem>
+                                  <SelectItem value="allow">سماح</SelectItem>
+                                  <SelectItem value="deny">منع</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            ) : (
+                              <Checkbox
+                                checked={Boolean((row as any)[a.key])}
+                                onCheckedChange={() => toggle(s.id, a.key as keyof Row)}
+                              />
+                            )}
                           </td>
                         ))}
                         <td className="p-2">

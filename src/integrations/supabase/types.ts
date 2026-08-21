@@ -14,62 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      access_policies: {
-        Row: {
-          action: string
-          created_at: string
-          description: string | null
-          effect: Database["public"]["Enums"]["policy_effect"]
-          id: string
-          is_active: boolean
-          name: string
-          priority: number
-          relation: string | null
-          screen_id: string | null
-          subject_id: string
-          subject_type: Database["public"]["Enums"]["perm_subject_type"]
-          updated_at: string
-        }
-        Insert: {
-          action?: string
-          created_at?: string
-          description?: string | null
-          effect?: Database["public"]["Enums"]["policy_effect"]
-          id?: string
-          is_active?: boolean
-          name: string
-          priority?: number
-          relation?: string | null
-          screen_id?: string | null
-          subject_id: string
-          subject_type: Database["public"]["Enums"]["perm_subject_type"]
-          updated_at?: string
-        }
-        Update: {
-          action?: string
-          created_at?: string
-          description?: string | null
-          effect?: Database["public"]["Enums"]["policy_effect"]
-          id?: string
-          is_active?: boolean
-          name?: string
-          priority?: number
-          relation?: string | null
-          screen_id?: string | null
-          subject_id?: string
-          subject_type?: Database["public"]["Enums"]["perm_subject_type"]
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "access_policies_screen_id_fkey"
-            columns: ["screen_id"]
-            isOneToOne: false
-            referencedRelation: "app_screens"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       accounts: {
         Row: {
           account_group: string | null
@@ -4896,33 +4840,6 @@ export type Database = {
         }
         Relationships: []
       }
-      resource_relations: {
-        Row: {
-          created_at: string
-          id: string
-          relation: string
-          resource_id: string
-          resource_type: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          relation: string
-          resource_id: string
-          resource_type: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          relation?: string
-          resource_id?: string
-          resource_type?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       sales_invoice_lines: {
         Row: {
           created_at: string
@@ -5317,6 +5234,13 @@ export type Database = {
           can_post: boolean
           can_view: boolean
           created_at: string
+          deny_approve: boolean
+          deny_create: boolean
+          deny_delete: boolean
+          deny_edit: boolean
+          deny_export: boolean
+          deny_post: boolean
+          deny_view: boolean
           id: string
           scope: Database["public"]["Enums"]["access_scope"]
           screen_id: string
@@ -5333,6 +5257,13 @@ export type Database = {
           can_post?: boolean
           can_view?: boolean
           created_at?: string
+          deny_approve?: boolean
+          deny_create?: boolean
+          deny_delete?: boolean
+          deny_edit?: boolean
+          deny_export?: boolean
+          deny_post?: boolean
+          deny_view?: boolean
           id?: string
           scope?: Database["public"]["Enums"]["access_scope"]
           screen_id: string
@@ -5349,6 +5280,13 @@ export type Database = {
           can_post?: boolean
           can_view?: boolean
           created_at?: string
+          deny_approve?: boolean
+          deny_create?: boolean
+          deny_delete?: boolean
+          deny_edit?: boolean
+          deny_export?: boolean
+          deny_post?: boolean
+          deny_view?: boolean
           id?: string
           scope?: Database["public"]["Enums"]["access_scope"]
           screen_id?: string

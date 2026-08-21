@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useScreenPermissions } from "@/hooks/useScreenPermissions";
 
 interface AdminRouteProps {
   children: React.ReactNode;
@@ -12,10 +13,11 @@ interface AdminRouteProps {
 export function AdminRoute({ children, allowedRoles = ['admin'], requiredPermission }: AdminRouteProps) {
   const { user, loading: authLoading } = useAuth();
   const { userRoles, hasPermission, hasCustomPermissions, isLoading: permissionsLoading } = usePermissions();
+  const { permissions: screenPermissions, canRoute, isLoading: screenLoading } = useScreenPermissions();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const isLoading = authLoading || permissionsLoading;
+  const isLoading = authLoading || permissionsLoading || screenLoading;
   
   const inferredPermission =
     requiredPermission ||
@@ -27,9 +29,15 @@ export function AdminRoute({ children, allowedRoles = ['admin'], requiredPermiss
     location.pathname.startsWith('/pos') ? 'pos' :
     location.pathname.startsWith('/settings') ? 'settings' : undefined);
 
-  const hasAccess = inferredPermission
-    ? hasPermission(inferredPermission) || (!hasCustomPermissions && userRoles.some(r => allowedRoles.includes(r.role)))
-    : userRoles.some(r => allowedRoles.includes(r.role));
+  const routePermission = screenPermissions.find((p) =>
+    location.pathname === p.route || location.pathname.startsWith(`${p.route}/`)
+  );
+  const isAdmin = userRoles.some((r) => r.role === "admin");
+  const hasAccess = isAdmin || (routePermission
+    ? canRoute(routePermission.route)
+    : inferredPermission
+      ? hasPermission(inferredPermission) || (!hasCustomPermissions && userRoles.some(r => allowedRoles.includes(r.role)))
+      : userRoles.some(r => allowedRoles.includes(r.role)));
 
   useEffect(() => {
     if (!isLoading && !user) {

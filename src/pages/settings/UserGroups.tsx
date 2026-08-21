@@ -131,12 +131,12 @@ export default function UserGroups() {
   return (
     <div className="space-y-4">
       <ListPageHeader
-        title="مجموعات المستخدمين"
-        subtitle="مجموعات صلاحيات إضافية تُضاف فوق نوع المستخدم (تتجمع الصلاحيات)"
+        title="مجموعات الصلاحيات"
+        subtitle="صلاحيات إضافية مشتركة لمستخدمين من أنواع مختلفة؛ لا تستبدل النوع الأساسي"
         breadcrumbs={[
           { label: "الرئيسية", href: "/" },
           { label: "الإعدادات" },
-          { label: "مجموعات المستخدمين" },
+          { label: "مجموعات الصلاحيات" },
         ]}
         onAdd={openAdd}
         addLabel="مجموعة جديدة"
