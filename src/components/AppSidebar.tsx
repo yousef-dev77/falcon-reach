@@ -51,7 +51,15 @@ export function AppSidebar() {
 
   const goApps = () => navigate("/apps");
 
-  const items = active?.items ?? [];
+  // Filter menu items by the user's real screen permissions.
+  // Admins see everything; users with no configured permissions keep the
+  // legacy role-based behaviour (full module menu) to avoid lock-outs.
+  const allItems = active?.items ?? [];
+  const viewableRoutes = new Set(screenPerms.filter((p) => p.can_view).map((p) => p.route));
+  const items =
+    isAdmin || permsLoading || viewableRoutes.size === 0
+      ? allItems
+      : allItems.filter((item) => viewableRoutes.has(item.url));
 
   return (
     <Sidebar side="right" collapsible="icon" className="border-l border-sidebar-border">
