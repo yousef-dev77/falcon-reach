@@ -25,7 +25,9 @@ export function AppSidebar() {
   const { open } = useSidebar();
   const location = useLocation();
   const navigate = useNavigate();
-  const { userRoles, hasPermission, hasCustomPermissions } = usePermissions();
+  const { userRoles } = usePermissions();
+  const { permissions: screenPerms, isLoading: permsLoading } = useScreenPermissions();
+  const isAdmin = userRoles.some((r) => r.role === "admin");
   const [tick, setTick] = useState(0);
 
   useEffect(() => {
