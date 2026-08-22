@@ -15,6 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { MODULES, findModuleByPath, getModule, type ModuleDefinition } from "@/config/modules";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useScreenPermissions } from "@/hooks/useScreenPermissions";
 
 function getActiveModuleKey(): string | null {
   return sessionStorage.getItem("active_module");
@@ -24,7 +25,9 @@ export function AppSidebar() {
   const { open } = useSidebar();
   const location = useLocation();
   const navigate = useNavigate();
-  const { userRoles, hasPermission, hasCustomPermissions } = usePermissions();
+  const { userRoles } = usePermissions();
+  const { permissions: screenPerms, isLoading: permsLoading } = useScreenPermissions();
+  const isAdmin = userRoles.some((r) => r.role === "admin");
   const [tick, setTick] = useState(0);
 
   useEffect(() => {
@@ -48,7 +51,28 @@ export function AppSidebar() {
 
   const goApps = () => navigate("/apps");
 
-  const items = active?.items ?? [];
+  // Filter menu items by the user's real screen permissions.
+  // Admins see everything; users with no configured permissions keep the
+  // legacy role-based behaviour (full module menu) to avoid lock-outs.
+  const allItems = active?.items ?? [];
+  const viewableRoutes = new Set(screenPerms.filter((p) => p.can_view).map((p) => p.route));
+  const showAll = isAdmin || permsLoading || viewableRoutes.size === 0;
+
+  // Carry the section label down so a heading never disappears with its first item.
+  let currentSection: string | undefined;
+  const withSections = allItems.map((item) => {
+    if (item.section) currentSection = item.section;
+    return { ...item, sectionLabel: currentSection };
+  });
+
+  const visible = showAll ? withSections : withSections.filter((i) => viewableRoutes.has(i.url));
+  const seenSections = new Set<string>();
+  const items = visible.map((item) => {
+    const heading =
+      item.sectionLabel && !seenSections.has(item.sectionLabel) ? item.sectionLabel : undefined;
+    if (heading) seenSections.add(heading);
+    return { ...item, heading };
+  });
 
   return (
     <Sidebar side="right" collapsible="icon" className="border-l border-sidebar-border">
@@ -90,9 +114,9 @@ export function AppSidebar() {
           <SidebarMenu>
             {items.map((item) => (
               <div key={item.url}>
-              {open && item.section && (
+              {open && item.heading && (
                 <div className="px-3 pb-1 pt-4 text-xs font-semibold text-sidebar-foreground/60 first:pt-1">
-                  {item.section}
+                  {item.heading}
                 </div>
               )}
               <SidebarMenuItem>
