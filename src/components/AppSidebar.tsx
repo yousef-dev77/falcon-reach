@@ -15,6 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { MODULES, findModuleByPath, getModule, type ModuleDefinition } from "@/config/modules";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useScreenPermissions } from "@/hooks/useScreenPermissions";
 
 function getActiveModuleKey(): string | null {
   return sessionStorage.getItem("active_module");
