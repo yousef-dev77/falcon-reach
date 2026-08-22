@@ -114,9 +114,9 @@ export function AppSidebar() {
           <SidebarMenu>
             {items.map((item) => (
               <div key={item.url}>
-              {open && item.section && (
+              {open && item.heading && (
                 <div className="px-3 pb-1 pt-4 text-xs font-semibold text-sidebar-foreground/60 first:pt-1">
-                  {item.section}
+                  {item.heading}
                 </div>
               )}
               <SidebarMenuItem>
