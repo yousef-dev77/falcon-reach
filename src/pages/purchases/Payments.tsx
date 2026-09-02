@@ -30,6 +30,7 @@ export default function Payments() {
   const [viewingId, setViewingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [allocations, setAllocations] = useState<AllocationRow[]>([]);
+  const [idempotencyKey, setIdempotencyKey] = useState<string>(() => crypto.randomUUID());
   const [formData, setFormData] = useState({
     payment_number: "",
     payment_date: new Date().toISOString().split('T')[0],
@@ -217,6 +218,7 @@ export default function Payments() {
       notes: ""
     });
     setAllocations([]);
+    setIdempotencyKey(crypto.randomUUID());
     setIsAddOpen(true);
   };
 
@@ -246,6 +248,7 @@ export default function Payments() {
         notes: formData.notes || null
       },
       allocations,
+      idempotencyKey,
     });
   };
 
