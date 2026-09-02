@@ -118,11 +118,23 @@ export default function Payments() {
 
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
+      // Idempotency: same voucher submitted twice (retry / double click / network) => single effect
+      const { data: claim, error: claimError } = await supabase.rpc("claim_idempotency_key", {
+        _scope: "supplier_payment",
+        _key: data.idempotencyKey,
+      });
+      if (claimError) throw claimError;
+      if (claim && claim[0] && claim[0].is_new === false) {
+        toast.info("هذه العملية تم تنفيذها مسبقاً — لم يتم تكرار الصرف");
+        return;
+      }
+
       const { data: newPay, error } = await supabase
         .from("payments")
         .insert([{ ...data.payment, created_by: user?.id }])
         .select().single();
       if (error) throw error;
+
 
       if (data.allocations.length > 0) {
         const allocRows = data.allocations.map((a: AllocationRow) => ({
