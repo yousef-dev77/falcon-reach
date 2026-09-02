@@ -171,6 +171,12 @@ export default function Payments() {
         console.error("Failed to create auto journal entry:", err);
         toast.warning(`تم حفظ السند لكن فشل القيد: ${err.message || ""}`);
       }
+
+      await supabase.rpc("complete_idempotency_key", {
+        _scope: "supplier_payment",
+        _key: data.idempotencyKey,
+        _result: { payment_id: newPay.id, payment_number: newPay.payment_number },
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["payments"] });
