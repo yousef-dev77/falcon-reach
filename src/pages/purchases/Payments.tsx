@@ -30,6 +30,7 @@ export default function Payments() {
   const [viewingId, setViewingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [allocations, setAllocations] = useState<AllocationRow[]>([]);
+  const [idempotencyKey, setIdempotencyKey] = useState<string>(() => crypto.randomUUID());
   const [formData, setFormData] = useState({
     payment_number: "",
     payment_date: new Date().toISOString().split('T')[0],
@@ -118,11 +119,23 @@ export default function Payments() {
 
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
+      // Idempotency: same voucher submitted twice (retry / double click / network) => single effect
+      const { data: claim, error: claimError } = await supabase.rpc("claim_idempotency_key", {
+        _scope: "supplier_payment",
+        _key: data.idempotencyKey,
+      });
+      if (claimError) throw claimError;
+      if (claim && claim[0] && claim[0].is_new === false) {
+        toast.info("هذه العملية تم تنفيذها مسبقاً — لم يتم تكرار الصرف");
+        return;
+      }
+
       const { data: newPay, error } = await supabase
         .from("payments")
         .insert([{ ...data.payment, created_by: user?.id }])
         .select().single();
       if (error) throw error;
+
 
       if (data.allocations.length > 0) {
         const allocRows = data.allocations.map((a: AllocationRow) => ({
@@ -159,6 +172,12 @@ export default function Payments() {
         console.error("Failed to create auto journal entry:", err);
         toast.warning(`تم حفظ السند لكن فشل القيد: ${err.message || ""}`);
       }
+
+      await supabase.rpc("complete_idempotency_key", {
+        _scope: "supplier_payment",
+        _key: data.idempotencyKey,
+        _result: { payment_id: newPay.id, payment_number: newPay.payment_number },
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["payments"] });
@@ -199,6 +218,7 @@ export default function Payments() {
       notes: ""
     });
     setAllocations([]);
+    setIdempotencyKey(crypto.randomUUID());
     setIsAddOpen(true);
   };
 
@@ -228,6 +248,7 @@ export default function Payments() {
         notes: formData.notes || null
       },
       allocations,
+      idempotencyKey,
     });
   };
 
