@@ -3017,6 +3017,42 @@ export type Database = {
           },
         ]
       }
+      idempotency_keys: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          idempotency_key: string
+          request_hash: string | null
+          result: Json | null
+          scope: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          idempotency_key: string
+          request_hash?: string | null
+          result?: Json | null
+          scope: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          idempotency_key?: string
+          request_hash?: string | null
+          result?: Json | null
+          scope?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       installed_modules: {
         Row: {
           installed_at: string
@@ -5830,9 +5866,20 @@ export type Database = {
         Returns: number
       }
       calculate_payroll: { Args: { _run_id: string }; Returns: number }
+      claim_idempotency_key: {
+        Args: { _key: string; _request_hash?: string; _scope: string }
+        Returns: {
+          is_new: boolean
+          previous_result: Json
+        }[]
+      }
       close_pos_session: {
         Args: { _closing_balance: number; _session_id: string }
         Returns: string
+      }
+      complete_idempotency_key: {
+        Args: { _key: string; _result: Json; _scope: string }
+        Returns: undefined
       }
       confirm_inventory_voucher: {
         Args: { _voucher_id: string }
