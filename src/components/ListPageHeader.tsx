@@ -1,11 +1,12 @@
 import { ReactNode } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   Plus,
   Trash2,
   Printer,
   FileSpreadsheet,
   FileText,
+  FileType2,
   Copy,
   RefreshCw,
   Search,
@@ -14,6 +15,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
+import { exportPageToWord, exportVisibleTablesToExcel } from "@/lib/documentExport";
 import {
   Tooltip,
   TooltipContent,
@@ -35,6 +38,7 @@ interface ListPageHeaderProps {
   onPrint?: () => void;
   onExportExcel?: () => void;
   onExportPdf?: () => void;
+  onExportWord?: () => void;
   onCopy?: () => void;
   onRefresh?: () => void;
   searchValue?: string;
@@ -51,6 +55,7 @@ interface ListPageHeaderProps {
   extraActions?: ReactNode;
   deleteDisabled?: boolean;
 }
+
 
 export function ListPageHeader({
   title,
