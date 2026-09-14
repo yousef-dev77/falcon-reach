@@ -142,20 +142,15 @@ export function AccountStatement({ type, partyId, partyName, partyCode }: Accoun
     ? finalBalance >= 0 ? "مدين (مستحق على العميل)" : "دائن (دفعة مقدمة)"
     : finalBalance <= 0 ? "دائن (مستحق للمورد)" : "مدين (دفعة مقدمة)";
 
-  const handlePrint = () => window.print();
-
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between print:hidden">
+      <div className="flex items-center print:hidden">
         <Button variant="outline" onClick={() => navigate(-1)} className="gap-2">
           <ArrowRight className="h-4 w-4" />
           رجوع
         </Button>
-        <Button onClick={handlePrint} className="gap-2">
-          <Printer className="h-4 w-4" />
-          طباعة
-        </Button>
       </div>
+
 
       <Card>
         <CardHeader>
