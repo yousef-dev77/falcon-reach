@@ -1,11 +1,12 @@
 import { ReactNode } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   Plus,
   Trash2,
   Printer,
   FileSpreadsheet,
   FileText,
+  FileType2,
   Copy,
   RefreshCw,
   Search,
@@ -14,6 +15,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
+import { exportPageToWord, exportVisibleTablesToExcel } from "@/lib/documentExport";
 import {
   Tooltip,
   TooltipContent,
@@ -35,6 +38,7 @@ interface ListPageHeaderProps {
   onPrint?: () => void;
   onExportExcel?: () => void;
   onExportPdf?: () => void;
+  onExportWord?: () => void;
   onCopy?: () => void;
   onRefresh?: () => void;
   searchValue?: string;
@@ -52,6 +56,7 @@ interface ListPageHeaderProps {
   deleteDisabled?: boolean;
 }
 
+
 export function ListPageHeader({
   title,
   subtitle,
@@ -61,7 +66,9 @@ export function ListPageHeader({
   onPrint,
   onExportExcel,
   onExportPdf,
+  onExportWord,
   onCopy,
+
   onRefresh,
   searchValue = "",
   onSearchChange,
@@ -84,38 +91,49 @@ export function ListPageHeader({
     { label: title },
   ];
 
+  const handleExportExcel = () => {
+    if (onExportExcel) return onExportExcel();
+    if (!exportVisibleTablesToExcel(title)) toast.info("لا يوجد جدول ظاهر لتصديره في هذه الشاشة");
+  };
+  const handleExportWord = () => (onExportWord ? onExportWord() : exportPageToWord(title));
+  const handleExportPdf = () => (onExportPdf ? onExportPdf() : window.print());
+
   return (
     <div className="space-y-0">
-      {/* Breadcrumb Bar */}
-      <div className="bg-primary text-primary-foreground px-4 py-2 rounded-t-lg flex items-center gap-2 text-sm">
-        {defaultBreadcrumbs.map((crumb, index) => (
-          <span key={index} className="flex items-center gap-1">
-            {index > 0 && <ChevronLeft className="h-3 w-3" />}
-            {crumb.href ? (
-              <button
-                onClick={() => navigate(crumb.href!)}
-                className="hover:underline cursor-pointer opacity-80 hover:opacity-100"
-              >
-                {index === 0 && <Home className="h-3.5 w-3.5 inline me-1" />}
-                {crumb.label}
-              </button>
-            ) : (
-              <span className="font-medium">{crumb.label}</span>
-            )}
-          </span>
-        ))}
+      {/* Title + Breadcrumb Bar */}
+      <div className="bg-primary text-primary-foreground px-4 py-3 rounded-t-lg flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="text-lg font-bold leading-tight truncate">{title}</h1>
+          {subtitle && <p className="text-xs opacity-80 mt-0.5">{subtitle}</p>}
+        </div>
+        <nav aria-label="مسار الصفحة" className="flex items-center gap-1 text-xs overflow-x-auto whitespace-nowrap print:hidden">
+          {defaultBreadcrumbs.map((crumb, index) => (
+            <span key={`${crumb.label}-${index}`} className="flex items-center gap-1">
+              {index > 0 && <ChevronLeft className="h-3 w-3 opacity-70" />}
+              {crumb.href ? (
+                <button
+                  type="button"
+                  onClick={() => navigate(crumb.href!)}
+                  className="hover:underline cursor-pointer opacity-80 hover:opacity-100 flex items-center"
+                >
+                  {index === 0 && <Home className="h-3.5 w-3.5 me-1" />}
+                  {crumb.label}
+                </button>
+              ) : (
+                <span className="font-medium">{crumb.label}</span>
+              )}
+            </span>
+          ))}
+        </nav>
       </div>
 
+
       {/* Toolbar */}
-      <div className="bg-card border border-t-0 border-border px-4 py-2 flex items-center gap-1 flex-wrap">
+      <div className="bg-card border border-t-0 border-border px-3 py-2 flex items-center gap-1.5 flex-wrap print:hidden">
         <TooltipProvider delayDuration={300}>
           {/* Add Button - labeled for clarity */}
           {showAdd && onAdd && (
-            <Button
-              onClick={onAdd}
-              size="sm"
-              className="h-9 gap-1.5 bg-green-600 hover:bg-green-700 text-white"
-            >
+            <Button onClick={onAdd} size="sm" className="h-9 gap-1.5">
               <Plus className="h-4 w-4" />
               <span>{addLabel}</span>
             </Button>
@@ -130,6 +148,7 @@ export function ListPageHeader({
                   size="icon"
                   onClick={onDelete}
                   disabled={deleteDisabled}
+                  aria-label="حذف"
                   className="h-9 w-9 text-destructive hover:text-destructive hover:bg-destructive/10"
                 >
                   <Trash2 className="h-5 w-5" />
@@ -152,6 +171,7 @@ export function ListPageHeader({
                   variant="ghost"
                   size="icon"
                   onClick={onPrint || (() => window.print())}
+                  aria-label="طباعة"
                   className="h-9 w-9 text-muted-foreground hover:text-foreground"
                 >
                   <Printer className="h-5 w-5" />
@@ -168,13 +188,32 @@ export function ListPageHeader({
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={onExportExcel}
-                  className="h-9 w-9 text-green-700 hover:text-green-800 hover:bg-green-50"
+                  onClick={handleExportExcel}
+                  aria-label="تصدير Excel"
+                  className="h-9 w-9 text-muted-foreground hover:text-foreground"
                 >
                   <FileSpreadsheet className="h-5 w-5" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>تصدير Excel</TooltipContent>
+            </Tooltip>
+          )}
+
+          {/* Export Word */}
+          {showExport && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleExportWord}
+                  aria-label="تصدير Word"
+                  className="h-9 w-9 text-muted-foreground hover:text-foreground"
+                >
+                  <FileType2 className="h-5 w-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>تصدير Word</TooltipContent>
             </Tooltip>
           )}
 
@@ -185,15 +224,17 @@ export function ListPageHeader({
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={onExportPdf}
-                  className="h-9 w-9 text-red-600 hover:text-red-700 hover:bg-red-50"
+                  onClick={handleExportPdf}
+                  aria-label="حفظ PDF"
+                  className="h-9 w-9 text-muted-foreground hover:text-foreground"
                 >
                   <FileText className="h-5 w-5" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>تصدير PDF</TooltipContent>
+              <TooltipContent>حفظ PDF</TooltipContent>
             </Tooltip>
           )}
+
 
           {/* Copy */}
           {showCopy && (

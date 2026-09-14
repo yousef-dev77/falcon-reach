@@ -217,26 +217,27 @@ export default function BankStatements() {
   if (selectedStatement) {
     return (
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => setSelectedStatement(null)}>
-              <ArrowLeft className="h-5 w-5" />
+        <ListPageHeader
+          title={`كشف حساب: ${selectedStatement.bank_account?.bank_name ?? ""}`}
+          subtitle={`${selectedStatement.statement_number ? `رقم: ${selectedStatement.statement_number} • ` : ""}تاريخ: ${format(new Date(selectedStatement.statement_date), "yyyy-MM-dd")}`}
+          breadcrumbs={[
+            { label: "الرئيسية", href: "/" },
+            { label: "المالية" },
+            { label: "كشوف البنوك" },
+            { label: selectedStatement.statement_number || "التفاصيل" },
+          ]}
+          addLabel="إضافة سطر"
+          onAdd={() => setIsLineDialogOpen(true)}
+          showSearch={false}
+          showRefresh={false}
+          extraActions={
+            <Button variant="ghost" size="sm" onClick={() => setSelectedStatement(null)} className="h-9 gap-1.5">
+              <ArrowLeft className="h-4 w-4" />
+              رجوع
             </Button>
-            <div>
-              <h1 className="text-2xl font-bold">
-                كشف حساب: {selectedStatement.bank_account?.bank_name}
-              </h1>
-              <p className="text-muted-foreground">
-                {selectedStatement.statement_number && `رقم: ${selectedStatement.statement_number} • `}
-                تاريخ: {format(new Date(selectedStatement.statement_date), "yyyy-MM-dd")}
-              </p>
-            </div>
-          </div>
-          <Button onClick={() => setIsLineDialogOpen(true)}>
-            <Plus className="ml-2 h-4 w-4" />
-            إضافة سطر
-          </Button>
-        </div>
+          }
+        />
+
 
         {/* Summary Cards */}
         <div className="grid gap-4 md:grid-cols-4">
