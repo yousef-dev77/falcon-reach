@@ -66,7 +66,9 @@ export function ListPageHeader({
   onPrint,
   onExportExcel,
   onExportPdf,
+  onExportWord,
   onCopy,
+
   onRefresh,
   searchValue = "",
   onSearchChange,
