@@ -129,15 +129,11 @@ export function ListPageHeader({
 
 
       {/* Toolbar */}
-      <div className="bg-card border border-t-0 border-border px-4 py-2 flex items-center gap-1 flex-wrap">
+      <div className="bg-card border border-t-0 border-border px-3 py-2 flex items-center gap-1.5 flex-wrap print:hidden">
         <TooltipProvider delayDuration={300}>
           {/* Add Button - labeled for clarity */}
           {showAdd && onAdd && (
-            <Button
-              onClick={onAdd}
-              size="sm"
-              className="h-9 gap-1.5 bg-green-600 hover:bg-green-700 text-white"
-            >
+            <Button onClick={onAdd} size="sm" className="h-9 gap-1.5">
               <Plus className="h-4 w-4" />
               <span>{addLabel}</span>
             </Button>
@@ -152,6 +148,7 @@ export function ListPageHeader({
                   size="icon"
                   onClick={onDelete}
                   disabled={deleteDisabled}
+                  aria-label="حذف"
                   className="h-9 w-9 text-destructive hover:text-destructive hover:bg-destructive/10"
                 >
                   <Trash2 className="h-5 w-5" />
@@ -174,6 +171,7 @@ export function ListPageHeader({
                   variant="ghost"
                   size="icon"
                   onClick={onPrint || (() => window.print())}
+                  aria-label="طباعة"
                   className="h-9 w-9 text-muted-foreground hover:text-foreground"
                 >
                   <Printer className="h-5 w-5" />
@@ -190,13 +188,32 @@ export function ListPageHeader({
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={onExportExcel}
-                  className="h-9 w-9 text-green-700 hover:text-green-800 hover:bg-green-50"
+                  onClick={handleExportExcel}
+                  aria-label="تصدير Excel"
+                  className="h-9 w-9 text-muted-foreground hover:text-foreground"
                 >
                   <FileSpreadsheet className="h-5 w-5" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>تصدير Excel</TooltipContent>
+            </Tooltip>
+          )}
+
+          {/* Export Word */}
+          {showExport && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleExportWord}
+                  aria-label="تصدير Word"
+                  className="h-9 w-9 text-muted-foreground hover:text-foreground"
+                >
+                  <FileType2 className="h-5 w-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>تصدير Word</TooltipContent>
             </Tooltip>
           )}
 
@@ -207,15 +224,17 @@ export function ListPageHeader({
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={onExportPdf}
-                  className="h-9 w-9 text-red-600 hover:text-red-700 hover:bg-red-50"
+                  onClick={handleExportPdf}
+                  aria-label="حفظ PDF"
+                  className="h-9 w-9 text-muted-foreground hover:text-foreground"
                 >
                   <FileText className="h-5 w-5" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>تصدير PDF</TooltipContent>
+              <TooltipContent>حفظ PDF</TooltipContent>
             </Tooltip>
           )}
+
 
           {/* Copy */}
           {showCopy && (
