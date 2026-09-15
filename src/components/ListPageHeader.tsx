@@ -101,6 +101,10 @@ export function ListPageHeader({
   };
   const handleExportWord = () => (onExportWord ? onExportWord() : exportPageToWord(title));
   const handleExportPdf = () => (onExportPdf ? onExportPdf() : window.print());
+  const handleOfficialPrint = async () => {
+    const ok = await printCurrentScreen(title, officialDocumentNumber);
+    if (!ok) toast.error("تم منع فتح نافذة الطباعة، يرجى السماح بالنوافذ المنبثقة");
+  };
 
   return (
     <div className="space-y-0">
