@@ -139,6 +139,8 @@ const App = () => (
               <Route path="/" element={<ProtectedRoute><DashboardLayout><Index /></DashboardLayout></ProtectedRoute>} />
               <Route path="/apps" element={<ProtectedRoute><DashboardLayout><AppLauncher /></DashboardLayout></ProtectedRoute>} />
               <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout><Dashboard /></DashboardLayout></ProtectedRoute>} />
+              <Route path="/approvals" element={<ProtectedRoute><DashboardLayout><ApprovalsCenter /></DashboardLayout></ProtectedRoute>} />
+              <Route path="/reports/builder" element={<ProtectedRoute><DashboardLayout><ReportBuilder /></DashboardLayout></ProtectedRoute>} />
               
               {/* Finance Routes - Admin + Branch Manager + Accountant */}
               <Route path="/finance/accounts" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'accountant']}><DashboardLayout><Accounts /></DashboardLayout></AdminRoute>} />

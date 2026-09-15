@@ -54,6 +54,8 @@ interface ListPageHeaderProps {
   showSearch?: boolean;
   extraActions?: ReactNode;
   deleteDisabled?: boolean;
+  showOfficialPrint?: boolean;
+  officialDocumentNumber?: string;
 }
 
 
