@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { exportPageToWord, exportVisibleTablesToExcel } from "@/lib/documentExport";
+import { printCurrentScreen } from "@/lib/officialPrint";
 import {
   Tooltip,
   TooltipContent,
