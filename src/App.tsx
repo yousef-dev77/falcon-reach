@@ -12,6 +12,8 @@ import { AdminRoute } from "./components/AdminRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
+import ApprovalsCenter from "./pages/ApprovalsCenter";
+import ReportBuilder from "./pages/ReportBuilder";
 import NotFound from "./pages/NotFound";
 import SessionSelector from "./pages/SessionSelector";
 import AppLauncher from "./pages/AppLauncher";
