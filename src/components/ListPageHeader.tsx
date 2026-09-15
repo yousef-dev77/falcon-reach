@@ -12,11 +12,13 @@ import {
   Search,
   ChevronLeft,
   Home,
+  Stamp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { exportPageToWord, exportVisibleTablesToExcel } from "@/lib/documentExport";
+import { printCurrentScreen } from "@/lib/officialPrint";
 import {
   Tooltip,
   TooltipContent,
@@ -54,6 +56,8 @@ interface ListPageHeaderProps {
   showSearch?: boolean;
   extraActions?: ReactNode;
   deleteDisabled?: boolean;
+  showOfficialPrint?: boolean;
+  officialDocumentNumber?: string;
 }
 
 
@@ -83,6 +87,8 @@ export function ListPageHeader({
   showSearch = true,
   extraActions,
   deleteDisabled = true,
+  showOfficialPrint = true,
+  officialDocumentNumber,
 }: ListPageHeaderProps) {
   const navigate = useNavigate();
 
@@ -97,6 +103,10 @@ export function ListPageHeader({
   };
   const handleExportWord = () => (onExportWord ? onExportWord() : exportPageToWord(title));
   const handleExportPdf = () => (onExportPdf ? onExportPdf() : window.print());
+  const handleOfficialPrint = async () => {
+    const ok = await printCurrentScreen(title, officialDocumentNumber);
+    if (!ok) toast.error("تم منع فتح نافذة الطباعة، يرجى السماح بالنوافذ المنبثقة");
+  };
 
   return (
     <div className="space-y-0">
@@ -178,6 +188,24 @@ export function ListPageHeader({
                 </Button>
               </TooltipTrigger>
               <TooltipContent>طباعة</TooltipContent>
+            </Tooltip>
+          )}
+
+          {/* Official Print (company letterhead) */}
+          {showOfficialPrint && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleOfficialPrint}
+                  aria-label="طباعة رسمية بترويسة الشركة"
+                  className="h-9 w-9 text-muted-foreground hover:text-foreground"
+                >
+                  <Stamp className="h-5 w-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>طباعة رسمية بترويسة الشركة</TooltipContent>
             </Tooltip>
           )}
 

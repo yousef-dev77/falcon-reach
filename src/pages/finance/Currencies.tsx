@@ -149,7 +149,12 @@ export default function Currencies() {
           { label: "النظام المالي" },
           { label: "العملات" },
         ]}
-        showAdd={false}
+        onAdd={() => {
+          setEditingCurrency(null);
+          setFormData({ code: "", name: "", symbol: "", exchange_rate: "1.0", is_base: false, is_active: true });
+          setIsDialogOpen(true);
+        }}
+        addLabel="عملة جديدة"
         showSearch={false}
       />
 
@@ -215,6 +220,76 @@ export default function Currencies() {
             )}
           </CardContent>
         </Card>
+
+      <Dialog open={isDialogOpen} onOpenChange={(o) => (o ? setIsDialogOpen(true) : resetForm())}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editingCurrency ? "تعديل عملة" : "إضافة عملة"}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>رمز العملة *</Label>
+                <Input
+                  value={formData.code}
+                  onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
+                  placeholder="YER"
+                  required
+                />
+              </div>
+              <div>
+                <Label>الاسم *</Label>
+                <Input
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="ريال يمني"
+                  required
+                />
+              </div>
+              <div>
+                <Label>العلامة</Label>
+                <Input
+                  value={formData.symbol}
+                  onChange={(e) => setFormData({ ...formData, symbol: e.target.value })}
+                  placeholder="ر.ي"
+                />
+              </div>
+              <div>
+                <Label>سعر الصرف مقابل العملة الأساسية</Label>
+                <Input
+                  type="number"
+                  step="0.0001"
+                  value={formData.exchange_rate}
+                  onChange={(e) => setFormData({ ...formData, exchange_rate: e.target.value })}
+                  required
+                />
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={formData.is_base}
+                onCheckedChange={(v) => setFormData({ ...formData, is_base: v })}
+              />
+              <Label>العملة الأساسية للنظام</Label>
+            </div>
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={formData.is_active}
+                onCheckedChange={(v) => setFormData({ ...formData, is_active: v })}
+              />
+              <Label>نشطة</Label>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={resetForm}>
+                إلغاء
+              </Button>
+              <Button type="submit" disabled={saveMutation.isPending}>
+                حفظ
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

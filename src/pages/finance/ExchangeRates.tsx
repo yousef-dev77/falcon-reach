@@ -174,7 +174,11 @@ export default function ExchangeRates() {
           { label: "النظام المالي" },
           { label: "أسعار الصرف" },
         ]}
-        showAdd={false}
+        onAdd={() => {
+          resetForm();
+          setIsDialogOpen(true);
+        }}
+        addLabel="سعر صرف جديد"
         showSearch={false}
       />
 

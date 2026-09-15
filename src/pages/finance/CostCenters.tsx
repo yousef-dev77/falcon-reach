@@ -282,7 +282,8 @@ export default function CostCenters() {
           { label: "النظام المالي" },
           { label: "مراكز التكلفة" },
         ]}
-        showAdd={false}
+        onAdd={openAddDialog}
+        addLabel="مركز تكلفة جديد"
         showSearch={false}
       />
 

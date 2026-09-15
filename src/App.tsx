@@ -12,6 +12,8 @@ import { AdminRoute } from "./components/AdminRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
+import ApprovalsCenter from "./pages/ApprovalsCenter";
+import ReportBuilder from "./pages/ReportBuilder";
 import NotFound from "./pages/NotFound";
 import SessionSelector from "./pages/SessionSelector";
 import AppLauncher from "./pages/AppLauncher";
@@ -137,6 +139,8 @@ const App = () => (
               <Route path="/" element={<ProtectedRoute><DashboardLayout><Index /></DashboardLayout></ProtectedRoute>} />
               <Route path="/apps" element={<ProtectedRoute><DashboardLayout><AppLauncher /></DashboardLayout></ProtectedRoute>} />
               <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout><Dashboard /></DashboardLayout></ProtectedRoute>} />
+              <Route path="/approvals" element={<ProtectedRoute><DashboardLayout><ApprovalsCenter /></DashboardLayout></ProtectedRoute>} />
+              <Route path="/reports/builder" element={<ProtectedRoute><DashboardLayout><ReportBuilder /></DashboardLayout></ProtectedRoute>} />
               
               {/* Finance Routes - Admin + Branch Manager + Accountant */}
               <Route path="/finance/accounts" element={<AdminRoute allowedRoles={['admin', 'branch_manager', 'accountant']}><DashboardLayout><Accounts /></DashboardLayout></AdminRoute>} />

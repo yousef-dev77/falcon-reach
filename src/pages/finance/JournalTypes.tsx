@@ -267,7 +267,11 @@ export default function JournalTypes() {
           { label: "النظام المالي" },
           { label: "أنواع القيود" },
         ]}
-        showAdd={false}
+        onAdd={() => {
+          resetForm();
+          setIsDialogOpen(true);
+        }}
+        addLabel="نوع قيد جديد"
         showSearch={false}
       />
 
