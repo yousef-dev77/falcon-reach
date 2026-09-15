@@ -85,6 +85,8 @@ export function ListPageHeader({
   showSearch = true,
   extraActions,
   deleteDisabled = true,
+  showOfficialPrint = true,
+  officialDocumentNumber,
 }: ListPageHeaderProps) {
   const navigate = useNavigate();
 
