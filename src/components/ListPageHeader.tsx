@@ -12,6 +12,7 @@ import {
   Search,
   ChevronLeft,
   Home,
+  Stamp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -187,6 +188,24 @@ export function ListPageHeader({
                 </Button>
               </TooltipTrigger>
               <TooltipContent>طباعة</TooltipContent>
+            </Tooltip>
+          )}
+
+          {/* Official Print (company letterhead) */}
+          {showOfficialPrint && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleOfficialPrint}
+                  aria-label="طباعة رسمية بترويسة الشركة"
+                  className="h-9 w-9 text-muted-foreground hover:text-foreground"
+                >
+                  <Stamp className="h-5 w-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>طباعة رسمية بترويسة الشركة</TooltipContent>
             </Tooltip>
           )}
 
