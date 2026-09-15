@@ -205,7 +205,8 @@ export default function ExpensesRevenue() {
           { label: "النظام المالي" },
           { label: "المصاريف والإيرادات" },
         ]}
-        showAdd={false}
+        onAdd={() => openAddDialog("expense")}
+        addLabel="عملية جديدة"
         showSearch={false}
       />
 

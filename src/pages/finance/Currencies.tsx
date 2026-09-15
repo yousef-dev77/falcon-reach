@@ -149,7 +149,12 @@ export default function Currencies() {
           { label: "النظام المالي" },
           { label: "العملات" },
         ]}
-        showAdd={false}
+        onAdd={() => {
+          setEditingCurrency(null);
+          setFormData({ code: "", name: "", symbol: "", exchange_rate: "1.0", is_base: false, is_active: true });
+          setIsDialogOpen(true);
+        }}
+        addLabel="عملة جديدة"
         showSearch={false}
       />
 

@@ -203,7 +203,11 @@ export default function FixedAssets() {
           { label: "النظام المالي" },
           { label: "الأصول الثابتة" },
         ]}
-        showAdd={false}
+        onAdd={() => {
+          resetForm();
+          setIsDialogOpen(true);
+        }}
+        addLabel="أصل ثابت جديد"
         showSearch={false}
       />
 
