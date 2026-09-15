@@ -1,5 +1,5 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Building2, ArrowRight, LayoutGrid } from "lucide-react";
+import { Building2, ArrowRight, LayoutGrid, LayoutDashboard, ClipboardCheck, FileSearch } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
   Sidebar,
@@ -16,6 +16,12 @@ import { Button } from "@/components/ui/button";
 import { MODULES, findModuleByPath, getModule, type ModuleDefinition } from "@/config/modules";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useScreenPermissions } from "@/hooks/useScreenPermissions";
+
+const GENERAL_ITEMS = [
+  { title: "لوحة التحكم", url: "/dashboard", icon: LayoutDashboard },
+  { title: "مركز الموافقات", url: "/approvals", icon: ClipboardCheck },
+  { title: "منشئ التقارير", url: "/reports/builder", icon: FileSearch },
+];
 
 function getActiveModuleKey(): string | null {
   return sessionStorage.getItem("active_module");
@@ -110,6 +116,31 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
+        <SidebarGroup>
+          <SidebarMenu>
+            {open && (
+              <div className="px-3 pb-1 pt-1 text-xs font-semibold text-sidebar-foreground/60">عام</div>
+            )}
+            {GENERAL_ITEMS.map((item) => (
+              <SidebarMenuItem key={item.url}>
+                <SidebarMenuButton asChild>
+                  <NavLink
+                    to={item.url}
+                    className={({ isActive }) =>
+                      isActive
+                        ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                        : "hover:bg-sidebar-accent"
+                    }
+                  >
+                    <item.icon className="h-4 w-4" />
+                    {open && <span className="truncate">{item.title}</span>}
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ))}
+          </SidebarMenu>
+        </SidebarGroup>
+
         <SidebarGroup>
           <SidebarMenu>
             {items.map((item) => (
