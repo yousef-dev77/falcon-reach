@@ -416,7 +416,10 @@ export default function FxAdjustment() {
                         {adj.difference_amount.toLocaleString()}
                       </TableCell>
                       <TableCell>
-                        <Badge variant={adj.adjustment_type === "gain" ? "default" : "destructive"}>
+                        <Badge
+                          variant={adj.adjustment_type === "gain" ? "outline" : "destructive"}
+                          className={adj.adjustment_type === "gain" ? "bg-success/10 text-success border-success/40" : ""}
+                        >
                           {adj.adjustment_type === "gain" ? (
                             <>
                               <TrendingUp className="h-3 w-3 ml-1" />
