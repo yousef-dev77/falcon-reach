@@ -285,27 +285,27 @@ export default function FxAdjustment() {
                 </div>
 
                 {formData.currency_id && parseFloat(formData.original_amount) > 0 && (
-                  <Card className={`${isGain ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"}`}>
+                  <Card className={isGain ? "bg-success/10 border-success/40" : "bg-destructive/10 border-destructive/40"}>
                     <CardContent className="py-4 space-y-2">
-                      <div className="flex justify-between">
+                      <div className="flex justify-between text-muted-foreground">
                         <span>القيمة القديمة:</span>
-                        <span>{oldValue.toLocaleString()}</span>
+                        <span className="text-foreground font-medium">{oldValue.toLocaleString()}</span>
                       </div>
-                      <div className="flex justify-between">
+                      <div className="flex justify-between text-muted-foreground">
                         <span>القيمة الجديدة:</span>
-                        <span>{newValue.toLocaleString()}</span>
+                        <span className="text-foreground font-medium">{newValue.toLocaleString()}</span>
                       </div>
-                      <hr />
+                      <hr className="border-border" />
                       <div className="flex justify-between items-center font-bold">
                         <span className="flex items-center gap-2">
                           {isGain ? (
-                            <TrendingUp className="h-4 w-4 text-green-600" />
+                            <TrendingUp className="h-4 w-4 text-success" />
                           ) : (
-                            <TrendingDown className="h-4 w-4 text-red-600" />
+                            <TrendingDown className="h-4 w-4 text-destructive" />
                           )}
                           {isGain ? "أرباح فروقات العملة:" : "خسائر فروقات العملة:"}
                         </span>
-                        <span className={isGain ? "text-green-600" : "text-red-600"}>
+                        <span className={isGain ? "text-success" : "text-destructive"}>
                           {Math.abs(difference).toLocaleString()}
                         </span>
                       </div>
@@ -412,7 +412,7 @@ export default function FxAdjustment() {
                       </TableCell>
                       <TableCell>{adj.original_amount.toLocaleString()}</TableCell>
                       <TableCell>{adj.adjusted_amount.toLocaleString()}</TableCell>
-                      <TableCell className={adj.adjustment_type === "gain" ? "text-green-600" : "text-red-600"}>
+                      <TableCell className={adj.adjustment_type === "gain" ? "text-success font-medium" : "text-destructive font-medium"}>
                         {adj.difference_amount.toLocaleString()}
                       </TableCell>
                       <TableCell>
