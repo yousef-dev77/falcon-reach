@@ -376,7 +376,6 @@ export default function FxAdjustment() {
               </form>
             </DialogContent>
           </Dialog>
-        </div>
 
         <Card>
           <CardHeader>
