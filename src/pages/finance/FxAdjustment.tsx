@@ -194,7 +194,7 @@ export default function FxAdjustment() {
 
   return (
     <div className="space-y-4">
-        <div className="flex items-center justify-between">
+        <div>
           <ListPageHeader
         title="تسوية فروقات العملة"
         breadcrumbs={[
@@ -202,16 +202,14 @@ export default function FxAdjustment() {
           { label: "النظام المالي" },
           { label: "تسوية فروقات العملة" },
         ]}
-        showAdd={false}
+        onAdd={() => {
+          resetForm();
+          setIsDialogOpen(true);
+        }}
+        addLabel="تسوية جديدة"
         showSearch={false}
       />
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={() => resetForm()}>
-                <Plus className="ml-2 h-4 w-4" />
-                تسوية جديدة
-              </Button>
-            </DialogTrigger>
             <DialogContent className="max-w-lg">
               <DialogHeader>
                 <DialogTitle>إنشاء تسوية فروقات العملة</DialogTitle>
