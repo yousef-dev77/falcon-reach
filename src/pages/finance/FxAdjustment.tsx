@@ -194,8 +194,7 @@ export default function FxAdjustment() {
 
   return (
     <div className="space-y-4">
-        <div>
-          <ListPageHeader
+        <ListPageHeader
         title="تسوية فروقات العملة"
         breadcrumbs={[
           { label: "الرئيسية", href: "/" },
