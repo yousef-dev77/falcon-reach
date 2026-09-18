@@ -59,6 +59,8 @@ All colors MUST be HSL.
     /* Warning */
     --warning: 43 100% 70%;
     --warning-foreground: 215 25% 15%;
+    --warning-strong: 35 92% 33%;
+
   }
 
   .dark {
@@ -104,6 +106,8 @@ All colors MUST be HSL.
 
     --warning: 43 100% 70%;
     --warning-foreground: 215 25% 15%;
+    --warning-strong: 43 96% 60%;
+
   }
 }
 
