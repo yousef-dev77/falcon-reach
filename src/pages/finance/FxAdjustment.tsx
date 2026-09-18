@@ -33,7 +33,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, RefreshCw, TrendingUp, TrendingDown, ArrowUpDown } from "lucide-react";
+import { TrendingUp, TrendingDown, ArrowUpDown } from "lucide-react";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 import { ListPageHeader } from "@/components/ListPageHeader";
