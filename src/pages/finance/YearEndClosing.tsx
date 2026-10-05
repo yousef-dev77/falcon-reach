@@ -273,24 +273,21 @@ export default function YearEndClosing() {
 
   return (
     <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <ListPageHeader
+      <ListPageHeader
         title="الإقفال السنوي"
         breadcrumbs={[
           { label: "الرئيسية", href: "/" },
           { label: "النظام المالي" },
           { label: "الإقفال السنوي" },
         ]}
-        showAdd={false}
+        onAdd={() => {
+          resetForm();
+          setIsDialogOpen(true);
+        }}
+        addLabel="إقفال سنة مالية"
         showSearch={false}
       />
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={() => resetForm()}>
-                <Lock className="ml-2 h-4 w-4" />
-                إقفال سنة مالية
-              </Button>
-            </DialogTrigger>
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogContent className="max-w-lg">
               <DialogHeader>
                 <DialogTitle>إقفال السنة المالية</DialogTitle>
