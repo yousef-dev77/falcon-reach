@@ -258,9 +258,9 @@ export default function YearEndClosing() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "completed":
-        return <Badge className="bg-green-500"><CheckCircle className="h-3 w-3 ml-1" />مكتمل</Badge>;
+        return <Badge className="bg-success text-success-foreground"><CheckCircle className="h-3 w-3 ml-1" />مكتمل</Badge>;
       case "reopened":
-        return <Badge className="bg-amber-500"><Unlock className="h-3 w-3 ml-1" />معاد فتحه</Badge>;
+        return <Badge className="bg-warning text-warning-foreground"><Unlock className="h-3 w-3 ml-1" />معاد فتحه</Badge>;
       case "in_progress":
         return <Badge variant="secondary"><Play className="h-3 w-3 ml-1" />قيد التنفيذ</Badge>;
       case "pending":
@@ -336,26 +336,26 @@ export default function YearEndClosing() {
                     <CardContent className="py-4 space-y-3">
                       <div className="flex justify-between items-center">
                         <span className="flex items-center gap-2">
-                          <TrendingUp className="h-4 w-4 text-green-500" />
+                          <TrendingUp className="h-4 w-4 text-success" />
                           إجمالي الإيرادات:
                         </span>
-                        <span className="font-bold text-green-600">
+                        <span className="font-bold text-success">
                           {closingData.revenue.toLocaleString()}
                         </span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="flex items-center gap-2">
-                          <TrendingDown className="h-4 w-4 text-red-500" />
+                          <TrendingDown className="h-4 w-4 text-destructive" />
                           إجمالي المصروفات:
                         </span>
-                        <span className="font-bold text-red-600">
+                        <span className="font-bold text-destructive">
                           {closingData.expenses.toLocaleString()}
                         </span>
                       </div>
                       <hr />
                       <div className="flex justify-between items-center text-lg">
                         <span>صافي الربح/الخسارة:</span>
-                        <span className={`font-bold ${closingData.netIncome >= 0 ? "text-green-600" : "text-red-600"}`}>
+                        <span className={`font-bold ${closingData.netIncome >= 0 ? "text-success" : "text-destructive"}`}>
                           {closingData.netIncome.toLocaleString()}
                         </span>
                       </div>
@@ -378,13 +378,13 @@ export default function YearEndClosing() {
               </div>
             </DialogContent>
           </Dialog>
-        </div>
+
 
         <AlertDialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle className="flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5 text-yellow-500" />
+                <AlertTriangle className="h-5 w-5 text-warning-strong" />
                 تأكيد إقفال السنة المالية
               </AlertDialogTitle>
               <AlertDialogDescription>
@@ -441,13 +441,13 @@ export default function YearEndClosing() {
                       <TableCell>
                         {format(new Date(closing.closing_date), "dd MMMM yyyy", { locale: ar })}
                       </TableCell>
-                      <TableCell className="text-green-600">
+                      <TableCell className="text-success">
                         {closing.total_revenue.toLocaleString()}
                       </TableCell>
-                      <TableCell className="text-red-600">
+                      <TableCell className="text-destructive">
                         {closing.total_expenses.toLocaleString()}
                       </TableCell>
-                      <TableCell className={`font-bold ${closing.net_income >= 0 ? "text-green-600" : "text-red-600"}`}>
+                      <TableCell className={`font-bold ${closing.net_income >= 0 ? "text-success" : "text-destructive"}`}>
                         {closing.net_income.toLocaleString()}
                       </TableCell>
                       <TableCell>{getStatusBadge(closing.status)}</TableCell>
@@ -456,7 +456,7 @@ export default function YearEndClosing() {
                           <Button
                             variant="outline"
                             size="sm"
-                            className="gap-1 border-amber-400 text-amber-700 hover:bg-amber-50"
+                            className="gap-1 border-warning-strong/50 text-warning-strong hover:bg-warning/20"
                             onClick={() => {
                               setReopenTarget({
                                 periodId: closing.fiscal_period_id,
@@ -471,7 +471,7 @@ export default function YearEndClosing() {
                           </Button>
                         )}
                         {closing.status === "reopened" && (
-                          <span className="text-xs text-amber-700">معاد فتحه — يجب إعادة الإقفال</span>
+                          <span className="text-xs text-warning-strong">معاد فتحه — يجب إعادة الإقفال</span>
                         )}
                       </TableCell>
                     </TableRow>
@@ -495,7 +495,7 @@ export default function YearEndClosing() {
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle className="flex items-center gap-2">
-                <Unlock className="h-5 w-5 text-amber-500" />
+                <Unlock className="h-5 w-5 text-warning-strong" />
                 إعادة فتح السنة المالية
               </AlertDialogTitle>
               <AlertDialogDescription>
@@ -522,7 +522,7 @@ export default function YearEndClosing() {
                     reason: reopenReason.trim(),
                   })
                 }
-                className="bg-amber-600 hover:bg-amber-700"
+                className="bg-warning text-warning-foreground hover:bg-warning/90"
               >
                 {reopenMutation.isPending ? "جاري الفتح..." : "تأكيد إعادة الفتح"}
               </AlertDialogAction>
