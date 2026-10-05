@@ -334,22 +334,18 @@ export default function FiscalPeriods() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <ListPageHeader
-          title="الفترات المحاسبية"
-          breadcrumbs={[
-            { label: "الرئيسية", href: "/" },
-            { label: "النظام المالي" },
-            { label: "الفترات المحاسبية" },
-          ]}
-          showAdd={false}
-          showSearch={false}
-        />
-        <Button onClick={openAddDialog}>
-          <Plus className="h-4 w-4 ml-2" />
-          إضافة فترة
-        </Button>
-      </div>
+      <ListPageHeader
+        title="الفترات المحاسبية"
+        breadcrumbs={[
+          { label: "الرئيسية", href: "/" },
+          { label: "النظام المالي" },
+          { label: "الفترات المحاسبية" },
+        ]}
+        onAdd={openAddDialog}
+        addLabel="إضافة فترة"
+        showSearch={false}
+      />
+
 
       {/* Add/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
