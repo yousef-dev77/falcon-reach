@@ -3,11 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Edit, Trash2, Loader2, Calendar, Lock, Unlock, AlertTriangle } from "lucide-react";
+import { Edit, Trash2, Loader2, Calendar, Lock, Unlock, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format, differenceInDays } from "date-fns";
@@ -334,22 +334,18 @@ export default function FiscalPeriods() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <ListPageHeader
-          title="الفترات المحاسبية"
-          breadcrumbs={[
-            { label: "الرئيسية", href: "/" },
-            { label: "النظام المالي" },
-            { label: "الفترات المحاسبية" },
-          ]}
-          showAdd={false}
-          showSearch={false}
-        />
-        <Button onClick={openAddDialog}>
-          <Plus className="h-4 w-4 ml-2" />
-          إضافة فترة
-        </Button>
-      </div>
+      <ListPageHeader
+        title="الفترات المحاسبية"
+        breadcrumbs={[
+          { label: "الرئيسية", href: "/" },
+          { label: "النظام المالي" },
+          { label: "الفترات المحاسبية" },
+        ]}
+        onAdd={openAddDialog}
+        addLabel="إضافة فترة"
+        showSearch={false}
+      />
+
 
       {/* Add/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -396,7 +392,7 @@ export default function FiscalPeriods() {
             <CardTitle className="text-sm font-medium">فترات مفتوحة</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{openPeriods}</div>
+            <div className="text-2xl font-bold text-success">{openPeriods}</div>
           </CardContent>
         </Card>
         <Card>
@@ -474,7 +470,7 @@ export default function FiscalPeriods() {
                                 onClick={() => setClosingPeriodId(period.id)}
                                 title="إغلاق الفترة"
                               >
-                                <Lock className="h-4 w-4 text-orange-500" />
+                                <Lock className="h-4 w-4 text-warning-strong" />
                               </Button>
                               <Button 
                                 variant="ghost" 
@@ -491,7 +487,7 @@ export default function FiscalPeriods() {
                               onClick={() => handleReopenPeriod(period.id)}
                               title="إعادة فتح الفترة"
                             >
-                              <Unlock className="h-4 w-4 text-green-600" />
+                              <Unlock className="h-4 w-4 text-success" />
                             </Button>
                           )}
                         </div>
@@ -541,7 +537,7 @@ export default function FiscalPeriods() {
             <AlertDialogCancel>إلغاء</AlertDialogCancel>
             <AlertDialogAction 
               onClick={() => closingPeriodId && handleClosePeriod(closingPeriodId)}
-              className="bg-orange-500 hover:bg-orange-600"
+              className="bg-warning text-warning-foreground hover:bg-warning/90"
             >
               إغلاق الفترة
             </AlertDialogAction>
