@@ -1140,6 +1140,7 @@ export type Database = {
         Row: {
           account_id: string | null
           accumulated_depreciation: number | null
+          branch_id: string | null
           category: string | null
           code: string
           created_at: string
@@ -1163,6 +1164,7 @@ export type Database = {
         Insert: {
           account_id?: string | null
           accumulated_depreciation?: number | null
+          branch_id?: string | null
           category?: string | null
           code: string
           created_at?: string
@@ -1186,6 +1188,7 @@ export type Database = {
         Update: {
           account_id?: string | null
           accumulated_depreciation?: number | null
+          branch_id?: string | null
           category?: string | null
           code?: string
           created_at?: string
@@ -1212,6 +1215,13 @@ export type Database = {
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fixed_assets_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
             referencedColumns: ["id"]
           },
         ]
