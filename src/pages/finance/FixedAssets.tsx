@@ -2,14 +2,16 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, Loader2 } from "lucide-react";
+import { Edit, Trash2, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { Link } from "react-router-dom";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ListPageHeader } from "@/components/ListPageHeader";
@@ -29,7 +31,14 @@ type FixedAsset = {
   current_value: number;
   location: string | null;
   status: string;
+  account_id: string | null;
+  depreciation_account_id: string | null;
+  expense_account_id: string | null;
+  depreciation_start_date: string | null;
+  branch_id: string | null;
 };
+type Acc = { id: string; code: string; name: string; account_type: string; parent_id: string | null };
+const emptyForm = () => ({ code: "", name: "", description: "", category: "", purchase_date: new Date().toISOString().split("T")[0], purchase_cost: 0, useful_life_years: 5, salvage_value: 0, depreciation_method: "straight_line", location: "", status: "active", account_id: "", depreciation_account_id: "", expense_account_id: "", depreciation_start_date: "", branch_id: "" });
 
 export default function FixedAssets() {
   const { user } = useAuth();
@@ -37,22 +46,18 @@ export default function FixedAssets() {
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingAsset, setEditingAsset] = useState<FixedAsset | null>(null);
-  const [formData, setFormData] = useState({
-    code: "",
-    name: "",
-    description: "",
-    category: "",
-    purchase_date: new Date().toISOString().split("T")[0],
-    purchase_cost: 0,
-    useful_life_years: 5,
-    salvage_value: 0,
-    depreciation_method: "straight_line",
-    location: "",
-    status: "active",
-  });
+  const [formData, setFormData] = useState(emptyForm());
+  const [accounts, setAccounts] = useState<Acc[]>([]);
+  const [branches, setBranches] = useState<{ id: string; name: string }[]>([]);
 
   useEffect(() => {
     fetchAssets();
+    supabase.from("accounts").select("id,code,name,account_type,parent_id").eq("is_active", true).order("code").then(({ data }) => {
+      const all = (data || []) as Acc[];
+      const parents = new Set(all.map((a) => a.parent_id).filter(Boolean));
+      setAccounts(all.filter((a) => !parents.has(a.id)));
+    });
+    supabase.from("branches").select("id,name").eq("is_active", true).then(({ data }) => setBranches((data as any) || []));
   }, []);
 
   const fetchAssets = async () => {
@@ -83,7 +88,12 @@ export default function FixedAssets() {
       return;
     }
 
-    const currentValue = formData.purchase_cost - formData.salvage_value;
+    if (!formData.code || !formData.name) return toast.error("الرمز والاسم مطلوبان");
+    if (formData.purchase_cost <= 0) return toast.error("التكلفة يجب أن تكون أكبر من صفر");
+    if (formData.salvage_value >= formData.purchase_cost) return toast.error("قيمة الخردة يجب أن تكون أقل من التكلفة");
+    if (!formData.depreciation_account_id || !formData.expense_account_id) return toast.error("حدد حساب مجمع الإهلاك وحساب مصروف الإهلاك");
+    const keepAcc = editingAsset ? editingAsset.accumulated_depreciation : 0;
+    const currentValue = formData.purchase_cost - keepAcc;
 
     const assetData = {
       code: formData.code,
@@ -98,7 +108,12 @@ export default function FixedAssets() {
       location: formData.location || null,
       status: formData.status,
       current_value: currentValue,
-      accumulated_depreciation: 0,
+      accumulated_depreciation: keepAcc,
+      account_id: formData.account_id || null,
+      depreciation_account_id: formData.depreciation_account_id || null,
+      expense_account_id: formData.expense_account_id || null,
+      depreciation_start_date: formData.depreciation_start_date || null,
+      branch_id: formData.branch_id || null,
     };
 
     if (editingAsset) {
@@ -160,27 +175,36 @@ export default function FixedAssets() {
       depreciation_method: asset.depreciation_method,
       location: asset.location || "",
       status: asset.status,
+      account_id: asset.account_id || "",
+      depreciation_account_id: asset.depreciation_account_id || "",
+      expense_account_id: asset.expense_account_id || "",
+      depreciation_start_date: asset.depreciation_start_date || "",
+      branch_id: asset.branch_id || "",
     });
     setIsDialogOpen(true);
   };
 
   const resetForm = () => {
-    setFormData({
-      code: "",
-      name: "",
-      description: "",
-      category: "",
-      purchase_date: new Date().toISOString().split("T")[0],
-      purchase_cost: 0,
-      useful_life_years: 5,
-      salvage_value: 0,
-      depreciation_method: "straight_line",
-      location: "",
-      status: "active",
-    });
+    setFormData(emptyForm());
     setEditingAsset(null);
     setIsDialogOpen(false);
   };
+
+  const set = (k: string, v: any) => setFormData((f) => ({ ...f, [k]: v }));
+  const accSelect = (k: "account_id" | "depreciation_account_id" | "expense_account_id", label: string, types: string[]) => (
+    <div className="space-y-1">
+      <Label>{label}</Label>
+      <Select value={(formData as any)[k] || undefined} onValueChange={(v) => set(k, v)}>
+        <SelectTrigger><SelectValue placeholder="اختر الحساب" /></SelectTrigger>
+        <SelectContent>
+          {accounts.filter((a) => types.includes(a.account_type)).map((a) => (
+            <SelectItem key={a.id} value={a.id}>{a.code} - {a.name}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+  const monthly = calculateDepreciation(formData.purchase_cost, formData.salvage_value, formData.useful_life_years) / 12;
 
   const totalAssetValue = assets.reduce((sum, a) => sum + a.purchase_cost, 0);
   const totalCurrentValue = assets.reduce((sum, a) => sum + a.current_value, 0);
@@ -211,6 +235,17 @@ export default function FixedAssets() {
         showSearch={false}
       />
 
+      <Card className="border-primary/30 bg-primary/5">
+        <CardContent className="pt-4 text-sm space-y-1">
+          <div className="font-semibold">طريقة العمل</div>
+          <ol className="list-decimal ps-5 space-y-0.5 text-muted-foreground">
+            <li>أنشئ الأصل هنا: التكلفة، العمر الإنتاجي، قيمة الخردة، وحسابات الأصل ومجمع الإهلاك ومصروف الإهلاك.</li>
+            <li>انتقل إلى <Link to="/finance/asset-depreciation" className="text-primary underline">جدول الإهلاك</Link> واختر الأصل ثم "توليد جدول الإهلاك" (قسط شهري بالقسط الثابت).</li>
+            <li>رحّل الأقساط المستحقة شهرياً: يُنشأ قيد (من ح/ مصروف الإهلاك إلى ح/ مجمع الإهلاك) وتنخفض القيمة الدفترية.</li>
+          </ol>
+        </CardContent>
+      </Card>
+
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="pb-3">
@@ -225,7 +260,7 @@ export default function FixedAssets() {
             <CardTitle className="text-sm font-medium">إجمالي التكلفة</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalAssetValue.toLocaleString()} ر.س</div>
+            <div className="text-2xl font-bold">{totalAssetValue.toLocaleString()} ر.ي</div>
           </CardContent>
         </Card>
         <Card>
@@ -233,7 +268,7 @@ export default function FixedAssets() {
             <CardTitle className="text-sm font-medium">القيمة الدفترية</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalCurrentValue.toLocaleString()} ر.س</div>
+            <div className="text-2xl font-bold">{totalCurrentValue.toLocaleString()} ر.ي</div>
           </CardContent>
         </Card>
         <Card>
@@ -241,7 +276,7 @@ export default function FixedAssets() {
             <CardTitle className="text-sm font-medium">مجمع الإهلاك</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalDepreciation.toLocaleString()} ر.س</div>
+            <div className="text-2xl font-bold">{totalDepreciation.toLocaleString()} ر.ي</div>
           </CardContent>
         </Card>
       </div>
@@ -284,8 +319,8 @@ export default function FixedAssets() {
                       {!asset.category && "-"}
                     </TableCell>
                     <TableCell>{format(new Date(asset.purchase_date), "yyyy/MM/dd")}</TableCell>
-                    <TableCell>{asset.purchase_cost.toLocaleString()} ر.س</TableCell>
-                    <TableCell>{asset.current_value.toLocaleString()} ر.س</TableCell>
+                    <TableCell>{asset.purchase_cost.toLocaleString()} ر.ي</TableCell>
+                    <TableCell>{asset.current_value.toLocaleString()} ر.ي</TableCell>
                     <TableCell>
                       <Badge variant={asset.status === "active" ? "default" : "secondary"}>
                         {asset.status === "active" && "نشط"}
@@ -310,6 +345,59 @@ export default function FixedAssets() {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={isDialogOpen} onOpenChange={(o) => (o ? setIsDialogOpen(true) : resetForm())}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>{editingAsset ? "تعديل أصل ثابت" : "أصل ثابت جديد"}</DialogTitle></DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid gap-3 md:grid-cols-3">
+              <div className="space-y-1"><Label>الرمز *</Label><Input value={formData.code} onChange={(e) => set("code", e.target.value)} /></div>
+              <div className="space-y-1 md:col-span-2"><Label>اسم الأصل *</Label><Input value={formData.name} onChange={(e) => set("name", e.target.value)} /></div>
+              <div className="space-y-1"><Label>الفئة</Label>
+                <Select value={formData.category || undefined} onValueChange={(v) => set("category", v)}>
+                  <SelectTrigger><SelectValue placeholder="اختر الفئة" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="buildings">مباني</SelectItem><SelectItem value="vehicles">سيارات</SelectItem>
+                    <SelectItem value="equipment">معدات</SelectItem><SelectItem value="furniture">أثاث</SelectItem>
+                    <SelectItem value="computers">أجهزة حاسوب</SelectItem><SelectItem value="other">أخرى</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1"><Label>الفرع</Label>
+                <Select value={formData.branch_id || undefined} onValueChange={(v) => set("branch_id", v)}>
+                  <SelectTrigger><SelectValue placeholder="اختر الفرع" /></SelectTrigger>
+                  <SelectContent>{branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1"><Label>الموقع</Label><Input value={formData.location} onChange={(e) => set("location", e.target.value)} /></div>
+              <div className="space-y-1"><Label>تاريخ الشراء *</Label><Input type="date" value={formData.purchase_date} onChange={(e) => set("purchase_date", e.target.value)} /></div>
+              <div className="space-y-1"><Label>بداية الإهلاك</Label><Input type="date" value={formData.depreciation_start_date} onChange={(e) => set("depreciation_start_date", e.target.value)} /></div>
+              <div className="space-y-1"><Label>الحالة</Label>
+                <Select value={formData.status} onValueChange={(v) => set("status", v)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent><SelectItem value="active">نشط</SelectItem><SelectItem value="under_maintenance">صيانة</SelectItem><SelectItem value="disposed">مستبعد</SelectItem></SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1"><Label>التكلفة *</Label><Input type="number" min={0} step="0.01" value={formData.purchase_cost} onChange={(e) => set("purchase_cost", Number(e.target.value))} /></div>
+              <div className="space-y-1"><Label>العمر الإنتاجي (سنوات) *</Label><Input type="number" min={1} value={formData.useful_life_years} onChange={(e) => set("useful_life_years", Number(e.target.value))} /></div>
+              <div className="space-y-1"><Label>قيمة الخردة</Label><Input type="number" min={0} step="0.01" value={formData.salvage_value} onChange={(e) => set("salvage_value", Number(e.target.value))} /></div>
+            </div>
+            <div className="rounded-[10px] bg-muted p-3 text-sm">
+              القسط الشهري المتوقع: <span className="font-bold">{monthly.toLocaleString(undefined, { maximumFractionDigits: 2 })} ر.ي</span> — السنوي: <span className="font-bold">{(monthly * 12).toLocaleString(undefined, { maximumFractionDigits: 2 })} ر.ي</span>
+            </div>
+            <div className="grid gap-3 md:grid-cols-3">
+              {accSelect("account_id", "حساب الأصل", ["asset"])}
+              {accSelect("depreciation_account_id", "حساب مجمع الإهلاك *", ["asset", "liability"])}
+              {accSelect("expense_account_id", "حساب مصروف الإهلاك *", ["expense"])}
+            </div>
+            <div className="space-y-1"><Label>الوصف</Label><Textarea value={formData.description} onChange={(e) => set("description", e.target.value)} /></div>
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={resetForm}>إلغاء</Button>
+              <Button type="submit">{editingAsset ? "حفظ التعديلات" : "حفظ الأصل"}</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

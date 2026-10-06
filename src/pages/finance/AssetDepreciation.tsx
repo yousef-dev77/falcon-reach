@@ -69,10 +69,14 @@ export default function AssetDepreciation() {
     const due = schedule.filter((s: any) => !s.is_posted && s.period_date <= today);
     if (due.length === 0) { toast.info("لا توجد قيود مستحقة"); return; }
     if (!confirm(`ترحيل ${due.length} قيد؟`)) return;
+    let ok = 0;
     for (const s of due) {
-      try { await supabase.rpc("post_asset_depreciation", { _schedule_id: s.id }); } catch (e) { console.error(e); }
+      const { error } = await supabase.rpc("post_asset_depreciation", { _schedule_id: s.id });
+      if (error) { toast.error(error.message); break; }
+      ok++;
     }
-    toast.success(`تم ترحيل ${due.length} قيد`);
+    if (ok) toast.success(`تم ترحيل ${ok} قسط`);
+    qc.invalidateQueries({ queryKey: ["fixed-assets"] });
     refetch();
   };
 
