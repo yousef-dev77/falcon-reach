@@ -65,8 +65,8 @@ export default function AssetDepreciation() {
   });
 
   const postAllDue = async () => {
-    const today = new Date().toISOString().slice(0, 10);
-    const due = schedule.filter((s: any) => !s.is_posted && s.period_date <= today);
+    const thisMonth = new Date().toISOString().slice(0, 7);
+    const due = schedule.filter((s: any) => !s.is_posted && s.period_date.slice(0, 7) <= thisMonth);
     if (due.length === 0) { toast.info("لا توجد قيود مستحقة"); return; }
     if (!confirm(`ترحيل ${due.length} قيد؟`)) return;
     let ok = 0;

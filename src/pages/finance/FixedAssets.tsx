@@ -126,6 +126,12 @@ export default function FixedAssets() {
         toast.error("خطأ في تحديث الأصل");
         console.error(error);
       } else {
+        // إعادة احتساب جدول الإهلاك تلقائياً (الأقساط غير المرحّلة فقط)
+        const { count } = await supabase.from("asset_depreciation_schedule").select("id", { count: "exact", head: true }).eq("asset_id", editingAsset.id);
+        if (count) {
+          const { error: gErr } = await supabase.rpc("generate_asset_depreciation_schedule", { _asset_id: editingAsset.id });
+          if (gErr) toast.error(gErr.message); else toast.info("تمت إعادة احتساب جدول الإهلاك");
+        }
         toast.success("تم تحديث الأصل بنجاح");
         fetchAssets();
         resetForm();
