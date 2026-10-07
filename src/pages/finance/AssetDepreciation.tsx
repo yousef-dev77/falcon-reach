@@ -17,7 +17,7 @@ export default function AssetDepreciation() {
   const { data: assets = [] } = useQuery({
     queryKey: ["fixed-assets"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("fixed_assets").select("*").eq("status", "active").order("code");
+      const { data, error } = await supabase.from("fixed_assets").select("*").order("code");
       if (error) throw error;
       return data;
     },
@@ -98,11 +98,11 @@ export default function AssetDepreciation() {
             <Select value={selectedAsset} onValueChange={setSelectedAsset}>
               <SelectTrigger><SelectValue placeholder="اختر أصل ثابت" /></SelectTrigger>
               <SelectContent>
-                {assets.map((a: any) => <SelectItem key={a.id} value={a.id}>{a.code} - {a.name}</SelectItem>)}
+                {assets.map((a: any) => <SelectItem key={a.id} value={a.id}>{a.code} - {a.name}{a.status === "under_maintenance" ? " (صيانة)" : a.status === "disposed" ? " (مستبعد)" : ""}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
-          {selectedAsset && (
+          {selectedAsset && assets.find((a: any) => a.id === selectedAsset)?.status !== "disposed" && (
             <>
               <Button onClick={() => generate.mutate()} disabled={generate.isPending}>
                 <Calculator className="me-2 h-4 w-4" />
@@ -113,6 +113,9 @@ export default function AssetDepreciation() {
                 ترحيل المستحق
               </Button>
             </>
+          )}
+          {selectedAsset && assets.find((a: any) => a.id === selectedAsset)?.status === "disposed" && (
+            <Badge variant="secondary">أصل مستبعد — للاستعراض فقط</Badge>
           )}
         </CardContent>
       </Card>

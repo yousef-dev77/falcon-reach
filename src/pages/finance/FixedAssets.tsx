@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Trash2, Loader2 } from "lucide-react";
+import { Edit, Trash2, Loader2, Archive } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -190,6 +190,26 @@ export default function FixedAssets() {
     setIsDialogOpen(false);
   };
 
+  const [disposeAsset, setDisposeAsset] = useState<FixedAsset | null>(null);
+  const [dsp, setDsp] = useState({ type: "sale", date: new Date().toISOString().split("T")[0], amount: 0, proceeds: "", gl: "", notes: "" });
+  const openDispose = (a: FixedAsset) => {
+    setDsp({ type: "sale", date: new Date().toISOString().split("T")[0], amount: 0, proceeds: "", gl: "", notes: "" });
+    setDisposeAsset(a);
+  };
+  const submitDispose = async () => {
+    if (!disposeAsset) return;
+    if (!confirm("سيتم إقفال الأصل نهائياً وترحيل قيد الاستبعاد. متابعة؟")) return;
+    const { error } = await supabase.rpc("dispose_fixed_asset", {
+      _asset_id: disposeAsset.id, _disposal_date: dsp.date, _disposal_type: dsp.type,
+      _amount: dsp.type === "scrap" ? 0 : dsp.amount,
+      _proceeds_account_id: dsp.proceeds || null, _gain_loss_account_id: dsp.gl || null, _notes: dsp.notes || null,
+    } as any);
+    if (error) return toast.error(error.message);
+    toast.success("تم استبعاد الأصل وترحيل القيد");
+    setDisposeAsset(null);
+    fetchAssets();
+  };
+
   const set = (k: string, v: any) => setFormData((f) => ({ ...f, [k]: v }));
   const accSelect = (k: "account_id" | "depreciation_account_id" | "expense_account_id", label: string, types: string[]) => (
     <div className="space-y-1">
@@ -330,12 +350,21 @@ export default function FixedAssets() {
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-1">
-                        <Button variant="ghost" size="icon" onClick={() => handleEdit(asset)}>
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(asset.id)}>
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
+                        {asset.status !== "disposed" && (
+                          <Button variant="ghost" size="icon" onClick={() => handleEdit(asset)}>
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {asset.status !== "disposed" && (
+                          <Button variant="ghost" size="icon" title="استبعاد / بيع" onClick={() => openDispose(asset)}>
+                            <Archive className="h-4 w-4 text-warning-strong" />
+                          </Button>
+                        )}
+                        {asset.status !== "disposed" && asset.accumulated_depreciation === 0 && (
+                          <Button variant="ghost" size="icon" onClick={() => handleDelete(asset.id)}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -375,7 +404,7 @@ export default function FixedAssets() {
               <div className="space-y-1"><Label>الحالة</Label>
                 <Select value={formData.status} onValueChange={(v) => set("status", v)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent><SelectItem value="active">نشط</SelectItem><SelectItem value="under_maintenance">صيانة</SelectItem><SelectItem value="disposed">مستبعد</SelectItem></SelectContent>
+                  <SelectContent><SelectItem value="active">نشط</SelectItem><SelectItem value="under_maintenance">صيانة</SelectItem>{formData.status === "disposed" && <SelectItem value="disposed">مستبعد</SelectItem>}</SelectContent>
                 </Select>
               </div>
               <div className="space-y-1"><Label>التكلفة *</Label><Input type="number" min={0} step="0.01" value={formData.purchase_cost} onChange={(e) => set("purchase_cost", Number(e.target.value))} /></div>
@@ -396,6 +425,58 @@ export default function FixedAssets() {
               <Button type="submit">{editingAsset ? "حفظ التعديلات" : "حفظ الأصل"}</Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!disposeAsset} onOpenChange={(o) => !o && setDisposeAsset(null)}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader><DialogTitle>استبعاد / بيع الأصل: {disposeAsset?.name}</DialogTitle></DialogHeader>
+          {disposeAsset && (() => {
+            const book = disposeAsset.purchase_cost - disposeAsset.accumulated_depreciation;
+            const amt = dsp.type === "scrap" ? 0 : dsp.amount;
+            const gl = amt - book;
+            return (
+              <div className="space-y-3">
+                <div className="grid grid-cols-3 gap-2 text-sm rounded-[10px] bg-muted p-3">
+                  <div>التكلفة<div className="font-bold">{disposeAsset.purchase_cost.toLocaleString()}</div></div>
+                  <div>مجمع الإهلاك<div className="font-bold">{disposeAsset.accumulated_depreciation.toLocaleString()}</div></div>
+                  <div>القيمة الدفترية<div className="font-bold">{book.toLocaleString()}</div></div>
+                </div>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <div className="space-y-1"><Label>نوع الاستبعاد</Label>
+                    <Select value={dsp.type} onValueChange={(v) => setDsp({ ...dsp, type: v })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent><SelectItem value="sale">بيع</SelectItem><SelectItem value="scrap">تخريد / إتلاف</SelectItem></SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1"><Label>تاريخ الاستبعاد</Label><Input type="date" value={dsp.date} onChange={(e) => setDsp({ ...dsp, date: e.target.value })} /></div>
+                  {dsp.type === "sale" && <>
+                    <div className="space-y-1"><Label>قيمة البيع</Label><Input type="number" min={0} value={dsp.amount} onChange={(e) => setDsp({ ...dsp, amount: Number(e.target.value) })} /></div>
+                    <div className="space-y-1"><Label>حساب المتحصلات</Label>
+                      <Select value={dsp.proceeds || undefined} onValueChange={(v) => setDsp({ ...dsp, proceeds: v })}>
+                        <SelectTrigger><SelectValue placeholder="صندوق / بنك / مدين" /></SelectTrigger>
+                        <SelectContent>{accounts.filter((a) => a.account_type === "asset").map((a) => <SelectItem key={a.id} value={a.id}>{a.code} - {a.name}</SelectItem>)}</SelectContent>
+                      </Select>
+                    </div>
+                  </>}
+                  <div className="space-y-1 md:col-span-2"><Label>حساب أرباح/خسائر استبعاد الأصول</Label>
+                    <Select value={dsp.gl || undefined} onValueChange={(v) => setDsp({ ...dsp, gl: v })}>
+                      <SelectTrigger><SelectValue placeholder="اختر الحساب" /></SelectTrigger>
+                      <SelectContent>{accounts.filter((a) => ["revenue", "expense"].includes(a.account_type)).map((a) => <SelectItem key={a.id} value={a.id}>{a.code} - {a.name}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1 md:col-span-2"><Label>ملاحظات</Label><Textarea value={dsp.notes} onChange={(e) => setDsp({ ...dsp, notes: e.target.value })} /></div>
+                </div>
+                <div className={`rounded-[10px] p-3 text-sm font-semibold ${gl >= 0 ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>
+                  {gl === 0 ? "لا ربح ولا خسارة" : gl > 0 ? `ربح رأسمالي: ${gl.toLocaleString()} ر.ي` : `خسارة رأسمالية: ${(-gl).toLocaleString()} ر.ي`}
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={() => setDisposeAsset(null)}>إلغاء</Button>
+                  <Button variant="destructive" onClick={submitDispose}>تأكيد الاستبعاد وترحيل القيد</Button>
+                </div>
+              </div>
+            );
+          })()}
         </DialogContent>
       </Dialog>
     </div>

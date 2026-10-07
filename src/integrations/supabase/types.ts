@@ -1150,6 +1150,12 @@ export type Database = {
           depreciation_method: string | null
           depreciation_start_date: string | null
           description: string | null
+          disposal_amount: number | null
+          disposal_date: string | null
+          disposal_gain_loss: number | null
+          disposal_journal_entry_id: string | null
+          disposal_notes: string | null
+          disposal_type: string | null
           expense_account_id: string | null
           id: string
           location: string | null
@@ -1174,6 +1180,12 @@ export type Database = {
           depreciation_method?: string | null
           depreciation_start_date?: string | null
           description?: string | null
+          disposal_amount?: number | null
+          disposal_date?: string | null
+          disposal_gain_loss?: number | null
+          disposal_journal_entry_id?: string | null
+          disposal_notes?: string | null
+          disposal_type?: string | null
           expense_account_id?: string | null
           id?: string
           location?: string | null
@@ -1198,6 +1210,12 @@ export type Database = {
           depreciation_method?: string | null
           depreciation_start_date?: string | null
           description?: string | null
+          disposal_amount?: number | null
+          disposal_date?: string | null
+          disposal_gain_loss?: number | null
+          disposal_journal_entry_id?: string | null
+          disposal_notes?: string | null
+          disposal_type?: string | null
           expense_account_id?: string | null
           id?: string
           location?: string | null
@@ -5897,6 +5915,18 @@ export type Database = {
       }
       confirm_purchase_return: { Args: { _return_id: string }; Returns: string }
       confirm_sales_return: { Args: { _return_id: string }; Returns: string }
+      dispose_fixed_asset: {
+        Args: {
+          _amount: number
+          _asset_id: string
+          _disposal_date: string
+          _disposal_type: string
+          _gain_loss_account_id: string
+          _notes: string
+          _proceeds_account_id: string
+        }
+        Returns: string
+      }
       employee_statement: {
         Args: { _employee_id: string; _from: string; _to: string }
         Returns: Json
