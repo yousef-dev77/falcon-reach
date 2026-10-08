@@ -16,7 +16,7 @@ const downloadBlob = (content: BlobPart, mimeType: string, fileName: string) => 
 const getExportRoot = (): HTMLElement => document.querySelector("main") ?? document.body;
 
 const stripInteractive = (root: HTMLElement) => {
-  root.querySelectorAll("button, input, select, textarea, svg, [role='tablist']").forEach((el) => el.remove());
+  root.querySelectorAll("button, input, select, textarea, svg, nav, [role='tablist'], [data-print-hide]").forEach((el) => el.remove());
   return root;
 };
 

@@ -42,7 +42,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <ConnectionStatusBanner />
           <ReadOnlyBanner />
           {/* Header */}
-          <header className="sticky top-0 z-10 flex h-16 items-center gap-3 border-b bg-card px-6">
+          <header data-app-chrome className="sticky top-0 z-10 flex h-16 items-center gap-3 border-b bg-card px-6 print:hidden">
             <SidebarTrigger />
 
             {/* Apps launcher */}
