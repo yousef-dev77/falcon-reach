@@ -35,7 +35,7 @@ export default function HRReports() {
 
   return (
     <div>
-      <ListPageHeader title="تقارير الموارد البشرية" breadcrumbs={[{ label: "الرئيسية", href: "/" }, { label: "الموارد البشرية", href: "/hr" }, { label: "التقارير" }]} showAdd={false} onPrint={() => window.print()} onRefresh={load} showSearch={false} />
+      <ListPageHeader title="تقارير الموارد البشرية" breadcrumbs={[{ label: "الرئيسية", href: "/" }, { label: "الموارد البشرية", href: "/hr" }, { label: "التقارير" }]} showAdd={false} onRefresh={load} showSearch={false} />
       <div className="bg-card border border-t-0 rounded-b-lg p-4 space-y-4">
         <div className="flex items-end gap-3">
           <div><Label>السنة</Label><Input type="number" value={year} onChange={e => setYear(Number(e.target.value))} className="w-24" /></div>

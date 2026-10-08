@@ -134,11 +134,22 @@ ${
   return true;
 };
 
-/** يطبع الشاشة الحالية كمستند رسمي (يستخدم الجداول والمحتوى الظاهر). */
-export const printCurrentScreen = async (title: string, documentNumber?: string) => {
-  const root = (document.querySelector("main") ?? document.body).cloneNode(true) as HTMLElement;
+/** يطبع الشاشة الحالية في نافذة نظيفة (بدون القائمة والأزرار وشريط النظام). */
+export const printCurrentScreen = async (title: string, documentNumber?: string, showSignatures = true) => {
+  const source = document.querySelector("main") ?? document.body;
+  const root = source.cloneNode(true) as HTMLElement;
+  // إزالة العناصر المخفية فعلياً في الشاشة (تبويبات غير نشطة، عناصر مخفية)
+  const srcAll = source.querySelectorAll("*");
+  const cloneAll = root.querySelectorAll("*");
+  srcAll.forEach((el, i) => {
+    const he = el as HTMLElement;
+    if (he.offsetParent === null && getComputedStyle(he).position !== "fixed" && !["TBODY", "TR", "TD", "TH", "THEAD"].includes(he.tagName)) {
+      if (getComputedStyle(he).display === "none" || he.hidden) cloneAll[i]?.setAttribute("data-print-remove", "");
+    }
+  });
+  root.querySelectorAll("[data-print-remove]").forEach((el) => el.remove());
   root
     .querySelectorAll("button, input, select, textarea, svg, nav, [role='tablist'], [data-print-hide]")
     .forEach((el) => el.remove());
-  return printOfficialDocument({ title, documentNumber, bodyHtml: root.innerHTML });
+  return printOfficialDocument({ title, documentNumber, bodyHtml: root.innerHTML, showSignatures });
 };

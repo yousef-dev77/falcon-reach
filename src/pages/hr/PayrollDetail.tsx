@@ -30,7 +30,7 @@ export default function PayrollDetail() {
 
   return (
     <div>
-      <ListPageHeader title={`كشف رواتب ${run.run_number}`} breadcrumbs={[{ label: "الرئيسية", href: "/" }, { label: "الموارد البشرية", href: "/hr" }, { label: "الرواتب", href: "/hr/payroll" }, { label: run.run_number }]} showAdd={false} showSearch={false} onPrint={() => window.print()} extraActions={<Button variant="ghost" size="sm" onClick={() => navigate("/hr/payroll")}><ArrowRight className="h-4 w-4 me-1" />رجوع</Button>} />
+      <ListPageHeader title={`كشف رواتب ${run.run_number}`} breadcrumbs={[{ label: "الرئيسية", href: "/" }, { label: "الموارد البشرية", href: "/hr" }, { label: "الرواتب", href: "/hr/payroll" }, { label: run.run_number }]} showAdd={false} showSearch={false} extraActions={<Button variant="ghost" size="sm" onClick={() => navigate("/hr/payroll")}><ArrowRight className="h-4 w-4 me-1" />رجوع</Button>} />
       <div className="space-y-4 p-4 bg-card border border-t-0 rounded-b-lg">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           <Card><CardHeader className="pb-2"><CardTitle className="text-xs">الفترة</CardTitle></CardHeader><CardContent className="text-lg font-bold">{run.month}/{run.year}</CardContent></Card>

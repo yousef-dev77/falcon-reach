@@ -102,14 +102,22 @@ export function ListPageHeader({
     if (!exportVisibleTablesToExcel(title)) toast.info("لا يوجد جدول ظاهر لتصديره في هذه الشاشة");
   };
   const handleExportWord = () => (onExportWord ? onExportWord() : exportPageToWord(title));
-  const handleExportPdf = () => (onExportPdf ? onExportPdf() : window.print());
+  const blocked = () => toast.error("تم منع فتح نافذة الطباعة، يرجى السماح بالنوافذ المنبثقة");
+  const handlePlainPrint = async () => {
+    if (onPrint) return onPrint();
+    if (!(await printCurrentScreen(title, undefined, false))) blocked();
+  };
+  const handleExportPdf = async () => {
+    if (onExportPdf) return onExportPdf();
+    toast.info('اختر "حفظ بتنسيق PDF" من نافذة الطباعة');
+    if (!(await printCurrentScreen(title, undefined, false))) blocked();
+  };
   const handleOfficialPrint = async () => {
-    const ok = await printCurrentScreen(title, officialDocumentNumber);
-    if (!ok) toast.error("تم منع فتح نافذة الطباعة، يرجى السماح بالنوافذ المنبثقة");
+    if (!(await printCurrentScreen(title, officialDocumentNumber))) blocked();
   };
 
   return (
-    <div className="space-y-0">
+    <div className="space-y-0" data-print-hide>
       {/* Title + Breadcrumb Bar */}
       <div className="bg-primary text-primary-foreground px-4 py-3 rounded-t-lg flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
@@ -180,7 +188,7 @@ export function ListPageHeader({
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={onPrint || (() => window.print())}
+                  onClick={handlePlainPrint}
                   aria-label="طباعة"
                   className="h-9 w-9 text-muted-foreground hover:text-foreground"
                 >
