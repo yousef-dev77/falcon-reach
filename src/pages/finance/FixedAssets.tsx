@@ -92,6 +92,8 @@ export default function FixedAssets() {
     if (formData.purchase_cost <= 0) return toast.error("التكلفة يجب أن تكون أكبر من صفر");
     if (formData.salvage_value >= formData.purchase_cost) return toast.error("قيمة الخردة يجب أن تكون أقل من التكلفة");
     if (!formData.depreciation_account_id || !formData.expense_account_id) return toast.error("حدد حساب مجمع الإهلاك وحساب مصروف الإهلاك");
+    if (!formData.depreciation_start_date) return toast.error("تاريخ بداية الإهلاك إلزامي", { description: "حدده قبل الحفظ ليتم احتساب الأقساط بشكل صحيح" });
+    if (formData.depreciation_start_date < formData.purchase_date) return toast.error("تاريخ بداية الإهلاك لا يمكن أن يسبق تاريخ الشراء");
     const keepAcc = editingAsset ? editingAsset.accumulated_depreciation : 0;
     const currentValue = formData.purchase_cost - keepAcc;
 
