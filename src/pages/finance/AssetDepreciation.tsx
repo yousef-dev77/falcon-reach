@@ -120,6 +120,12 @@ export default function AssetDepreciation() {
         </CardContent>
       </Card>
 
+      {asset && !asset.depreciation_start_date && asset.status !== "disposed" && (
+        <div role="alert" className="rounded-[10px] border border-warning bg-warning/10 p-4 text-sm">
+          <div className="font-bold text-warning-strong">تاريخ بداية الإهلاك غير محدد</div>
+          <div className="text-muted-foreground mt-1">لا يمكن احتساب أقساط الإهلاك لهذا الأصل. افتح بطاقة الأصل من شاشة <a href="/finance/fixed-assets" className="text-primary underline">الأصول الثابتة</a> وحدد تاريخ بداية الإهلاك ثم ارجع لاحتساب الجدول.</div>
+        </div>
+      )}
       {asset && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Card><CardHeader><CardTitle className="text-xs">التكلفة</CardTitle></CardHeader><CardContent className="font-bold">{Number(asset.purchase_cost).toFixed(2)}</CardContent></Card>
