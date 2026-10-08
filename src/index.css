@@ -158,3 +158,19 @@ html[data-readonly="true"] main textarea:not([data-allow-readonly="true"]),
 html[data-readonly="true"] main select:not([data-allow-readonly="true"]) {
   background-color: hsl(var(--muted) / 0.4) !important;
 }
+
+/* ===== Print: show only the page content, never the app chrome ===== */
+@media print {
+  @page { size: A4; margin: 12mm; }
+  html, body { background: #fff !important; }
+  [data-sidebar], [data-sidebar="sidebar"], .peer[data-state], [data-app-chrome],
+  [data-print-hide], [data-sonner-toaster], nav[aria-label="مسار الصفحة"],
+  main button, main [role="tablist"], main input, main select, main textarea {
+    display: none !important;
+  }
+  main { padding: 0 !important; overflow: visible !important; }
+  main, main * { box-shadow: none !important; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { border: 1px solid #c3cfda !important; }
+  tr { page-break-inside: avoid; }
+}
