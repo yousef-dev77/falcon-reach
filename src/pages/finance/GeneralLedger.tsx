@@ -189,7 +189,6 @@ export default function GeneralLedger() {
         ]}
         showAdd={false}
         onRefresh={() => fetchLedgerEntries()}
-        onPrint={() => window.print()}
         showSearch={false}
       />
 

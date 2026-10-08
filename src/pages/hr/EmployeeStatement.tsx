@@ -55,7 +55,7 @@ export default function EmployeeStatement() {
       <ListPageHeader
         title={`كشف حساب موظف ${emp?.full_name ? "— " + emp.full_name : ""}`}
         breadcrumbs={[{ label: "الرئيسية", href: "/" }, { label: "الموارد البشرية", href: "/hr" }, { label: "الموظفون", href: "/hr/employees" }, { label: "كشف حساب" }]}
-        onRefresh={load} showSearch={false} showAdd={false} onPrint={() => window.print()}
+        onRefresh={load} showSearch={false} showAdd={false}
       />
       <div className="bg-card border border-t-0 rounded-b-lg p-4 space-y-5 print:border-0">
         {/* الفترة */}
