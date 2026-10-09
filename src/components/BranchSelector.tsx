@@ -16,7 +16,7 @@ export function BranchSelector() {
   const { activeBranch, userBranches, setActiveBranch, isLoading, hasMultipleBranches, isGlobalAdmin } = useBranch();
 
   if (isLoading) {
-    return <Skeleton className="h-9 w-40" />;
+    return <Skeleton className="h-9 w-24 md:w-40" />;
   }
 
   if (userBranches.length === 0) {
@@ -31,10 +31,10 @@ export function BranchSelector() {
   // إذا كان فرع واحد فقط، نعرض اسمه بدون dropdown
   if (!hasMultipleBranches) {
     return (
-      <div className="flex items-center gap-2 px-3 py-2 bg-muted/50 rounded-md">
-        <Building2 className="h-4 w-4 text-primary" />
-        <span className="text-sm font-medium">{activeBranch?.name}</span>
-        <Badge variant="outline" className="text-xs">
+      <div className="flex items-center gap-1.5 md:gap-2 px-2 md:px-3 py-2 bg-muted/50 rounded-md min-w-0">
+        <Building2 className="h-4 w-4 text-primary shrink-0" />
+        <span className="text-sm font-medium truncate max-w-[80px] md:max-w-[200px]">{activeBranch?.name}</span>
+        <Badge variant="outline" className="text-xs hidden sm:inline-flex">
           {activeBranch?.code}
         </Badge>
       </div>
@@ -44,15 +44,15 @@ export function BranchSelector() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" className="gap-2 min-w-[160px] justify-between">
+        <Button variant="outline" className="gap-1 md:gap-2 md:min-w-[160px] justify-between px-2 md:px-4 min-w-0">
           <div className="flex items-center gap-2">
             <Building2 className="h-4 w-4 text-primary" />
-            <span className="truncate max-w-[100px]">{activeBranch?.name}</span>
+            <span className="truncate max-w-[70px] md:max-w-[100px]">{activeBranch?.name}</span>
           </div>
           <ChevronDown className="h-4 w-4 opacity-50" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-64">
+      <DropdownMenuContent align="end" className="w-64 max-w-[90vw]">
         <DropdownMenuLabel className="flex items-center justify-between">
           <span>الفرع النشط</span>
           {isGlobalAdmin && (
