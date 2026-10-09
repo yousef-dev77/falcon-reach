@@ -30,6 +30,7 @@ export default function Collections() {
   const [viewingId, setViewingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [allocations, setAllocations] = useState<AllocationRow[]>([]);
+  const [idempotencyKey, setIdempotencyKey] = useState<string>(() => crypto.randomUUID());
   const [formData, setFormData] = useState({
     receipt_number: "",
     receipt_date: new Date().toISOString().split('T')[0],
@@ -119,11 +120,25 @@ export default function Collections() {
 
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
+      const { data: claim, error: claimError } = await supabase.rpc("claim_idempotency_key", {
+        _scope: "customer_collection",
+        _key: data.idempotencyKey,
+      });
+      if (claimError) throw claimError;
+      if (claim && claim[0] && claim[0].is_new === false) {
+        toast.info("هذه العملية تم تنفيذها مسبقاً — لم يتم تكرار القبض");
+        return;
+      }
       const { data: newCol, error } = await supabase
         .from("collections")
         .insert([{ ...data.collection, created_by: user?.id }])
         .select().single();
       if (error) throw error;
+      await supabase.rpc("complete_idempotency_key", {
+        _scope: "customer_collection",
+        _key: data.idempotencyKey,
+        _result: { collection_id: newCol.id, receipt_number: newCol.receipt_number },
+      });
 
       // 1. Insert allocations (triggers will update invoice paid_amount + status)
       if (data.allocations.length > 0) {
@@ -202,6 +217,7 @@ export default function Collections() {
       notes: ""
     });
     setAllocations([]);
+    setIdempotencyKey(crypto.randomUUID());
     setIsAddOpen(true);
   };
 
@@ -231,6 +247,7 @@ export default function Collections() {
         notes: formData.notes || null
       },
       allocations,
+      idempotencyKey,
     });
   };
 
