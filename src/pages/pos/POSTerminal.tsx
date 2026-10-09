@@ -38,6 +38,8 @@ export default function POSTerminal() {
   const [cashier, setCashier] = useState<ActiveCashier | null>(null);
   const [pinOpen, setPinOpen] = useState(true);
   const searchRef = useRef<HTMLInputElement>(null);
+  const [paying, setPaying] = useState(false);
+  const [payKey, setPayKey] = useState<string>(() => crypto.randomUUID());
 
   useEffect(() => {
     (async () => {
@@ -113,8 +115,18 @@ export default function POSTerminal() {
   };
 
   const confirmPayment = async () => {
+    if (paying) return;
     const paid = (payments.cash || 0) + (payments.card || 0) + (payments.transfer || 0);
     if (paid < totals.total) return toast.error("المبلغ المدفوع أقل من المطلوب");
+    setPaying(true);
+    try {
+    const { data: claim, error: claimErr } = await supabase.rpc("claim_idempotency_key", { _scope: "pos_order", _key: payKey });
+    if (claimErr) return toast.error(claimErr.message);
+    if (claim && claim[0] && claim[0].is_new === false) {
+      toast.info("تم تنفيذ هذه الفاتورة مسبقاً — لم يتم تكرارها");
+      setCart([]); setPayDlg(false); setPayKey(crypto.randomUUID());
+      return;
+    }
 
     const order_number = `POS-${Date.now()}`;
     const { data: order, error } = await supabase.from("pos_orders").insert({
@@ -153,10 +165,12 @@ export default function POSTerminal() {
 
     const { error: payErr } = await supabase.rpc("pay_pos_order" as any, { _order_id: order.id });
     if (payErr) return toast.error(payErr.message);
+    await supabase.rpc("complete_idempotency_key", { _scope: "pos_order", _key: payKey, _result: { order_id: order.id, order_number } });
 
     toast.success(`تمت الفاتورة ${order.order_number}. الباقي: ${(paid - totals.total).toFixed(2)}`);
-    setCart([]); setCustomerId(""); setPayDlg(false); setSearch("");
+    setCart([]); setCustomerId(""); setPayDlg(false); setSearch(""); setPayKey(crypto.randomUUID());
     searchRef.current?.focus();
+    } finally { setPaying(false); }
   };
 
   if (!session) return <div className="p-8 text-center">جارٍ التحميل...</div>;
@@ -295,7 +309,7 @@ export default function POSTerminal() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setPayDlg(false)}>إلغاء</Button>
-            <Button onClick={confirmPayment}>تأكيد الدفع</Button>
+            <Button onClick={confirmPayment} disabled={paying}>{paying ? "جارٍ التنفيذ..." : "تأكيد الدفع"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
