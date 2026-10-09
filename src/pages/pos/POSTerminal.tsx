@@ -309,7 +309,7 @@ export default function POSTerminal() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setPayDlg(false)}>إلغاء</Button>
-            <Button onClick={confirmPayment}>تأكيد الدفع</Button>
+            <Button onClick={confirmPayment} disabled={paying}>{paying ? "جارٍ التنفيذ..." : "تأكيد الدفع"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
