@@ -171,6 +171,9 @@ export default function PurchaseInvoices() {
   const handleConfirm = async (id: string) => {
     const inv = invoices.find(i => i.id === id);
     if (!inv || inv.status !== "draft") return;
+    const { data: claim, error: claimErr } = await supabase.rpc("claim_idempotency_key", { _scope: "purchase_invoice_confirm", _key: id });
+    if (claimErr) { toast.error(claimErr.message); return; }
+    if (claim && claim[0] && claim[0].is_new === false) { toast.info("تم تأكيد هذه الفاتورة مسبقاً — لم يتم تكرار القيد"); fetchAll(); return; }
 
     try {
       const { createAutoJournalEntry } = await import("@/hooks/useAutoJournalEntry");
