@@ -255,7 +255,6 @@ export default function Collections() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
         <ListPageHeader
           title="سندات القبض"
           breadcrumbs={[
@@ -263,14 +262,10 @@ export default function Collections() {
             { label: "نظام المبيعات" },
             { label: "سندات القبض" },
           ]}
-          showAdd={false}
+          onAdd={openAdd}
+          addLabel="إضافة سند قبض"
           showSearch={false}
         />
-        <Button onClick={openAdd}>
-          <Plus className="h-4 w-4 ml-2" />
-          إضافة سند قبض
-        </Button>
-      </div>
 
       <Card>
         <CardHeader>
