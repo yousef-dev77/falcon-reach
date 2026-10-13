@@ -10,7 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, CheckCircle, Send } from "lucide-react";
+import { Plus, Trash2, CheckCircle, Send, ArrowLeftRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 const statusLabels: Record<string, string> = { draft: "مسودة", submitted: "مرسل", approved: "معتمد", rejected: "مرفوض", closed: "مغلق" };
@@ -25,15 +26,20 @@ export default function PurchaseRequests() {
   const [search, setSearch] = useState("");
   const [form, setForm] = useState({ request_date: new Date().toISOString().slice(0, 10), required_date: "", warehouse_id: "", department: "", notes: "" });
   const [lines, setLines] = useState<any[]>([{ product_id: "", quantity: 1, estimated_price: 0 }]);
+  const [suppliers, setSuppliers] = useState<any[]>([]);
+  const [convertId, setConvertId] = useState<string | null>(null);
+  const [convSupplier, setConvSupplier] = useState("");
+  const navigate = useNavigate();
 
   const load = async () => {
     const { data } = await supabase.from("purchase_requests").select("*").order("request_date", { ascending: false });
     setRows(data || []);
-    const [p, w] = await Promise.all([
+    const [p, w, s] = await Promise.all([
       supabase.from("products").select("id,code,name").eq("is_active", true),
       supabase.from("warehouses").select("id,code,name").eq("is_active", true),
+      supabase.from("suppliers").select("id,name").eq("is_active", true),
     ]);
-    setProducts(p.data || []); setWarehouses(w.data || []);
+    setProducts(p.data || []); setWarehouses(w.data || []); setSuppliers(s.data || []);
   };
   useEffect(() => { load(); }, []);
 
@@ -63,11 +69,29 @@ export default function PurchaseRequests() {
     if (error) toast.error(error.message); else { toast.success("تم"); load(); }
   };
 
+  const convert = async () => {
+    if (!convertId || !convSupplier) return toast.error("اختر المورد");
+    const { error } = await supabase.rpc("convert_pr_to_po", { _request_id: convertId, _supplier_id: convSupplier });
+    if (error) return toast.error(error.message);
+    toast.success("تم إنشاء أمر شراء كمسودة"); setConvertId(null); navigate("/purchases/orders");
+  };
+
   const filtered = rows.filter(r => !search || r.request_number?.includes(search));
 
   return (
     <div className="space-y-4">
       <ListPageHeader title="طلبات الشراء" breadcrumbs={[{ label: "الرئيسية", href: "/" }, { label: "المشتريات" }, { label: "طلبات الشراء" }]} searchValue={search} onSearchChange={setSearch} onAdd={() => setOpen(true)} onRefresh={load} />
+      <Dialog open={!!convertId} onOpenChange={(o) => !o && setConvertId(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>تحويل الطلب إلى أمر شراء</DialogTitle></DialogHeader>
+          <Label>المورد *</Label>
+          <Select value={convSupplier} onValueChange={setConvSupplier}>
+            <SelectTrigger><SelectValue placeholder="اختر المورد" /></SelectTrigger>
+            <SelectContent>{suppliers.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
+          </Select>
+          <DialogFooter><Button variant="outline" onClick={() => setConvertId(null)}>إلغاء</Button><Button onClick={convert}>تحويل</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
       <div className="bg-card border rounded-lg">
         <Table>
           <TableHeader><TableRow><TableHead>الرقم</TableHead><TableHead>التاريخ</TableHead><TableHead>القسم</TableHead><TableHead>الحالة</TableHead><TableHead>إجراءات</TableHead></TableRow></TableHeader>
@@ -82,6 +106,7 @@ export default function PurchaseRequests() {
                   <TableCell className="flex gap-1">
                     {r.status === "draft" && <Button size="sm" variant="outline" onClick={() => setStatus(r.id, "submitted")}><Send className="h-4 w-4" /></Button>}
                     {r.status === "submitted" && <Button size="sm" onClick={() => setStatus(r.id, "approved")}><CheckCircle className="h-4 w-4" /></Button>}
+                    {r.status === "approved" && <Button size="sm" variant="outline" onClick={() => { setConvertId(r.id); setConvSupplier(""); }}><ArrowLeftRight className="h-4 w-4 me-1" />تحويل لأمر شراء</Button>}
                   </TableCell>
                 </TableRow>
               ))}
