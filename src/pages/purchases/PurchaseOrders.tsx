@@ -10,13 +10,15 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, CheckCircle } from "lucide-react";
+import { Plus, Trash2, CheckCircle, FileText } from "lucide-react";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 const statusLabels: Record<string, string> = { draft: "مسودة", confirmed: "مؤكد", partially_received: "مستلم جزئياً", received: "مستلم", cancelled: "ملغي", closed: "مغلق" };
 
 export default function PurchaseOrders() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { activeBranch } = useBranch();
   const [rows, setRows] = useState<any[]>([]);
   const [suppliers, setSuppliers] = useState<any[]>([]);
@@ -83,7 +85,14 @@ export default function PurchaseOrders() {
                   <TableCell>{r.suppliers?.name}</TableCell>
                   <TableCell>{Number(r.total_amount).toFixed(2)}</TableCell>
                   <TableCell><Badge>{statusLabels[r.status]}</Badge></TableCell>
-                  <TableCell>{r.status === "draft" && <Button size="sm" onClick={() => confirm(r.id)}><CheckCircle className="h-4 w-4" /></Button>}</TableCell>
+                  <TableCell>
+                    {r.status === "draft" && <Button size="sm" onClick={() => confirm(r.id)}><CheckCircle className="h-4 w-4" /></Button>}
+                    {["confirmed", "partially_received", "received"].includes(r.status) && <Button size="sm" variant="outline" onClick={async () => {
+                      const { error } = await supabase.rpc("convert_po_to_purchase_invoice", { _order_id: r.id });
+                      if (error) return toast.error(error.message);
+                      toast.success("تم إنشاء فاتورة مورد كمسودة"); navigate("/purchases/invoices");
+                    }}><FileText className="h-4 w-4 me-1" />إنشاء فاتورة</Button>}
+                  </TableCell>
                 </TableRow>
               ))}
           </TableBody>

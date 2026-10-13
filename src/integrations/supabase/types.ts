@@ -4388,6 +4388,7 @@ export type Database = {
           invoice_number: string
           notes: string | null
           paid_amount: number | null
+          purchase_order_id: string | null
           status: Database["public"]["Enums"]["invoice_status"] | null
           subtotal: number | null
           supplier_id: string
@@ -4408,6 +4409,7 @@ export type Database = {
           invoice_number: string
           notes?: string | null
           paid_amount?: number | null
+          purchase_order_id?: string | null
           status?: Database["public"]["Enums"]["invoice_status"] | null
           subtotal?: number | null
           supplier_id: string
@@ -4428,6 +4430,7 @@ export type Database = {
           invoice_number?: string
           notes?: string | null
           paid_amount?: number | null
+          purchase_order_id?: string | null
           status?: Database["public"]["Enums"]["invoice_status"] | null
           subtotal?: number | null
           supplier_id?: string
@@ -4449,6 +4452,13 @@ export type Database = {
             columns: ["currency_id"]
             isOneToOne: false
             referencedRelation: "currencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_invoices_purchase_order_id_fkey"
+            columns: ["purchase_order_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_orders"
             referencedColumns: ["id"]
           },
           {
@@ -4975,6 +4985,7 @@ export type Database = {
           invoice_number: string
           notes: string | null
           paid_amount: number | null
+          sales_order_id: string | null
           status: Database["public"]["Enums"]["invoice_status"] | null
           subtotal: number | null
           tax_amount: number | null
@@ -4995,6 +5006,7 @@ export type Database = {
           invoice_number: string
           notes?: string | null
           paid_amount?: number | null
+          sales_order_id?: string | null
           status?: Database["public"]["Enums"]["invoice_status"] | null
           subtotal?: number | null
           tax_amount?: number | null
@@ -5015,6 +5027,7 @@ export type Database = {
           invoice_number?: string
           notes?: string | null
           paid_amount?: number | null
+          sales_order_id?: string | null
           status?: Database["public"]["Enums"]["invoice_status"] | null
           subtotal?: number | null
           tax_amount?: number | null
@@ -5042,6 +5055,13 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_invoices_sales_order_id_fkey"
+            columns: ["sales_order_id"]
+            isOneToOne: false
+            referencedRelation: "sales_orders"
             referencedColumns: ["id"]
           },
           {
@@ -5915,6 +5935,18 @@ export type Database = {
       }
       confirm_purchase_return: { Args: { _return_id: string }; Returns: string }
       confirm_sales_return: { Args: { _return_id: string }; Returns: string }
+      convert_po_to_purchase_invoice: {
+        Args: { _order_id: string }
+        Returns: string
+      }
+      convert_pr_to_po: {
+        Args: { _request_id: string; _supplier_id: string }
+        Returns: string
+      }
+      convert_so_to_sales_invoice: {
+        Args: { _order_id: string }
+        Returns: string
+      }
       dispose_fixed_asset: {
         Args: {
           _amount: number
